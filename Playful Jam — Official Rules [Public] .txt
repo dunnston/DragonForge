@@ -1,0 +1,165 @@
+﻿Playful AI Jam: Official Rules and Regulations
+Last Updated: 10/19/2025
+________________
+
+
+Introduction
+This Agreement outlines the official rules and regulations for Playful Jam. By participating in this event, you ("Participant") agree to abide by these terms. References to "we," "us," "our," or "organizers" refer to the Playful Jam organizing team.
+Eligibility
+* Age Requirement: All participants must be 18 years of age or older
+* Geographic: Open to participants worldwide
+* Previous Experience: No prior game development experience required
+* Verification: Organizers reserve the right to verify age and identity
+Content Guidelines
+PG-Rated Content Only
+All submissions must maintain a PG rating and are strictly prohibited from containing:
+* Pornographic or sexually explicit material
+* Graphic violence or gore
+* Hate speech, racism, sexism, or discrimination of any kind
+* Political content or propaganda
+* Harassment or personal attacks
+* Content promoting illegal activities
+* Blasphemy toward real-world religions
+Acceptable Content
+* Mild cartoon violence (similar to classic arcade games)
+* Educational or informational content
+* Fantasy themes and characters
+* Mild competitive elements
+* Mild romance 
+Content Review: If you're unsure whether your content meets these guidelines, contact us via Discord before submission.
+Teams and Participation
+* Team Size: Solo participants or teams of up to 5 members
+* Single Team Rule: Each participant may only join one team
+* Team Registration: All team members must be listed at submission time
+* Team Leader: One team member must be designated as the submission contact
+Submissions
+* AFK Mechanics
+* Virtual pet/companion system
+* Minimum 3 AFK progression systems
+* AI Integration
+* English Accessibility
+* "Holy Shit" Moment
+* Potential to scale to a full game
+Bonus For
+* Multiple innovative uses of AI
+* Social gaming layer
+* Game design doc
+* Mobile-friendly web experience
+* Cross-session continuity 
+Submission Limits
+* One Game Per Team: Each team may submit only one game
+* Modification Rights: You may update your submission until the deadline
+* Final Version: The last version submitted before the deadline will be judged
+AI Requirements
+Mandatory AI Usage: All participants must use AI tools in their development process. This includes but is not limited to:
+* Code generation and assistance
+* Art and asset creation
+* Game design ideation
+* Content generation
+* Bug fixing and optimization
+Documentation Required: Teams must document how AI was used in their development process for judging purposes.
+Technical Requirements
+Platform Requirements
+* Primary Platform: Web browsers (Chrome, Firefox, Safari, Edge) — or inside another platform, i.e. Roblox, that can provide a link to play. 
+* Mobile Optimization: Preferred if they function on mobile devices (iOS/Android)
+* Performance: Smooth gameplay on standard mobile hardware
+* Loading Time: Initial load time should not exceed 30 seconds on mobile
+Optional Platforms
+Teams may also submit versions for:
+* Desktop applications (Windows, Mac, Linux)
+* Mobile apps
+* Other platforms
+Assets and Premade Content
+Allowed Assets
+* Premade Assets: Scripts, sounds, music, animations, and art assets are permitted
+* Asset Libraries: Use of asset stores and libraries is allowed
+* AI-Generated Content: AI-created assets are permitted and encouraged
+Requirements
+* Proper Attribution: All non-original assets must be properly credited
+* Legal Permission: You must have legal right to use all assets
+* Asset Documentation: List all external assets used in your submission
+Prohibited
+* Complete Premade Games: Submissions that are primarily premade games
+* Copyrighted Material: Unlicensed copyrighted content
+* Stolen Assets: Assets used without permission
+Judging and Prizes
+Judging Criteria
+Games will be evaluated on:
+1. AI Integration 
+2. AFK Loop Mastery
+3. Pet bond Quality 
+4. Scale Potential 
+5. Overall Experience 
+Prize Structure
+* 🥇 Champion: $4,000 + development support commitment
+* 🥈 Excellence Awards: $1,000 each (2 winners)
+* 🏆 People's Choice: $1,000 (community voted)
+Development Support
+The Champion will receive ongoing support to develop their prototype into a full game, including:
+* Development guidance and mentorship
+* Resource connections
+* Marketing and launch support
+Intellectual Property Rights
+Your Rights
+* Full Ownership: You retain complete ownership of your game and all associated intellectual property
+* Commercial Rights: You may commercialize your game after the jam
+* Modification Rights: You may continue developing your game post-jam
+* Distribution Rights: You control how and where your game is distributed
+Promotional Usage
+By participating, you grant organizers the right to:
+* Showcase your game on our website and social media
+* Use screenshots and gameplay footage for promotional purposes
+* Feature your game in post-jam content and documentation
+Discord Community
+Community Guidelines
+* Respectful Communication: Maintain professional and respectful discourse
+* No Spam: Avoid excessive self-promotion or irrelevant content
+* Support Focus: Use channels for their intended purposes
+* Discord TOS: All participants must follow Discord's Terms of Service
+Support Available
+* Technical Help: Development assistance and troubleshooting
+* Rule Clarification: Questions about jam requirements
+* Community Networking: Connect with other participants
+* Live Updates: Real-time announcements during the jam
+Deadlines and Late Submissions
+Submission Deadline
+Hard Deadline: 10/26/25 — 11:00 PM, PT
+Late Submission Policy
+* Grace Period: 24-hour grace period for technical difficulties only
+* Contact Required: Must contact organizers via Discord before deadline
+* Documentation: Must provide evidence of technical issues
+* Approval Required: Late submissions subject to organizer approval
+Disqualification
+Automatic Disqualification
+Teams will be disqualified for:
+* Submitting inappropriate content (see Content Guidelines)
+* Failing to meet core requirements
+* Submitting multiple games
+* Providing false information
+* Violating intellectual property rights
+* Harassment or inappropriate behavior
+Appeals Process
+Disqualified teams may appeal the decision by contacting organizers within 48 hours of notification.
+Organizer Rights
+The organizing team reserves the right to:
+* Make final decisions on all matters not explicitly covered in these rules
+* Disqualify submissions that violate rules or spirit of the jam
+* Modify rules with reasonable notice to participants
+* Cancel or postpone the event due to unforeseen circumstances
+* Use submission content for promotional purposes as outlined above
+Final Provisions
+Rule Updates
+These rules may be updated during the jam. Participants will be notified of any changes via Discord and email.
+Dispute Resolution
+All disputes will be resolved at the sole discretion of the organizing team. Decisions are final.
+Limitation of Liability
+Organizers are not liable for technical issues, lost submissions, or other problems beyond their reasonable control.
+Contact Information
+For questions, clarifications, or support:
+* Discord: https://discord.gg/playfulai 
+* Email: najva@playful.ai
+________________
+
+
+By participating in Playful Jam, you acknowledge that you have read, understood, and agree to abide by these rules and regulations.
+Good luck, and have fun creating!
