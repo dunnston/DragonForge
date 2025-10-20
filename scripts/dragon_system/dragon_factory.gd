@@ -70,7 +70,9 @@ func _generate_fallback_name(dragon: Dragon) -> String:
 		DragonPart.Element.SHADOW: "Umbra"
 	}
 	
-	await get_tree().create_timer(0.5).timeout  # Simulate API delay
+	# Simulate API delay only if we have access to the scene tree
+	if get_tree() != null:
+		await get_tree().create_timer(0.5).timeout
 	
 	var prefix = element_names[dragon.head_part.element]
 	var suffix = element_names[dragon.body_part.element].to_lower()

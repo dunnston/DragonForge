@@ -10,7 +10,6 @@ script = ExtResource("1_vbyfl")
 position = Vector2(50, 50)
 
 [node name="HeadSprite2" type="ColorRect" parent="DragonDisplay"]
-anchors_preset = -1
 offset_left = 50.0
 offset_top = 50.0
 offset_right = 130.0
@@ -18,7 +17,6 @@ offset_bottom = 110.0
 color = Color(0, 0, 0, 1)
 
 [node name="BodySprite2" type="ColorRect" parent="DragonDisplay"]
-anchors_preset = -1
 offset_left = 50.0
 offset_top = 120.0
 offset_right = 130.0
@@ -26,7 +24,6 @@ offset_bottom = 220.0
 color = Color(0, 0, 0, 1)
 
 [node name="TailSprite2" type="ColorRect" parent="DragonDisplay"]
-anchors_preset = -1
 offset_left = 50.0
 offset_top = 230.0
 offset_right = 130.0
@@ -34,7 +31,6 @@ offset_bottom = 270.0
 color = Color(0, 0, 0, 1)
 
 [node name="NameLabel2" type="Label" parent="DragonDisplay"]
-anchors_preset = -1
 offset_left = 150.0
 offset_top = 50.0
 offset_right = 350.0
@@ -43,7 +39,6 @@ text = "Dragon Name"
 autowrap_mode = 3
 
 [node name="StatsLabel2" type="Label" parent="DragonDisplay"]
-anchors_preset = -1
 offset_left = 150.0
 offset_top = 100.0
 offset_right = 450.0
@@ -52,7 +47,6 @@ text = "ATK: 0 | HP: 0/0 | SPD: 0"
 autowrap_mode = 3
 
 [node name="Instructions" type="Label" parent="."]
-anchors_preset = -1
 offset_left = 50.0
 offset_top = 300.0
 offset_right = 450.0
@@ -62,7 +56,6 @@ Watch the stats and element synergies!"
 autowrap_mode = 3
 
 [node name="CollectionInfo" type="Label" parent="."]
-anchors_preset = -1
 offset_left = 50.0
 offset_top = 400.0
 offset_right = 450.0
