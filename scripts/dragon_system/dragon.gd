@@ -25,6 +25,10 @@ const EXPLORATION_FATIGUE = {
 	60: 0.40   # 60min = 40% fatigue
 }
 const FATIGUE_THRESHOLD: float = 0.8  # Auto-remove at 80%+ fatigue
+
+# State Management
+enum DragonState { IDLE, DEFENDING, EXPLORING, TRAINING, RESTING }
+
 # Export Properties (saved with Resource)
 @export var dragon_id: String
 @export var dragon_name: String = "Unnamed Dragon"
