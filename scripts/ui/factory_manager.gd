@@ -6,6 +6,7 @@ var factory: DragonFactory
 
 # === UI ELEMENTS - Top Bar ===
 @onready var gold_label: Label = $MarginContainer/MainVBox/TopBar/GoldDisplay/HBox/GoldLabel
+@onready var view_inventory_button: Button = $MarginContainer/MainVBox/TopBar/ViewInventoryButton
 
 @onready var fire_parts_count: Label = $MarginContainer/MainVBox/TopBar/PartsDisplay/PartsHBox/FireParts/Count
 @onready var ice_parts_count: Label = $MarginContainer/MainVBox/TopBar/PartsDisplay/PartsHBox/IceParts/Count
@@ -24,6 +25,10 @@ var factory: DragonFactory
 @onready var tail_slot_label: Label = $MarginContainer/MainVBox/MainContent/CenterPanel/CreationVBox/TailSlot/VBox/SlotRect/PartLabel
 @onready var animate_button: Button = $MarginContainer/MainVBox/MainContent/CenterPanel/CreationVBox/AnimateButton
 
+@onready var head_slot_panel: PanelContainer = $MarginContainer/MainVBox/MainContent/CenterPanel/CreationVBox/HeadSlot
+@onready var body_slot_panel: PanelContainer = $MarginContainer/MainVBox/MainContent/CenterPanel/CreationVBox/BodySlot
+@onready var tail_slot_panel: PanelContainer = $MarginContainer/MainVBox/MainContent/CenterPanel/CreationVBox/TailSlot
+
 @onready var head_slot_rect: ColorRect = $MarginContainer/MainVBox/MainContent/CenterPanel/CreationVBox/HeadSlot/VBox/SlotRect
 @onready var body_slot_rect: ColorRect = $MarginContainer/MainVBox/MainContent/CenterPanel/CreationVBox/BodySlot/VBox/SlotRect
 @onready var tail_slot_rect: ColorRect = $MarginContainer/MainVBox/MainContent/CenterPanel/CreationVBox/TailSlot/VBox/SlotRect
@@ -38,10 +43,16 @@ var factory: DragonFactory
 @onready var active_missions_label: Label = $MarginContainer/MainVBox/BottomBar/ExplorationPanel/VBox/ActiveLabel
 @onready var collection_progress: Label = $MarginContainer/MainVBox/BottomBar/CollectionPanel/VBox/ProgressLabel
 
+# === UI PANELS ===
+@onready var inventory_panel: Control = $InventoryPanel
+@onready var part_selector: Control = $PartSelector
+@onready var dragon_tooltip: Control = $DragonTooltip
+
 # === DRAGON CREATION STATE ===
 var selected_head: DragonPart.Element = -1
 var selected_body: DragonPart.Element = -1
 var selected_tail: DragonPart.Element = -1
+var current_selecting_slot: String = ""  # Track which slot is being selected
 
 # === ELEMENT COLORS ===
 const ELEMENT_COLORS = {
@@ -63,6 +74,11 @@ func _ready():
 
 	# Connect button signals
 	animate_button.pressed.connect(_on_animate_button_pressed)
+	view_inventory_button.pressed.connect(_on_view_inventory_pressed)
+
+	# Connect part selector signal
+	if part_selector:
+		part_selector.part_selected.connect(_on_part_selected)
 
 	# Connect to TreasureVault signals if available
 	if TreasureVault:
@@ -83,48 +99,41 @@ func _ready():
 	print("[FactoryManager] Factory Manager UI initialized")
 
 func _setup_part_slot_buttons():
-	# Create invisible buttons over the slots for clicking
-	var head_button = Button.new()
-	head_button.flat = true
-	head_button.custom_minimum_size = Vector2(400, 80)
-	head_button.pressed.connect(func(): _on_slot_clicked("head"))
-	head_slot_rect.add_child(head_button)
+	# Use gui_input on the panels for more reliable click detection
+	head_slot_panel.gui_input.connect(func(event): _on_slot_input(event, "head"))
+	body_slot_panel.gui_input.connect(func(event): _on_slot_input(event, "body"))
+	tail_slot_panel.gui_input.connect(func(event): _on_slot_input(event, "tail"))
 
-	var body_button = Button.new()
-	body_button.flat = true
-	body_button.custom_minimum_size = Vector2(400, 80)
-	body_button.pressed.connect(func(): _on_slot_clicked("body"))
-	body_slot_rect.add_child(body_button)
+	print("[FactoryManager] Slot buttons set up")
 
-	var tail_button = Button.new()
-	tail_button.flat = true
-	tail_button.custom_minimum_size = Vector2(400, 80)
-	tail_button.pressed.connect(func(): _on_slot_clicked("tail"))
-	tail_slot_rect.add_child(tail_button)
+func _on_slot_input(event: InputEvent, slot_name: String):
+	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
+		print("[FactoryManager] Clicked slot: %s" % slot_name)
+		_on_slot_clicked(slot_name)
 
 # === SLOT SELECTION ===
 
 func _on_slot_clicked(slot_name: String):
-	# Show element picker popup
-	_show_element_picker(slot_name)
+	# Store which slot is being selected
+	current_selecting_slot = slot_name
 
-func _show_element_picker(slot_name: String):
-	# Simple picker - cycle through available elements
-	# TODO: Create proper picker popup UI
-
-	var available_elements = []
-	for element in DragonPart.Element.values():
-		if TreasureVault and TreasureVault.get_part_count(element) > 0:
-			available_elements.append(element)
-
-	if available_elements.is_empty():
-		print("[FactoryManager] No parts available!")
-		return
-
-	# For now, just cycle to the first available element
-	var element = available_elements[0]
-
+	# Determine part type based on slot
+	var part_type: DragonPart.PartType
 	match slot_name:
+		"head":
+			part_type = DragonPart.PartType.HEAD
+		"body":
+			part_type = DragonPart.PartType.BODY
+		"tail":
+			part_type = DragonPart.PartType.TAIL
+
+	# Open part selector
+	if part_selector:
+		part_selector.open(part_type)
+
+func _on_part_selected(element: DragonPart.Element):
+	# Update the appropriate slot based on which one was clicked
+	match current_selecting_slot:
 		"head":
 			selected_head = element
 			_update_slot_display(head_slot_label, head_slot_rect, element)
@@ -140,12 +149,12 @@ func _show_element_picker(slot_name: String):
 func _update_slot_display(label: Label, rect: ColorRect, element: DragonPart.Element):
 	if element == -1:
 		label.text = "Empty"
-		label.theme_override_colors["font_color"] = Color(0.5, 0.5, 0.5, 1)
+		label.add_theme_color_override("font_color", Color(0.5, 0.5, 0.5, 1))
 		rect.color = Color(0.2, 0.25, 0.2, 1)
 	else:
 		var element_name = DragonPart.Element.keys()[element]
 		label.text = element_name
-		label.theme_override_colors["font_color"] = Color(0.9, 0.9, 0.9, 1)
+		label.add_theme_color_override("font_color", Color(0.9, 0.9, 0.9, 1))
 		rect.color = ELEMENT_COLORS.get(element, Color.WHITE) * 0.4
 
 func _check_can_create_dragon():
@@ -262,26 +271,39 @@ func _create_dragon_entry(dragon: Dragon) -> PanelContainer:
 
 	# Dragon name
 	var name_label = Label.new()
-	name_label.text = dragon.dragon_name
-	name_label.theme_override_colors["font_color"] = Color(0.8, 1, 0.8, 1)
-	name_label.theme_override_font_sizes["font_size"] = 16
+	name_label.text = dragon.dragon_name if dragon.dragon_name else "Unnamed Dragon"
+	name_label.add_theme_color_override("font_color", Color(0.8, 1, 0.8, 1))
+	name_label.add_theme_font_size_override("font_size", 16)
 	vbox.add_child(name_label)
 
 	# Dragon stats
 	var stats_label = Label.new()
 	stats_label.text = "HP: %d  Lvl: %d" % [dragon.current_health, dragon.level]
-	stats_label.theme_override_colors["font_color"] = Color(0.7, 0.7, 0.7, 1)
-	stats_label.theme_override_font_sizes["font_size"] = 12
+	stats_label.add_theme_color_override("font_color", Color(0.7, 0.7, 0.7, 1))
+	stats_label.add_theme_font_size_override("font_size", 12)
 	vbox.add_child(stats_label)
 
 	# Dragon state
 	var state_label = Label.new()
 	state_label.text = _get_state_text(dragon.current_state)
-	state_label.theme_override_colors["font_color"] = Color(0.6, 0.9, 0.6, 1)
-	state_label.theme_override_font_sizes["font_size"] = 12
+	state_label.add_theme_color_override("font_color", Color(0.6, 0.9, 0.6, 1))
+	state_label.add_theme_font_size_override("font_size", 12)
 	vbox.add_child(state_label)
 
+	# Add hover detection for tooltip
+	panel.mouse_entered.connect(func(): _on_dragon_entry_hover(dragon, panel))
+	panel.mouse_exited.connect(func(): _on_dragon_entry_unhover())
+
 	return panel
+
+func _on_dragon_entry_hover(dragon: Dragon, panel: Control):
+	if dragon_tooltip:
+		var global_pos = panel.global_position
+		dragon_tooltip.show_for_dragon(dragon, global_pos)
+
+func _on_dragon_entry_unhover():
+	if dragon_tooltip:
+		dragon_tooltip.hide_tooltip()
 
 func _get_state_text(state: Dragon.DragonState) -> String:
 	match state:
@@ -296,19 +318,19 @@ func _get_state_text(state: Dragon.DragonState) -> String:
 func _update_defense_display():
 	# TODO: Connect to DefenseManager when implemented
 	wave_label.text = "Wave: 1"
-	timer_label.text = "Next wave in: 5:00"
+	timer_label.text = "Next: 5:00"
 	defenders_label.text = "Defenders: 0/3"
 
 func _update_exploration_display():
 	# TODO: Connect to ExplorationManager when implemented
-	active_missions_label.text = "Active missions: 0"
+	active_missions_label.text = "Active: 0"
 
 func _update_collection_display():
 	if factory:
 		var progress = factory.get_collection_progress()
-		collection_progress.text = "Dragons: %d/%d" % [progress["discovered"], progress["total"]]
+		collection_progress.text = "%d/%d" % [progress["discovered"], progress["total"]]
 	else:
-		collection_progress.text = "Dragons: 0/125"
+		collection_progress.text = "0/125"
 
 # === SIGNAL HANDLERS ===
 
@@ -326,6 +348,10 @@ func _on_dragon_created(dragon: Dragon):
 func _on_dragon_named(dragon: Dragon, name: String):
 	print("[FactoryManager] Dragon named: %s" % name)
 	_update_dragons_list()
+
+func _on_view_inventory_pressed():
+	if inventory_panel:
+		inventory_panel.open()
 
 # === PUBLIC API ===
 

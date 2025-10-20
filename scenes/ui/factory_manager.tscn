@@ -1,6 +1,9 @@
-[gd_scene load_steps=2 format=3 uid="uid://c8x2k4j5m9n3p"]
+[gd_scene load_steps=5 format=3 uid="uid://c8x2k4j5m9n3p"]
 
 [ext_resource type="Script" path="res://scripts/ui/factory_manager.gd" id="1"]
+[ext_resource type="PackedScene" uid="uid://d7h8k9l0m1n2o" path="res://scenes/ui/inventory_panel.tscn" id="2"]
+[ext_resource type="PackedScene" uid="uid://b3c4d5e6f7g8h" path="res://scenes/ui/part_selector.tscn" id="3"]
+[ext_resource type="PackedScene" uid="uid://h8i9j0k1l2m3n" path="res://scenes/ui/dragon_tooltip.tscn" id="4"]
 
 [node name="FactoryManager" type="Control"]
 layout_mode = 3
@@ -27,21 +30,21 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-theme_override_constants/margin_left = 20
-theme_override_constants/margin_top = 20
-theme_override_constants/margin_right = 20
-theme_override_constants/margin_bottom = 20
+theme_override_constants/margin_left = 15
+theme_override_constants/margin_top = 15
+theme_override_constants/margin_right = 15
+theme_override_constants/margin_bottom = 15
 
 [node name="MainVBox" type="VBoxContainer" parent="MarginContainer"]
 layout_mode = 2
-theme_override_constants/separation = 15
+theme_override_constants/separation = 10
 
 [node name="TopBar" type="HBoxContainer" parent="MarginContainer/MainVBox"]
 layout_mode = 2
-theme_override_constants/separation = 30
+theme_override_constants/separation = 10
 
 [node name="GoldDisplay" type="PanelContainer" parent="MarginContainer/MainVBox/TopBar"]
-custom_minimum_size = Vector2(200, 60)
+custom_minimum_size = Vector2(160, 50)
 layout_mode = 2
 
 [node name="HBox" type="HBoxContainer" parent="MarginContainer/MainVBox/TopBar/GoldDisplay"]
@@ -49,14 +52,14 @@ layout_mode = 2
 theme_override_constants/separation = 10
 
 [node name="GoldIcon" type="ColorRect" parent="MarginContainer/MainVBox/TopBar/GoldDisplay/HBox"]
-custom_minimum_size = Vector2(40, 40)
+custom_minimum_size = Vector2(35, 35)
 layout_mode = 2
 color = Color(1, 0.843, 0, 1)
 
 [node name="GoldLabel" type="Label" parent="MarginContainer/MainVBox/TopBar/GoldDisplay/HBox"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.8, 1, 0.8, 1)
-theme_override_font_sizes/font_size = 32
+theme_override_font_sizes/font_size = 24
 text = "0"
 
 [node name="PartsDisplay" type="PanelContainer" parent="MarginContainer/MainVBox/TopBar"]
@@ -142,23 +145,29 @@ theme_override_colors/font_color = Color(0.8, 1, 0.8, 1)
 text = "0"
 horizontal_alignment = 1
 
+[node name="ViewInventoryButton" type="Button" parent="MarginContainer/MainVBox/TopBar"]
+custom_minimum_size = Vector2(120, 50)
+layout_mode = 2
+theme_override_font_sizes/font_size = 14
+text = "VIEW VAULT"
+
 [node name="MainContent" type="HBoxContainer" parent="MarginContainer/MainVBox"]
 layout_mode = 2
 size_flags_vertical = 3
-theme_override_constants/separation = 15
+theme_override_constants/separation = 10
 
 [node name="LeftPanel" type="PanelContainer" parent="MarginContainer/MainVBox/MainContent"]
-custom_minimum_size = Vector2(220, 0)
+custom_minimum_size = Vector2(180, 0)
 layout_mode = 2
 
 [node name="ScientistsVBox" type="VBoxContainer" parent="MarginContainer/MainVBox/MainContent/LeftPanel"]
 layout_mode = 2
-theme_override_constants/separation = 10
+theme_override_constants/separation = 8
 
 [node name="Title" type="Label" parent="MarginContainer/MainVBox/MainContent/LeftPanel/ScientistsVBox"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.5, 1, 0.5, 1)
-theme_override_font_sizes/font_size = 24
+theme_override_font_sizes/font_size = 20
 text = "SCIENTISTS"
 horizontal_alignment = 1
 
@@ -170,7 +179,7 @@ size_flags_vertical = 3
 layout_mode = 2
 
 [node name="ScientistIcon" type="ColorRect" parent="MarginContainer/MainVBox/MainContent/LeftPanel/ScientistsVBox/BreederPanel/VBox"]
-custom_minimum_size = Vector2(80, 80)
+custom_minimum_size = Vector2(60, 60)
 layout_mode = 2
 size_flags_horizontal = 4
 color = Color(0.3, 0.5, 0.3, 1)
@@ -178,14 +187,14 @@ color = Color(0.3, 0.5, 0.3, 1)
 [node name="NameLabel" type="Label" parent="MarginContainer/MainVBox/MainContent/LeftPanel/ScientistsVBox/BreederPanel/VBox"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.5, 1, 0.5, 1)
-theme_override_font_sizes/font_size = 18
+theme_override_font_sizes/font_size = 16
 text = "BREEDER"
 horizontal_alignment = 1
 
 [node name="StatusLabel" type="Label" parent="MarginContainer/MainVBox/MainContent/LeftPanel/ScientistsVBox/BreederPanel/VBox"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.7, 0.7, 0.7, 1)
-theme_override_font_sizes/font_size = 12
+theme_override_font_sizes/font_size = 11
 text = "Not hired"
 horizontal_alignment = 1
 
@@ -197,7 +206,7 @@ size_flags_vertical = 3
 layout_mode = 2
 
 [node name="ScientistIcon" type="ColorRect" parent="MarginContainer/MainVBox/MainContent/LeftPanel/ScientistsVBox/TrainerPanel/VBox"]
-custom_minimum_size = Vector2(80, 80)
+custom_minimum_size = Vector2(60, 60)
 layout_mode = 2
 size_flags_horizontal = 4
 color = Color(0.3, 0.5, 0.3, 1)
@@ -205,14 +214,14 @@ color = Color(0.3, 0.5, 0.3, 1)
 [node name="NameLabel" type="Label" parent="MarginContainer/MainVBox/MainContent/LeftPanel/ScientistsVBox/TrainerPanel/VBox"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.5, 1, 0.5, 1)
-theme_override_font_sizes/font_size = 18
+theme_override_font_sizes/font_size = 16
 text = "TRAINER"
 horizontal_alignment = 1
 
 [node name="StatusLabel" type="Label" parent="MarginContainer/MainVBox/MainContent/LeftPanel/ScientistsVBox/TrainerPanel/VBox"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.7, 0.7, 0.7, 1)
-theme_override_font_sizes/font_size = 12
+theme_override_font_sizes/font_size = 11
 text = "Not hired"
 horizontal_alignment = 1
 
@@ -224,7 +233,7 @@ size_flags_vertical = 3
 layout_mode = 2
 
 [node name="ScientistIcon" type="ColorRect" parent="MarginContainer/MainVBox/MainContent/LeftPanel/ScientistsVBox/CaretakerPanel/VBox"]
-custom_minimum_size = Vector2(80, 80)
+custom_minimum_size = Vector2(60, 60)
 layout_mode = 2
 size_flags_horizontal = 4
 color = Color(0.3, 0.5, 0.3, 1)
@@ -232,14 +241,14 @@ color = Color(0.3, 0.5, 0.3, 1)
 [node name="NameLabel" type="Label" parent="MarginContainer/MainVBox/MainContent/LeftPanel/ScientistsVBox/CaretakerPanel/VBox"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.5, 1, 0.5, 1)
-theme_override_font_sizes/font_size = 18
+theme_override_font_sizes/font_size = 16
 text = "CARETAKER"
 horizontal_alignment = 1
 
 [node name="StatusLabel" type="Label" parent="MarginContainer/MainVBox/MainContent/LeftPanel/ScientistsVBox/CaretakerPanel/VBox"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.7, 0.7, 0.7, 1)
-theme_override_font_sizes/font_size = 12
+theme_override_font_sizes/font_size = 11
 text = "Not hired"
 horizontal_alignment = 1
 
@@ -249,12 +258,12 @@ size_flags_horizontal = 3
 
 [node name="CreationVBox" type="VBoxContainer" parent="MarginContainer/MainVBox/MainContent/CenterPanel"]
 layout_mode = 2
-theme_override_constants/separation = 20
+theme_override_constants/separation = 12
 
 [node name="Title" type="Label" parent="MarginContainer/MainVBox/MainContent/CenterPanel/CreationVBox"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.5, 1, 0.5, 1)
-theme_override_font_sizes/font_size = 28
+theme_override_font_sizes/font_size = 22
 text = "DRAGON CREATION"
 horizontal_alignment = 1
 
@@ -267,12 +276,12 @@ layout_mode = 2
 [node name="Label" type="Label" parent="MarginContainer/MainVBox/MainContent/CenterPanel/CreationVBox/HeadSlot/VBox"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.5, 1, 0.5, 1)
-theme_override_font_sizes/font_size = 20
+theme_override_font_sizes/font_size = 16
 text = "Head"
 horizontal_alignment = 1
 
 [node name="SlotRect" type="ColorRect" parent="MarginContainer/MainVBox/MainContent/CenterPanel/CreationVBox/HeadSlot/VBox"]
-custom_minimum_size = Vector2(400, 80)
+custom_minimum_size = Vector2(0, 60)
 layout_mode = 2
 color = Color(0.2, 0.25, 0.2, 1)
 
@@ -301,12 +310,12 @@ layout_mode = 2
 [node name="Label" type="Label" parent="MarginContainer/MainVBox/MainContent/CenterPanel/CreationVBox/BodySlot/VBox"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.5, 1, 0.5, 1)
-theme_override_font_sizes/font_size = 20
+theme_override_font_sizes/font_size = 16
 text = "Body"
 horizontal_alignment = 1
 
 [node name="SlotRect" type="ColorRect" parent="MarginContainer/MainVBox/MainContent/CenterPanel/CreationVBox/BodySlot/VBox"]
-custom_minimum_size = Vector2(400, 80)
+custom_minimum_size = Vector2(0, 60)
 layout_mode = 2
 color = Color(0.2, 0.25, 0.2, 1)
 
@@ -335,12 +344,12 @@ layout_mode = 2
 [node name="Label" type="Label" parent="MarginContainer/MainVBox/MainContent/CenterPanel/CreationVBox/TailSlot/VBox"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.5, 1, 0.5, 1)
-theme_override_font_sizes/font_size = 20
+theme_override_font_sizes/font_size = 16
 text = "Tail"
 horizontal_alignment = 1
 
 [node name="SlotRect" type="ColorRect" parent="MarginContainer/MainVBox/MainContent/CenterPanel/CreationVBox/TailSlot/VBox"]
-custom_minimum_size = Vector2(400, 80)
+custom_minimum_size = Vector2(0, 60)
 layout_mode = 2
 color = Color(0.2, 0.25, 0.2, 1)
 
@@ -361,25 +370,25 @@ theme_override_colors/font_color = Color(0.5, 0.5, 0.5, 1)
 text = "Empty"
 
 [node name="AnimateButton" type="Button" parent="MarginContainer/MainVBox/MainContent/CenterPanel/CreationVBox"]
-custom_minimum_size = Vector2(0, 60)
+custom_minimum_size = Vector2(0, 50)
 layout_mode = 2
 theme_override_colors/font_color = Color(0.2, 0.2, 0.2, 1)
 theme_override_colors/font_hover_color = Color(0.1, 0.1, 0.1, 1)
-theme_override_font_sizes/font_size = 28
+theme_override_font_sizes/font_size = 22
 text = "ANIMATE"
 
 [node name="RightPanel" type="PanelContainer" parent="MarginContainer/MainVBox/MainContent"]
-custom_minimum_size = Vector2(280, 0)
+custom_minimum_size = Vector2(220, 0)
 layout_mode = 2
 
 [node name="DragonsVBox" type="VBoxContainer" parent="MarginContainer/MainVBox/MainContent/RightPanel"]
 layout_mode = 2
-theme_override_constants/separation = 10
+theme_override_constants/separation = 8
 
 [node name="Title" type="Label" parent="MarginContainer/MainVBox/MainContent/RightPanel/DragonsVBox"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.5, 1, 0.5, 1)
-theme_override_font_sizes/font_size = 24
+theme_override_font_sizes/font_size = 20
 text = "DRAGONS"
 horizontal_alignment = 1
 
@@ -393,9 +402,9 @@ size_flags_horizontal = 3
 theme_override_constants/separation = 8
 
 [node name="BottomBar" type="HBoxContainer" parent="MarginContainer/MainVBox"]
-custom_minimum_size = Vector2(0, 120)
+custom_minimum_size = Vector2(0, 100)
 layout_mode = 2
-theme_override_constants/separation = 15
+theme_override_constants/separation = 10
 
 [node name="DefensePanel" type="PanelContainer" parent="MarginContainer/MainVBox/BottomBar"]
 layout_mode = 2
@@ -407,7 +416,7 @@ layout_mode = 2
 [node name="Title" type="Label" parent="MarginContainer/MainVBox/BottomBar/DefensePanel/VBox"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.5, 1, 0.5, 1)
-theme_override_font_sizes/font_size = 20
+theme_override_font_sizes/font_size = 18
 text = "DEFENSE"
 horizontal_alignment = 1
 
@@ -423,19 +432,20 @@ color = Color(1, 0.3, 0.3, 1)
 [node name="WaveLabel" type="Label" parent="MarginContainer/MainVBox/BottomBar/DefensePanel/VBox/HBox"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.8, 1, 0.8, 1)
-theme_override_font_sizes/font_size = 18
+theme_override_font_sizes/font_size = 16
 text = "Wave: 1"
 
 [node name="TimerLabel" type="Label" parent="MarginContainer/MainVBox/BottomBar/DefensePanel/VBox"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.8, 1, 0.8, 1)
-text = "Next wave in: 5:00"
+theme_override_font_sizes/font_size = 14
+text = "Next: 5:00"
 horizontal_alignment = 1
 
 [node name="DefendersLabel" type="Label" parent="MarginContainer/MainVBox/BottomBar/DefensePanel/VBox"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.7, 0.7, 0.7, 1)
-theme_override_font_sizes/font_size = 12
+theme_override_font_sizes/font_size = 11
 text = "Defenders: 0/3"
 horizontal_alignment = 1
 
@@ -449,14 +459,15 @@ layout_mode = 2
 [node name="Title" type="Label" parent="MarginContainer/MainVBox/BottomBar/ExplorationPanel/VBox"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.5, 1, 0.5, 1)
-theme_override_font_sizes/font_size = 20
+theme_override_font_sizes/font_size = 18
 text = "EXPLORATION"
 horizontal_alignment = 1
 
 [node name="ActiveLabel" type="Label" parent="MarginContainer/MainVBox/BottomBar/ExplorationPanel/VBox"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.8, 1, 0.8, 1)
-text = "Active missions: 0"
+theme_override_font_sizes/font_size = 14
+text = "Active: 0"
 horizontal_alignment = 1
 
 [node name="CollectionPanel" type="PanelContainer" parent="MarginContainer/MainVBox/BottomBar"]
@@ -469,16 +480,24 @@ layout_mode = 2
 [node name="Title" type="Label" parent="MarginContainer/MainVBox/BottomBar/CollectionPanel/VBox"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.5, 1, 0.5, 1)
-theme_override_font_sizes/font_size = 20
+theme_override_font_sizes/font_size = 18
 text = "COLLECTION"
 horizontal_alignment = 1
 
 [node name="ProgressLabel" type="Label" parent="MarginContainer/MainVBox/BottomBar/CollectionPanel/VBox"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.8, 1, 0.8, 1)
-text = "Dragons: 0/125"
+theme_override_font_sizes/font_size = 14
+text = "0/125"
 horizontal_alignment = 1
 
 [node name="ViewButton" type="Button" parent="MarginContainer/MainVBox/BottomBar/CollectionPanel/VBox"]
 layout_mode = 2
-text = "View Collection"
+theme_override_font_sizes/font_size = 12
+text = "View"
+
+[node name="InventoryPanel" parent="." instance=ExtResource("2")]
+
+[node name="PartSelector" parent="." instance=ExtResource("3")]
+
+[node name="DragonTooltip" parent="." instance=ExtResource("4")]
