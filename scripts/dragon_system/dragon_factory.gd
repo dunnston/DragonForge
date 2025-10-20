@@ -2,7 +2,8 @@ extends Node
 class_name DragonFactory
 
 signal dragon_created(dragon: Dragon)
-signal dragon_name_generated(dragon: Dragon, name: String)
+signal dragon_name_generated(dragon: Dragon, name: String) 
+signal mutation_discovered(dragon: Dragon)  # Holy Shit Moment!
 
 var active_dragons: Array[Dragon] = []
 var dragon_collection: Dictionary = {}  # combination_key -> bool (discovered)
@@ -13,6 +14,11 @@ func create_dragon(head: DragonPart, body: DragonPart, tail: DragonPart) -> Drag
 		return null
 	
 	var dragon = Dragon.new(head, body, tail)
+	
+	# Check for Chimera Mutation (Holy Shit Moment!)
+	if DragonStateManager.instance:
+		DragonStateManager.instance.attempt_chimera_mutation(dragon)
+	
 	active_dragons.append(dragon)
 	
 	# Track collection
