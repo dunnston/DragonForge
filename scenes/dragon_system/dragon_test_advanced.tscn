@@ -1,5 +1,38 @@
-[gd_scene format=3 uid="uid://c80ndwl4jmxyy"]
+[gd_scene load_steps=2 format=3 uid="uid://c80ndwl4jmxyy"]
+
+[ext_resource type="Script" uid="uid://bat5iwwmq4v16" path="res://scripts/dragon_system/dragon_test_advanced.gd" id="1_ifbvk"]
 
 [node name="Main" type="Control"]
 layout_mode = 3
 anchors_preset = 0
+script = ExtResource("1_ifbvk")
+
+[node name="MainLayout" type="VBoxContainer" parent="."]
+layout_mode = 0
+
+[node name="TitleLabel" type="Label" parent="MainLayout"]
+layout_mode = 2
+
+[node name="Separator1" type="HSeparator" parent="MainLayout"]
+layout_mode = 2
+
+[node name="StatusLabel" type="Label" parent="MainLayout"]
+layout_mode = 2
+
+[node name="Separator2" type="HSeparator" parent="MainLayout"]
+layout_mode = 2
+
+[node name="DebugPanel" type="HBoxContainer" parent="MainLayout"]
+layout_mode = 2
+
+[node name="LevelUpButton" type="Button" parent="MainLayout/DebugPanel"]
+layout_mode = 2
+
+[node name="FeedButton" type="Button" parent="MainLayout/DebugPanel"]
+layout_mode = 2
+
+[node name="MutateButton" type="Button" parent="MainLayout/DebugPanel"]
+layout_mode = 2
+
+[node name="TimeSkipButton" type="Button" parent="MainLayout/DebugPanel"]
+layout_mode = 2
