@@ -80,16 +80,16 @@ func _create_part_box(element: DragonPart.Element, count: int) -> Control:
 	var name_label = Label.new()
 	name_label.text = ELEMENT_NAMES[element]
 	name_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	name_label.theme_override_colors["font_color"] = Color(0.8, 1, 0.8, 1) if available else Color(0.5, 0.5, 0.5, 1)
-	name_label.theme_override_font_sizes["font_size"] = 14
+	name_label.add_theme_color_override("font_color", Color(0.8, 1, 0.8, 1) if available else Color(0.5, 0.5, 0.5, 1))
+	name_label.add_theme_font_size_override("font_size", 14)
 	vbox.add_child(name_label)
 
 	# Count label
 	var count_label = Label.new()
 	count_label.text = "×%d" % count
 	count_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	count_label.theme_override_colors["font_color"] = Color(1, 0.843, 0, 1) if available else Color(0.5, 0.5, 0.5, 1)
-	count_label.theme_override_font_sizes["font_size"] = 12
+	count_label.add_theme_color_override("font_color", Color(1, 0.843, 0, 1) if available else Color(0.5, 0.5, 0.5, 1))
+	count_label.add_theme_font_size_override("font_size", 12)
 	vbox.add_child(count_label)
 
 	# Make clickable if available
