@@ -99,10 +99,10 @@ func _ready():
 	print("[FactoryManager] Factory Manager UI initialized")
 
 func _setup_part_slot_buttons():
-	# Use gui_input on the panels for more reliable click detection
-	head_slot_panel.gui_input.connect(func(event): _on_slot_input(event, "head"))
-	body_slot_panel.gui_input.connect(func(event): _on_slot_input(event, "body"))
-	tail_slot_panel.gui_input.connect(func(event): _on_slot_input(event, "tail"))
+	# Use gui_input on the slot rectangles (the "Empty" areas) for click detection
+	head_slot_rect.gui_input.connect(func(event): _on_slot_input(event, "head"))
+	body_slot_rect.gui_input.connect(func(event): _on_slot_input(event, "body"))
+	tail_slot_rect.gui_input.connect(func(event): _on_slot_input(event, "tail"))
 
 	print("[FactoryManager] Slot buttons set up")
 
