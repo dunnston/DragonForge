@@ -133,8 +133,8 @@ func get_protected_part_count(element: DragonPart.Element) -> int:
 
 func can_build_dragon(head: DragonPart.Element, body: DragonPart.Element, tail: DragonPart.Element) -> bool:
 	return (get_part_count(head) + get_protected_part_count(head)) >= 1 and \
-	       (get_part_count(body) + get_protected_part_count(body)) >= 1 and \
-	       (get_part_count(tail) + get_protected_part_count(tail)) >= 1
+		   (get_part_count(body) + get_protected_part_count(body)) >= 1 and \
+		   (get_part_count(tail) + get_protected_part_count(tail)) >= 1
 
 # === ARTIFACTS (Special Items) ===
 

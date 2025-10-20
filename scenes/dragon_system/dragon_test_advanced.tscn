@@ -1,17 +1,15 @@
-[gd_scene load_steps=4 format=3 uid="uid://c80ndwl4jmxyy"]
+[gd_scene load_steps=3 format=3 uid="uid://c80ndwl4jmxyy"]
 
 [ext_resource type="Script" uid="uid://cjqx7ipdon1qu" path="res://scripts/dragon_system/dragon_test.gd" id="1_vbyfl"]
 [ext_resource type="PackedScene" uid="uid://cqrh4xo6ikm40" path="res://scenes/dragon_system/dragon_display.tscn" id="2_4ovk0"]
-[ext_resource type="Script" uid="uid://ce7defsohudc" path="res://scripts/dragon_system/dragon_display.gd" id="3_pr6mb"]
 
 [node name="Main" type="Node2D"]
 script = ExtResource("1_vbyfl")
 
-[node name="DragonDisplay" type="Node2D" parent="." instance=ExtResource("2_4ovk0")]
+[node name="DragonDisplay" parent="." instance=ExtResource("2_4ovk0")]
 position = Vector2(50, 50)
-script = ExtResource("3_pr6mb")
 
-[node name="HeadSprite" type="ColorRect" parent="DragonDisplay"]
+[node name="HeadSprite2" type="ColorRect" parent="DragonDisplay"]
 anchors_preset = -1
 offset_left = 50.0
 offset_top = 50.0
@@ -19,7 +17,7 @@ offset_right = 130.0
 offset_bottom = 110.0
 color = Color(0, 0, 0, 1)
 
-[node name="BodySprite" type="ColorRect" parent="DragonDisplay"]
+[node name="BodySprite2" type="ColorRect" parent="DragonDisplay"]
 anchors_preset = -1
 offset_left = 50.0
 offset_top = 120.0
@@ -27,7 +25,7 @@ offset_right = 130.0
 offset_bottom = 220.0
 color = Color(0, 0, 0, 1)
 
-[node name="TailSprite" type="ColorRect" parent="DragonDisplay"]
+[node name="TailSprite2" type="ColorRect" parent="DragonDisplay"]
 anchors_preset = -1
 offset_left = 50.0
 offset_top = 230.0
@@ -35,7 +33,7 @@ offset_right = 130.0
 offset_bottom = 270.0
 color = Color(0, 0, 0, 1)
 
-[node name="NameLabel" type="Label" parent="DragonDisplay"]
+[node name="NameLabel2" type="Label" parent="DragonDisplay"]
 anchors_preset = -1
 offset_left = 150.0
 offset_top = 50.0
@@ -44,7 +42,7 @@ offset_bottom = 100.0
 text = "Dragon Name"
 autowrap_mode = 3
 
-[node name="StatsLabel" type="Label" parent="DragonDisplay"]
+[node name="StatsLabel2" type="Label" parent="DragonDisplay"]
 anchors_preset = -1
 offset_left = 150.0
 offset_top = 100.0
