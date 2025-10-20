@@ -1,0 +1,72 @@
+[gd_scene load_steps=4 format=3 uid="uid://7yqjnkii6r6n"]
+
+[ext_resource type="Script" uid="uid://cjqx7ipdon1qu" path="res://scripts/dragon_system/dragon_test.gd" id="1_ybufm"]
+[ext_resource type="PackedScene" uid="uid://cqrh4xo6ikm40" path="res://scenes/dragon_system/dragon_display.tscn" id="2_133uv"]
+[ext_resource type="Script" uid="uid://ce7defsohudc" path="res://scripts/dragon_system/dragon_display.gd" id="3_ogv7v"]
+
+[node name="Main" type="Node2D"]
+script = ExtResource("1_ybufm")
+
+[node name="DragonDisplay" type="Node2D" parent="." instance=ExtResource("2_133uv")]
+position = Vector2(50, 50)
+script = ExtResource("3_ogv7v")
+
+[node name="HeadSprite" type="ColorRect" parent="DragonDisplay"]
+anchors_preset = -1
+offset_left = 50.0
+offset_top = 50.0
+offset_right = 130.0
+offset_bottom = 110.0
+color = Color(0, 0, 0, 1)
+
+[node name="BodySprite" type="ColorRect" parent="DragonDisplay"]
+anchors_preset = -1
+offset_left = 50.0
+offset_top = 120.0
+offset_right = 130.0
+offset_bottom = 220.0
+color = Color(0, 0, 0, 1)
+
+[node name="TailSprite" type="ColorRect" parent="DragonDisplay"]
+anchors_preset = -1
+offset_left = 50.0
+offset_top = 230.0
+offset_right = 130.0
+offset_bottom = 270.0
+color = Color(0, 0, 0, 1)
+
+[node name="NameLabel" type="Label" parent="DragonDisplay"]
+anchors_preset = -1
+offset_left = 150.0
+offset_top = 50.0
+offset_right = 350.0
+offset_bottom = 100.0
+text = "Dragon Name"
+autowrap_mode = 3
+
+[node name="StatsLabel" type="Label" parent="DragonDisplay"]
+anchors_preset = -1
+offset_left = 150.0
+offset_top = 100.0
+offset_right = 450.0
+offset_bottom = 200.0
+text = "ATK: 0 | HP: 0/0 | SPD: 0"
+autowrap_mode = 3
+
+[node name="Instructions" type="Label" parent="."]
+anchors_preset = -1
+offset_left = 50.0
+offset_top = 300.0
+offset_right = 450.0
+offset_bottom = 400.0
+text = "Press SPACE to create a new random dragon!
+Watch the stats and element synergies!"
+autowrap_mode = 3
+
+[node name="CollectionInfo" type="Label" parent="."]
+anchors_preset = -1
+offset_left = 50.0
+offset_top = 400.0
+offset_right = 450.0
+offset_bottom = 450.0
+text = "Collection Progress: 0/125 (0%)"

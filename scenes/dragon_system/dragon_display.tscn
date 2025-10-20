@@ -1,0 +1,48 @@
+[gd_scene load_steps=2 format=3 uid="uid://cqrh4xo6ikm40"]
+
+[ext_resource type="Script" uid="uid://ce7defsohudc" path="res://scripts/dragon_system/dragon_display.gd" id="1_days5"]
+
+[node name="Main" type="Node2D"]
+script = ExtResource("1_days5")
+
+[node name="HeadSprite" type="ColorRect" parent="."]
+anchors_preset = -1
+offset_left = 50.0
+offset_top = 50.0
+offset_right = 130.0
+offset_bottom = 110.0
+color = Color(0, 0, 0, 1)
+
+[node name="BodySprite" type="ColorRect" parent="."]
+anchors_preset = -1
+offset_left = 50.0
+offset_top = 120.0
+offset_right = 130.0
+offset_bottom = 220.0
+color = Color(0, 0, 0, 1)
+
+[node name="TailSprite" type="ColorRect" parent="."]
+anchors_preset = -1
+offset_left = 50.0
+offset_top = 230.0
+offset_right = 130.0
+offset_bottom = 270.0
+color = Color(0, 0, 0, 1)
+
+[node name="NameLabel" type="Label" parent="."]
+anchors_preset = -1
+offset_left = 150.0
+offset_top = 50.0
+offset_right = 350.0
+offset_bottom = 100.0
+text = "Dragon Name"
+autowrap_mode = 3
+
+[node name="StatsLabel" type="Label" parent="."]
+anchors_preset = -1
+offset_left = 150.0
+offset_top = 100.0
+offset_right = 450.0
+offset_bottom = 200.0
+text = "ATK: 0 | HP: 0/0 | SPD: 0"
+autowrap_mode = 3
