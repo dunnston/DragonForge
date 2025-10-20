@@ -66,30 +66,6 @@ signal hunger_changed(dragon: Dragon, hunger_level: float)
 signal health_changed(dragon: Dragon, current_health: int, max_health: int)
 signal death(dragon: Dragon)
 signal mutation_discovered(dragon: Dragon)
-@export var current_health: int = 0
-@export var current_state: DragonState = DragonState.IDLE
-@export var state_start_time: int = 0
-@export var last_fed_time: int = 0
-@export var created_at: int = 0
-@export var is_chimera_mutation: bool = false
-@export var is_dead: bool = false
-
-# Computed Stats (recalculated on load)
-var total_attack: int = 0
-var total_health: int = 0
-var total_speed: int = 0
-
-# Life Systems (computed from timestamps)
-var hunger_level: float = 0.0     # 0.0 = fed, 1.0 = starving
-var fatigue_level: float = 0.0    # 0.0 = rested, 1.0 = exhausted
-
-# Signals for Integration  
-signal state_changed(dragon: Dragon, old_state: DragonState, new_state: DragonState)
-signal level_up(dragon: Dragon, new_level: int)
-signal hunger_changed(dragon: Dragon, hunger_level: float)
-signal health_changed(dragon: Dragon, current_health: int, max_health: int)
-signal death(dragon: Dragon)
-signal mutation_discovered(dragon: Dragon)
 
 func _init(head: DragonPart = null, body: DragonPart = null, tail: DragonPart = null):
 	dragon_id = generate_unique_id()
