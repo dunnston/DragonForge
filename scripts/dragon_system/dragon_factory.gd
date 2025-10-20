@@ -70,9 +70,9 @@ func _generate_fallback_name(dragon: Dragon) -> String:
 		DragonPart.Element.SHADOW: "Umbra"
 	}
 	
-	# Simulate API delay only if we have access to the scene tree
-	if get_tree() != null:
-		await get_tree().create_timer(0.5).timeout
+	# Simulate API delay - use Engine for non-scene-tree dependent delay
+	for i in 30:  # Simple frame-based delay (about 0.5 seconds at 60 FPS)
+		await Engine.get_main_loop().process_frame
 	
 	var prefix = element_names[dragon.head_part.element]
 	var suffix = element_names[dragon.body_part.element].to_lower()

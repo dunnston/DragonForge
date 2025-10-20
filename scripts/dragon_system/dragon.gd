@@ -27,7 +27,7 @@ const EXPLORATION_FATIGUE = {
 const FATIGUE_THRESHOLD: float = 0.8  # Auto-remove at 80%+ fatigue
 
 # State Management
-enum DragonState { IDLE, DEFENDING, EXPLORING, TRAINING, RESTING }
+enum DragonState { IDLE, DEFENDING, EXPLORING, TRAINING, RESTING, DEAD }
 
 # Export Properties (saved with Resource)
 @export var dragon_id: String
@@ -244,6 +244,7 @@ func _die() -> void:
 		return
 
 	is_dead = true
+	current_state = DragonState.DEAD
 	death.emit(self)
 
 # === GETTERS FOR EXTERNAL ACCESS ===

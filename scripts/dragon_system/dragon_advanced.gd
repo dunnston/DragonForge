@@ -16,7 +16,7 @@ const EXP_MULTIPLIER: float = 1.5  # Exponential curve
 const MUTATION_CHANCE: float = 0.01  # 1% chance
 
 # State Management
-enum DragonState { IDLE, DEFENDING, EXPLORING, TRAINING, RESTING }
+enum DragonState { IDLE, DEFENDING, EXPLORING, TRAINING, RESTING, DEAD }
 
 # Export Properties (saved with Resource)
 @export var dragon_id: String

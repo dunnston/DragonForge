@@ -80,3 +80,11 @@ func get_random_part(part_type: DragonPart.PartType) -> DragonPart:
 	if parts.is_empty():
 		return null
 	return parts[randi() % parts.size()]
+
+func get_part_by_element_and_type(element: DragonPart.Element, part_type: DragonPart.PartType) -> DragonPart:
+	"""Find a specific part by element and type"""
+	var parts = get_parts_of_type(part_type)
+	for part in parts:
+		if part.element == element:
+			return part
+	return null
