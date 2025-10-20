@@ -192,7 +192,7 @@ func _check_milestones():
 			milestones_reached.append(milestone_value)
 			var reward_id = MILESTONES[milestone_value]
 			milestone_reached.emit(milestone_value, reward_id)
-			print("[TreasureVault] 🎉 MILESTONE REACHED: %d gold - Unlocked: %s" % [milestone_value, reward_id])
+			print("[TreasureVault] [MILESTONE] REACHED: %d gold - Unlocked: %s" % [milestone_value, reward_id])
 
 func has_reached_milestone(value: int) -> bool:
 	return value in milestones_reached
@@ -241,7 +241,7 @@ func apply_raid_loss(loss_percentage: float = 0.25) -> Dictionary:
 
 	# Emit signals
 	resources_stolen.emit(stolen)
-	print("[TreasureVault] ⚔️ RAID LOSS: Lost %d gold and parts!" % stolen["gold"])
+	print("[TreasureVault] [RAID] LOSS: Lost %d gold and parts!" % stolen["gold"])
 
 	# Show what was protected
 	if protected_gold > 0 or protected_parts.size() > 0:
@@ -250,7 +250,7 @@ func apply_raid_loss(loss_percentage: float = 0.25) -> Dictionary:
 			"parts": protected_parts.duplicate()
 		}
 		resources_protected.emit(protected)
-		print("[TreasureVault] 🛡️ Protected resources safe: %d gold" % protected_gold)
+		print("[TreasureVault] [PROTECTED] Resources safe: %d gold" % protected_gold)
 
 	return stolen
 
@@ -263,7 +263,7 @@ func protect_gold(amount: int) -> bool:
 
 	gold -= amount
 	protected_gold += amount
-	print("[TreasureVault] 🛡️ Protected %d gold" % amount)
+	print("[TreasureVault] [PROTECTED] Secured %d gold" % amount)
 	return true
 
 func protect_part(element: DragonPart.Element, count: int = 1) -> bool:
@@ -275,7 +275,7 @@ func protect_part(element: DragonPart.Element, count: int = 1) -> bool:
 	if not protected_parts.has(element):
 		protected_parts[element] = 0
 	protected_parts[element] += count
-	print("[TreasureVault] 🛡️ Protected %d %s parts" % [count, DragonPart.Element.keys()[element]])
+	print("[TreasureVault] [PROTECTED] Secured %d %s parts" % [count, DragonPart.Element.keys()[element]])
 	return true
 
 func unprotect_gold(amount: int) -> bool:

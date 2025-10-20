@@ -242,6 +242,17 @@ func take_damage(amount: int) -> void:
 func _die() -> void:
 	if is_dead:
 		return
-		
+
 	is_dead = true
 	death.emit(self)
+
+# === GETTERS FOR EXTERNAL ACCESS ===
+
+func get_attack() -> int:
+	return total_attack
+
+func get_health() -> int:
+	return total_health
+
+func get_speed() -> int:
+	return total_speed

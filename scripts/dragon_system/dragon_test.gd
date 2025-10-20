@@ -43,9 +43,9 @@ func _on_dragon_named(dragon: Dragon, name: String):
 func _update_collection_info():
 	var progress = factory.get_collection_progress()
 	collection_info_label.text = "Collection Progress: %d/%d (%.1f%%)" % [
-		progress.discovered,
-		progress.total,
-		progress.percentage
+		progress["discovered"],
+		progress["total"],
+		progress["percentage"]
 	]
 
 func _input(event):

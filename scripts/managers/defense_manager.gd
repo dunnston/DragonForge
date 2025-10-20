@@ -53,7 +53,7 @@ func _update_wave_timer():
 	# Emit warning signals
 	if time_until_next_wave <= 30 and int(time_until_next_wave) % 10 == 0:
 		wave_incoming.emit(time_until_next_wave)
-		print("[DefenseManager] ⚠️ Wave incoming in %.0f seconds!" % time_until_next_wave)
+		print("[DefenseManager] WARNING: Wave incoming in %.0f seconds!" % time_until_next_wave)
 
 	# Start wave
 	if time_until_next_wave <= 0:
@@ -79,7 +79,7 @@ func assign_dragon_to_defense(dragon: Dragon) -> bool:
 
 	defending_dragons.append(dragon)
 	dragon.current_state = Dragon.DragonState.DEFENDING
-	print("[DefenseManager] %s assigned to defense (Total: %d)" % [dragon.name, defending_dragons.size()])
+	print("[DefenseManager] %s assigned to defense (Total: %d)" % [dragon.dragon_name, defending_dragons.size()])
 	return true
 
 func remove_dragon_from_defense(dragon: Dragon) -> bool:
@@ -88,7 +88,7 @@ func remove_dragon_from_defense(dragon: Dragon) -> bool:
 
 	defending_dragons.erase(dragon)
 	dragon.current_state = Dragon.DragonState.IDLE
-	print("[DefenseManager] %s removed from defense" % dragon.name)
+	print("[DefenseManager] %s removed from defense" % dragon.dragon_name)
 	return true
 
 func get_defending_dragons() -> Array[Dragon]:
@@ -102,12 +102,12 @@ func _start_wave():
 	# Generate enemies based on wave number and vault value
 	var enemies = _generate_wave(wave_number)
 
-	print("[DefenseManager] ⚔️ WAVE %d: %d enemies attacking!" % [wave_number, enemies.size()])
+	print("[DefenseManager] COMBAT: WAVE %d - %d enemies attacking!" % [wave_number, enemies.size()])
 	wave_started.emit(wave_number, enemies)
 
 	# Check if we have defenders
 	if defending_dragons.is_empty():
-		print("[DefenseManager] ❌ NO DEFENDERS! Auto-loss!")
+		print("[DefenseManager] ERROR: NO DEFENDERS! Auto-loss!")
 		_apply_auto_loss()
 		_complete_wave(false, {})
 		return
@@ -147,7 +147,7 @@ func _generate_wave(wave_num: int) -> Array:
 	if wave_num % 10 == 0:
 		var boss = _create_boss(wave_num, difficulty_multiplier)
 		enemies.append(boss)
-		print("[DefenseManager] 👑 BOSS WAVE!")
+		print("[DefenseManager] [BOSS] BOSS WAVE!")
 
 	return enemies
 
@@ -192,7 +192,7 @@ func _resolve_combat(dragons: Array[Dragon], enemies: Array) -> bool:
 		dragon_power += dragon_total
 
 		print("[DefenseManager] %s power: %.1f (base %.1f, hunger %.0f%%, fatigue %.0f%%)" %
-			[dragon.name, dragon_total, base_power, (1.0 - hunger_penalty) * 100, (1.0 - fatigue_penalty) * 100])
+			[dragon.dragon_name, dragon_total, base_power, (1.0 - hunger_penalty) * 100, (1.0 - fatigue_penalty) * 100])
 
 	# Calculate total enemy power
 	var enemy_power: float = 0.0
@@ -218,17 +218,16 @@ func _resolve_combat(dragons: Array[Dragon], enemies: Array) -> bool:
 		damage_per_dragon = max(10, damage_per_dragon)  # Minimum 10 damage
 
 		for dragon in dragons:
-			dragon.current_health = max(0, dragon.current_health - damage_per_dragon)
+			dragon.take_damage(int(damage_per_dragon))  # Use Dragon's take_damage method
 			dragon.fatigue_level = min(1.0, dragon.fatigue_level + 0.15)  # Losing is exhausting
 			dragon_damaged.emit(dragon, int(damage_per_dragon))
 
 			print("[DefenseManager] %s took %.0f damage (HP: %.0f/%.0f)" %
-				[dragon.name, damage_per_dragon, dragon.current_health, dragon.get_health()])
+				[dragon.dragon_name, damage_per_dragon, dragon.current_health, dragon.get_health()])
 
-			# Check for death
-			if dragon.current_health <= 0:
-				dragon.death.emit(dragon)
-				print("[DefenseManager] 💀 %s has fallen!" % dragon.name)
+			# Death handled by Dragon.take_damage()
+			if dragon.is_dead:
+				print("[DefenseManager] DEAD: %s has fallen!" % dragon.dragon_name)
 
 		return false
 
@@ -270,7 +269,7 @@ func _apply_raid_loss():
 	# Apply loss to vault
 	var stolen = TreasureVault.instance.apply_raid_loss(loss_percentage)
 
-	print("[DefenseManager] 💰 Raiders stole %d gold and parts!" % stolen.get("gold", 0))
+	print("[DefenseManager] [STOLEN] Raiders stole %d gold and parts!" % stolen.get("gold", 0))
 
 func _apply_auto_loss():
 	"""When player has no defenders, lose a fixed amount"""
@@ -279,7 +278,7 @@ func _apply_auto_loss():
 
 	# Harsher penalty for no defenders (50% loss)
 	var stolen = TreasureVault.instance.apply_raid_loss(0.50)
-	print("[DefenseManager] 💰 UNDEFENDED! Raiders stole %d gold and parts!" % stolen.get("gold", 0))
+	print("[DefenseManager] [STOLEN] UNDEFENDED! Raiders stole %d gold and parts!" % stolen.get("gold", 0))
 
 func _complete_wave(victory: bool, rewards: Dictionary):
 	is_in_combat = false

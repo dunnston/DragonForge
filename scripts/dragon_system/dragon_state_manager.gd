@@ -158,7 +158,7 @@ func _check_death_conditions(dragon: Dragon):
 	if dragon.current_health <= 0 and dragon.hunger_level >= 1.0 and not dragon.is_dead:
 		dragon.is_dead = true
 		dragon_death.emit(dragon)
-		print("💀 %s has died from starvation!" % dragon.dragon_name)
+		print("[DEAD] %s has died from starvation!" % dragon.dragon_name)
 
 # === EXPERIENCE & LEVELING SYSTEM ===
 
@@ -177,7 +177,7 @@ func _check_level_up(dragon: Dragon):
 		if dragon.experience >= exp_needed:
 			dragon.level += 1
 			dragon.calculate_stats()  # Recalculate with new level
-			print("🎉 %s leveled up to %d!" % [dragon.dragon_name, dragon.level])
+			print("[LEVEL UP] %s reached level %d!" % [dragon.dragon_name, dragon.level])
 			dragon_level_up.emit(dragon, dragon.level)
 		else:
 			break

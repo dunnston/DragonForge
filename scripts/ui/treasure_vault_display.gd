@@ -51,7 +51,7 @@ func _update_display():
 	# Update gold display
 	gold_label.text = "Gold: %d" % vault.get_total_gold()
 	if vault.protected_gold > 0:
-		gold_label.text += " (🛡️%d protected)" % vault.protected_gold
+		gold_label.text += " ([PROTECTED] %d)" % vault.protected_gold
 
 	# Update tier display
 	tier_label.text = "Vault Tier: %d" % vault.vault_tier
@@ -100,7 +100,7 @@ func _update_parts_display():
 			var element_name = DragonPart.Element.keys()[element]
 			label.text = "%s Parts: %d" % [element_name, count]
 			if protected > 0:
-				label.text += " (🛡️%d)" % protected
+				label.text += " ([PROTECTED] %d)" % protected
 			parts_container.add_child(label)
 
 # === SIGNAL HANDLERS ===
@@ -161,7 +161,7 @@ func _play_raid_effect():
 
 func _show_milestone_popup(value: int, reward_id: String):
 	# TODO: Show fancy popup
-	print("[VaultDisplay] 🎉 MILESTONE: %d gold - Unlocked: %s" % [value, reward_id])
+	print("[VaultDisplay] [MILESTONE] Unlocked at %d gold: %s" % [value, reward_id])
 
 # === MANUAL UPDATE (for debugging) ===
 
