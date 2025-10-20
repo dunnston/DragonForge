@@ -47,6 +47,7 @@ var factory: DragonFactory
 @onready var inventory_panel: Control = $InventoryPanel
 @onready var part_selector: Control = $PartSelector
 @onready var dragon_tooltip: Control = $DragonTooltip
+@onready var dragon_details_modal: Control = $DragonDetailsModal
 
 # === DRAGON CREATION STATE ===
 var selected_head: DragonPart.Element = -1
@@ -79,6 +80,10 @@ func _ready():
 	# Connect part selector signal
 	if part_selector:
 		part_selector.part_selected.connect(_on_part_selected)
+
+	# Connect dragon details modal signal
+	if dragon_details_modal:
+		dragon_details_modal.dragon_updated.connect(_on_dragon_updated_from_modal)
 
 	# Connect to TreasureVault signals if available
 	if TreasureVault:
@@ -290,20 +295,20 @@ func _create_dragon_entry(dragon: Dragon) -> PanelContainer:
 	state_label.add_theme_font_size_override("font_size", 12)
 	vbox.add_child(state_label)
 
-	# Add hover detection for tooltip
-	panel.mouse_entered.connect(func(): _on_dragon_entry_hover(dragon, panel))
-	panel.mouse_exited.connect(func(): _on_dragon_entry_unhover())
+	# Add click detection to open modal
+	panel.gui_input.connect(func(event): _on_dragon_entry_input(event, dragon))
 
 	return panel
 
-func _on_dragon_entry_hover(dragon: Dragon, panel: Control):
-	if dragon_tooltip:
-		var global_pos = panel.global_position
-		dragon_tooltip.show_for_dragon(dragon, global_pos)
+func _on_dragon_entry_input(event: InputEvent, dragon: Dragon):
+	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
+		print("[FactoryManager] Clicked dragon: %s" % dragon.dragon_name)
+		if dragon_details_modal:
+			dragon_details_modal.open_for_dragon(dragon)
 
-func _on_dragon_entry_unhover():
-	if dragon_tooltip:
-		dragon_tooltip.hide_tooltip()
+func _on_dragon_updated_from_modal():
+	# Refresh the dragon list when changes are made in the modal
+	_update_dragons_list()
 
 func _get_state_text(state: Dragon.DragonState) -> String:
 	match state:

@@ -1,9 +1,10 @@
-[gd_scene load_steps=5 format=3 uid="uid://c8x2k4j5m9n3p"]
+[gd_scene load_steps=6 format=3 uid="uid://c8x2k4j5m9n3p"]
 
 [ext_resource type="Script" path="res://scripts/ui/factory_manager.gd" id="1"]
 [ext_resource type="PackedScene" uid="uid://d7h8k9l0m1n2o" path="res://scenes/ui/inventory_panel.tscn" id="2"]
 [ext_resource type="PackedScene" uid="uid://b3c4d5e6f7g8h" path="res://scenes/ui/part_selector.tscn" id="3"]
 [ext_resource type="PackedScene" uid="uid://h8i9j0k1l2m3n" path="res://scenes/ui/dragon_tooltip.tscn" id="4"]
+[ext_resource type="PackedScene" uid="uid://c9d0e1f2g3h4i" path="res://scenes/ui/dragon_details_modal.tscn" id="5"]
 
 [node name="FactoryManager" type="Control"]
 layout_mode = 3
@@ -501,3 +502,5 @@ text = "View"
 [node name="PartSelector" parent="." instance=ExtResource("3")]
 
 [node name="DragonTooltip" parent="." instance=ExtResource("4")]
+
+[node name="DragonDetailsModal" parent="." instance=ExtResource("5")]

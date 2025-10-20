@@ -50,9 +50,9 @@ func _ready():
 		queue_free()
 		return
 
-	# Initialize starting parts (enough to build 1 dragon)
+	# Initialize starting parts (enough to build multiple dragons)
 	for element in DragonPart.Element.values():
-		dragon_parts[element] = 1
+		dragon_parts[element] = 3
 
 	_update_vault_value()
 
