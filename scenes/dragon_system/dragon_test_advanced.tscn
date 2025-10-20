@@ -1,38 +1,442 @@
-[gd_scene load_steps=2 format=3 uid="uid://c80ndwl4jmxyy"]
+[gd_scene load_steps=4 format=3 uid="uid://c80ndwl4jmxyy"]
 
-[ext_resource type="Script" uid="uid://bat5iwwmq4v16" path="res://scripts/dragon_system/dragon_test_advanced.gd" id="1_ifbvk"]
+[ext_resource type="Script" uid="uid://cjqx7ipdon1qu" path="res://scripts/dragon_system/dragon_test.gd" id="1_vbyfl"]
+[ext_resource type="PackedScene" uid="uid://cqrh4xo6ikm40" path="res://scenes/dragon_system/dragon_display.tscn" id="2_4ovk0"]
+[ext_resource type="Script" uid="uid://ce7defsohudc" path="res://scripts/dragon_system/dragon_display.gd" id="3_pr6mb"]
 
-[node name="Main" type="Control"]
-layout_mode = 3
-anchors_preset = 0
-script = ExtResource("1_ifbvk")
+[node name="Main" type="Node2D"]
+script = ExtResource("1_vbyfl")
+
+[node name="DragonDisplay" type="Node2D" parent="." instance=ExtResource("2_4ovk0")]
+position = Vector2(50, 50)
+script = ExtResource("3_pr6mb")
+
+[node name="HeadSprite" type="ColorRect" parent="DragonDisplay"]
+anchors_preset = -1
+offset_left = 50.0
+offset_top = 50.0
+offset_right = 130.0
+offset_bottom = 110.0
+color = Color(0, 0, 0, 1)
+
+[node name="BodySprite" type="ColorRect" parent="DragonDisplay"]
+anchors_preset = -1
+offset_left = 50.0
+offset_top = 120.0
+offset_right = 130.0
+offset_bottom = 220.0
+color = Color(0, 0, 0, 1)
+
+[node name="TailSprite" type="ColorRect" parent="DragonDisplay"]
+anchors_preset = -1
+offset_left = 50.0
+offset_top = 230.0
+offset_right = 130.0
+offset_bottom = 270.0
+color = Color(0, 0, 0, 1)
+
+[node name="NameLabel" type="Label" parent="DragonDisplay"]
+anchors_preset = -1
+offset_left = 150.0
+offset_top = 50.0
+offset_right = 350.0
+offset_bottom = 100.0
+text = "Dragon Name"
+autowrap_mode = 3
+
+[node name="StatsLabel" type="Label" parent="DragonDisplay"]
+anchors_preset = -1
+offset_left = 150.0
+offset_top = 100.0
+offset_right = 450.0
+offset_bottom = 200.0
+text = "ATK: 0 | HP: 0/0 | SPD: 0"
+autowrap_mode = 3
+
+[node name="Instructions" type="Label" parent="."]
+anchors_preset = -1
+offset_left = 50.0
+offset_top = 300.0
+offset_right = 450.0
+offset_bottom = 400.0
+text = "Press SPACE to create a new random dragon!
+Watch the stats and element synergies!"
+autowrap_mode = 3
+
+[node name="CollectionInfo" type="Label" parent="."]
+anchors_preset = -1
+offset_left = 50.0
+offset_top = 400.0
+offset_right = 450.0
+offset_bottom = 450.0
+text = "Collection Progress: 0/125 (0%)"
 
 [node name="MainLayout" type="VBoxContainer" parent="."]
-layout_mode = 0
 
 [node name="TitleLabel" type="Label" parent="MainLayout"]
 layout_mode = 2
 
-[node name="Separator1" type="HSeparator" parent="MainLayout"]
+[node name="HSeparator" type="HSeparator" parent="MainLayout"]
 layout_mode = 2
 
 [node name="StatusLabel" type="Label" parent="MainLayout"]
 layout_mode = 2
 
-[node name="Separator2" type="HSeparator" parent="MainLayout"]
+[node name="HSeparator2" type="HSeparator" parent="MainLayout"]
 layout_mode = 2
 
 [node name="DebugPanel" type="HBoxContainer" parent="MainLayout"]
 layout_mode = 2
 
-[node name="LevelUpButton" type="Button" parent="MainLayout/DebugPanel"]
+[node name="LevelUpBtn" type="Button" parent="MainLayout/DebugPanel"]
 layout_mode = 2
 
-[node name="FeedButton" type="Button" parent="MainLayout/DebugPanel"]
+[node name="FeedBtn" type="Button" parent="MainLayout/DebugPanel"]
 layout_mode = 2
 
-[node name="MutateButton" type="Button" parent="MainLayout/DebugPanel"]
+[node name="MutateBtn" type="Button" parent="MainLayout/DebugPanel"]
 layout_mode = 2
 
-[node name="TimeSkipButton" type="Button" parent="MainLayout/DebugPanel"]
+[node name="TimeSkipBtn" type="Button" parent="MainLayout/DebugPanel"]
 layout_mode = 2
+
+[node name="@Button@33587" type="Button" parent="MainLayout/DebugPanel"]
+layout_mode = 2
+
+[node name="@Button@33588" type="Button" parent="MainLayout/DebugPanel"]
+layout_mode = 2
+
+[node name="@Button@33589" type="Button" parent="MainLayout/DebugPanel"]
+layout_mode = 2
+
+[node name="@Button@33590" type="Button" parent="MainLayout/DebugPanel"]
+layout_mode = 2
+
+[node name="@Label@33720" type="Label" parent="MainLayout"]
+layout_mode = 2
+
+[node name="Separator" type="HSeparator" parent="MainLayout"]
+layout_mode = 2
+
+[node name="@HBoxContainer@33721" type="HBoxContainer" parent="MainLayout"]
+layout_mode = 2
+
+[node name="DragonDisplay" type="Control" parent="MainLayout"]
+layout_mode = 2
+
+[node name="@Label@35159" type="Label" parent="MainLayout"]
+layout_mode = 2
+
+[node name="Separator1" type="HSeparator" parent="MainLayout"]
+layout_mode = 2
+
+[node name="@Label@35160" type="Label" parent="MainLayout"]
+layout_mode = 2
+
+[node name="Separator2" type="HSeparator" parent="MainLayout"]
+layout_mode = 2
+
+[node name="@HBoxContainer@35161" type="HBoxContainer" parent="MainLayout"]
+layout_mode = 2
+
+[node name="@Label@35232" type="Label" parent="MainLayout"]
+layout_mode = 2
+
+[node name="@HSeparator@35233" type="HSeparator" parent="MainLayout"]
+layout_mode = 2
+
+[node name="ContentLayout" type="HBoxContainer" parent="MainLayout"]
+layout_mode = 2
+
+[node name="LeftPanel" type="VBoxContainer" parent="MainLayout/ContentLayout"]
+layout_mode = 2
+
+[node name="StatusLabel" type="Label" parent="MainLayout/ContentLayout/LeftPanel"]
+layout_mode = 2
+
+[node name="TestLabel" type="Label" parent="MainLayout/ContentLayout/LeftPanel"]
+layout_mode = 2
+
+[node name="RightPanel" type="VBoxContainer" parent="MainLayout/ContentLayout"]
+layout_mode = 2
+
+[node name="Separator2" type="HSeparator" parent="MainLayout/ContentLayout/RightPanel"]
+layout_mode = 2
+
+[node name="DebugPanel" type="VBoxContainer" parent="MainLayout/ContentLayout/RightPanel"]
+layout_mode = 2
+
+[node name="@Label@35260" type="Label" parent="MainLayout"]
+layout_mode = 2
+
+[node name="@RichTextLabel@35262" type="RichTextLabel" parent="MainLayout"]
+layout_mode = 2
+
+[node name="@HBoxContainer@35263" type="HBoxContainer" parent="MainLayout"]
+layout_mode = 2
+
+[node name="MainContainer" type="VBoxContainer" parent="."]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+
+[node name="TitleLabel" type="Label" parent="MainContainer"]
+layout_mode = 2
+text = "🐉 DRAGON PHASE 2 ADVANCED SYSTEM TEST 🐉"
+
+[node name="StatusLabel" type="RichTextLabel" parent="MainContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Initializing dragon systems..."
+
+[node name="Separator" type="HSeparator" parent="MainContainer"]
+layout_mode = 2
+
+[node name="DebugPanel" type="HBoxContainer" parent="MainContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+
+[node name="LevelUpBtn" type="Button" parent="MainContainer/DebugPanel"]
+layout_mode = 2
+
+[node name="FeedBtn" type="Button" parent="MainContainer/DebugPanel"]
+layout_mode = 2
+
+[node name="MutateBtn" type="Button" parent="MainContainer/DebugPanel"]
+layout_mode = 2
+
+[node name="TimeSkipBtn" type="Button" parent="MainContainer/DebugPanel"]
+layout_mode = 2
+
+[node name="LevelUpButton" type="Button" parent="MainContainer/DebugPanel"]
+layout_mode = 2
+text = "🎉 Level Up"
+
+[node name="FeedButton" type="Button" parent="MainContainer/DebugPanel"]
+layout_mode = 2
+text = "🍖 Feed Dragon"
+
+[node name="MutateButton" type="Button" parent="MainContainer/DebugPanel"]
+layout_mode = 2
+text = "⚡ Force Mutation"
+
+[node name="TimeSkipButton" type="Button" parent="MainContainer/DebugPanel"]
+layout_mode = 2
+text = "⏰ Skip Time"
+
+[node name="@Label@33585" type="Label" parent="MainContainer"]
+layout_mode = 2
+
+[node name="Separator1" type="HSeparator" parent="MainContainer"]
+layout_mode = 2
+
+[node name="@HBoxContainer@33586" type="HBoxContainer" parent="MainContainer"]
+layout_mode = 2
+
+[node name="@Label@33790" type="Label" parent="MainContainer"]
+layout_mode = 2
+
+[node name="HSeparator" type="HSeparator" parent="MainContainer"]
+layout_mode = 2
+
+[node name="ContentContainer" type="HBoxContainer" parent="MainContainer"]
+layout_mode = 2
+
+[node name="StatusPanel" type="VBoxContainer" parent="MainContainer/ContentContainer"]
+layout_mode = 2
+
+[node name="StatusLabel" type="Label" parent="MainContainer/ContentContainer/StatusPanel"]
+layout_mode = 2
+
+[node name="DebugPanel" type="VBoxContainer" parent="MainContainer/ContentContainer"]
+layout_mode = 2
+
+[node name="DragonDisplay" type="Control" parent="MainContainer/ContentContainer"]
+layout_mode = 2
+
+[node name="@Label@35312" type="Label" parent="MainContainer"]
+layout_mode = 2
+
+[node name="@Label@35313" type="Label" parent="MainContainer"]
+layout_mode = 2
+
+[node name="@HSeparator@35314" type="HSeparator" parent="MainContainer"]
+layout_mode = 2
+
+[node name="@HBoxContainer@35315" type="HBoxContainer" parent="MainContainer"]
+layout_mode = 2
+
+[node name="@VBoxContainer@33540" type="VBoxContainer" parent="."]
+
+[node name="@VBoxContainer@33562" type="VBoxContainer" parent="."]
+
+[node name="@VBoxContainer@33584" type="VBoxContainer" parent="."]
+
+[node name="UI" type="VBoxContainer" parent="."]
+
+[node name="@VBoxContainer@33633" type="VBoxContainer" parent="."]
+
+[node name="StatusLabel" type="Label" parent="."]
+
+[node name="DebugPanel" type="VBoxContainer" parent="."]
+
+[node name="LevelUpButton" type="Button" parent="DebugPanel"]
+layout_mode = 2
+
+[node name="FeedButton" type="Button" parent="DebugPanel"]
+layout_mode = 2
+
+[node name="MutateButton" type="Button" parent="DebugPanel"]
+layout_mode = 2
+
+[node name="TimeSkipButton" type="Button" parent="DebugPanel"]
+layout_mode = 2
+
+[node name="LevelUpBtn" type="Button" parent="DebugPanel"]
+layout_mode = 2
+
+[node name="FeedBtn" type="Button" parent="DebugPanel"]
+layout_mode = 2
+
+[node name="MutateBtn" type="Button" parent="DebugPanel"]
+layout_mode = 2
+
+[node name="TimeSkipBtn" type="Button" parent="DebugPanel"]
+layout_mode = 2
+
+[node name="DebugTitle" type="Label" parent="DebugPanel"]
+layout_mode = 2
+
+[node name="@Button@33791" type="Button" parent="DebugPanel"]
+layout_mode = 2
+
+[node name="@Button@33792" type="Button" parent="DebugPanel"]
+layout_mode = 2
+
+[node name="@Button@33793" type="Button" parent="DebugPanel"]
+layout_mode = 2
+
+[node name="@Button@33794" type="Button" parent="DebugPanel"]
+layout_mode = 2
+
+[node name="@Button@35111" type="Button" parent="DebugPanel"]
+layout_mode = 2
+
+[node name="@Button@35112" type="Button" parent="DebugPanel"]
+layout_mode = 2
+
+[node name="@Button@35113" type="Button" parent="DebugPanel"]
+layout_mode = 2
+
+[node name="@Button@35114" type="Button" parent="DebugPanel"]
+layout_mode = 2
+
+[node name="@Button@35162" type="Button" parent="DebugPanel"]
+layout_mode = 2
+
+[node name="@Button@35163" type="Button" parent="DebugPanel"]
+layout_mode = 2
+
+[node name="@Button@35164" type="Button" parent="DebugPanel"]
+layout_mode = 2
+
+[node name="@Button@35165" type="Button" parent="DebugPanel"]
+layout_mode = 2
+
+[node name="@Button@35234" type="Button" parent="DebugPanel"]
+layout_mode = 2
+
+[node name="@Button@35235" type="Button" parent="DebugPanel"]
+layout_mode = 2
+
+[node name="@Button@35236" type="Button" parent="DebugPanel"]
+layout_mode = 2
+
+[node name="@Button@35237" type="Button" parent="DebugPanel"]
+layout_mode = 2
+
+[node name="@Button@35264" type="Button" parent="DebugPanel"]
+layout_mode = 2
+
+[node name="@Button@35265" type="Button" parent="DebugPanel"]
+layout_mode = 2
+
+[node name="@Button@35266" type="Button" parent="DebugPanel"]
+layout_mode = 2
+
+[node name="@Button@35267" type="Button" parent="DebugPanel"]
+layout_mode = 2
+
+[node name="UIContainer" type="VBoxContainer" parent="."]
+
+[node name="@VBoxContainer@33697" type="VBoxContainer" parent="."]
+
+[node name="@VBoxContainer@33719" type="VBoxContainer" parent="."]
+
+[node name="MainVBox" type="VBoxContainer" parent="."]
+
+[node name="TitleLabel" type="Label" parent="MainVBox"]
+layout_mode = 2
+
+[node name="Separator1" type="HSeparator" parent="MainVBox"]
+layout_mode = 2
+
+[node name="StatusScroll" type="ScrollContainer" parent="MainVBox"]
+layout_mode = 2
+
+[node name="StatusLabel" type="Label" parent="MainVBox/StatusScroll"]
+layout_mode = 2
+
+[node name="Separator2" type="HSeparator" parent="MainVBox"]
+layout_mode = 2
+
+[node name="ButtonContainer" type="HBoxContainer" parent="MainVBox"]
+layout_mode = 2
+
+[node name="LevelUpBtn" type="Button" parent="MainVBox/ButtonContainer"]
+layout_mode = 2
+
+[node name="FeedBtn" type="Button" parent="MainVBox/ButtonContainer"]
+layout_mode = 2
+
+[node name="MutateBtn" type="Button" parent="MainVBox/ButtonContainer"]
+layout_mode = 2
+
+[node name="TimeSkipBtn" type="Button" parent="MainVBox/ButtonContainer"]
+layout_mode = 2
+
+[node name="@VBoxContainer@33789" type="VBoxContainer" parent="."]
+
+[node name="@VBoxContainer@33837" type="VBoxContainer" parent="."]
+
+[node name="VBoxContainer" type="VBoxContainer" parent="."]
+
+[node name="@VBoxContainer@35089" type="VBoxContainer" parent="."]
+
+[node name="VBox" type="VBoxContainer" parent="."]
+
+[node name="TitleLabel" type="Label" parent="VBox"]
+layout_mode = 2
+
+[node name="StatusLabel" type="Label" parent="VBox"]
+layout_mode = 2
+
+[node name="Separator1" type="HSeparator" parent="VBox"]
+layout_mode = 2
+
+[node name="DebugPanel" type="HBoxContainer" parent="VBox"]
+layout_mode = 2
+
+[node name="@VBoxContainer@35136" type="VBoxContainer" parent="."]
+
+[node name="@VBoxContainer@35158" type="VBoxContainer" parent="."]
+
+[node name="@VBoxContainer@35187" type="VBoxContainer" parent="."]
+
+[node name="@VBoxContainer@35209" type="VBoxContainer" parent="."]
+
+[node name="@VBoxContainer@35231" type="VBoxContainer" parent="."]
+
+[node name="@VBoxContainer@35259" type="VBoxContainer" parent="."]
+
+[node name="@VBoxContainer@35289" type="VBoxContainer" parent="."]
