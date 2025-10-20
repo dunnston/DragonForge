@@ -1,0 +1,76 @@
+DRAGON PHASE 3 ERROR FIX - SUMMARY
+
+========================================
+ERROR DESCRIPTION:
+========================================
+File: res://scripts/dragon_system/dragon_phase3.gd
+Line: 88, Column: 5
+Error: Function "calculate_stats()" not found in base self.
+
+========================================
+ROOT CAUSE:
+========================================
+The DragonPhase3 class was extending directly from Resource instead of Dragon:
+
+BEFORE:
+extends Resource
+class_name DragonPhase3
+
+This meant that DragonPhase3 didn't inherit the calculate_stats() method
+from the Dragon class, even though it was trying to call it in _init().
+
+========================================
+SOLUTION APPLIED:
+========================================
+
+1. CHANGED INHERITANCE:
+   - Changed "extends Resource" to "extends Dragon"
+   - This gives DragonPhase3 access to all Dragon methods including calculate_stats()
+
+2. REMOVED DUPLICATE DECLARATIONS:
+   - Removed duplicate constants (now inherited from Dragon)
+   - Removed duplicate properties (now inherited from Dragon) 
+   - Removed duplicate signals (now inherited from Dragon)
+   - Kept only Phase 3-specific additions
+
+3. FIXED CONSTRUCTOR:
+   - Changed from duplicated _init() implementation to:
+     func _init(head: DragonPart = null, body: DragonPart = null, tail: DragonPart = null):
+         super(head, body, tail)  # Call parent Dragon._init()
+
+4. CLEANED DRAGON.GD:
+   - Fixed duplicate variable/signal declarations in the base Dragon class
+
+========================================
+FINAL RESULT:
+========================================
+BEFORE: DragonPhase3 was a standalone Resource with duplicate code
+AFTER:  DragonPhase3 properly extends Dragon with clean inheritance
+
+✅ ERROR RESOLVED: calculate_stats() now available via inheritance
+✅ CODE CLEANUP: No more duplicate declarations  
+✅ PROPER OOP: Clean inheritance hierarchy
+✅ COMPILATION: All scripts compile successfully
+
+========================================
+FILES MODIFIED:
+========================================
+- res://scripts/dragon_system/dragon_phase3.gd (main fix)
+- res://scripts/dragon_system/dragon.gd (cleaned duplicates)
+
+========================================
+INHERITANCE HIERARCHY:
+========================================
+Resource (Godot built-in)
+└── Dragon (base dragon functionality)
+    └── DragonPhase3 (adds combat & exploration features)
+
+Now DragonPhase3 has access to all Dragon methods:
+- calculate_stats()
+- feed()
+- gain_experience() 
+- take_damage()
+- update_life_systems()
+- And all other Dragon functionality
+
+The error is completely resolved and the code follows proper OOP principles!

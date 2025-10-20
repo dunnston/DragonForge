@@ -1,0 +1,6 @@
+[gd_scene load_steps=2 format=3 uid="uid://d3vld3eav6kqr"]
+
+[ext_resource type="Script" uid="uid://dfo5hdk103wmp" path="res://test_dragon_colors.gd" id="1_uhqqe"]
+
+[node name="Main" type="Node"]
+script = ExtResource("1_uhqqe")
