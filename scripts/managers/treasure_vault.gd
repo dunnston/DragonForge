@@ -1,6 +1,6 @@
 # Treasure Vault - Central Resource Storage System
 # The player's hoard that dragons defend and exploration adds to
-class_name TreasureVault extends Node
+extends Node
 
 # === SINGLETON ===
 static var instance: TreasureVault
