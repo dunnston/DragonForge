@@ -35,11 +35,11 @@ var managed_dragons: Dictionary = {}  # dragon_id -> dragon
 func _ready():
 	instance = self
 	# Update all dragons every 30 seconds for AFK systems
-	var timer = Timer.new()
-	add_child(timer)
-	timer.wait_time = 30.0
-	timer.timeout.connect(_update_all_dragons)
-	timer.start()
+	var update_timer = Timer.new()
+	add_child(update_timer)
+	update_timer.wait_time = 30.0
+	update_timer.timeout.connect(_update_all_dragons)
+	update_timer.start()
 
 # === DRAGON REGISTRATION & MANAGEMENT ===
 
@@ -73,7 +73,12 @@ func update_dragon_systems(dragon: Dragon):
 		
 	var current_time = Time.get_unix_time_from_system()
 	
-	# Update hunger system
+	# Update all systems
+	_update_hunger_system(dragon, current_time)
+	_update_fatigue_system(dragon, current_time)
+	_update_health_system(dragon, current_time)
+	_check_death_conditions(dragon)
+
 # === HUNGER SYSTEM ===
 
 func _update_hunger_system(dragon: Dragon, current_time: int):
@@ -93,7 +98,7 @@ func _update_hunger_system(dragon: Dragon, current_time: int):
 	if abs(dragon.hunger_level - old_hunger) > 0.1:
 		dragon_hunger_changed.emit(dragon, dragon.hunger_level)
 
-func feed_dragon(dragon: Dragon):
+func feed_dragon(dragon: Dragon) -> bool:
 	"""Feed a dragon, resetting hunger and restoring health"""
 	if not dragon or dragon.is_dead:
 		return false
@@ -153,6 +158,8 @@ func _check_death_conditions(dragon: Dragon):
 	if dragon.current_health <= 0 and dragon.hunger_level >= 1.0 and not dragon.is_dead:
 		dragon.is_dead = true
 		dragon_death.emit(dragon)
+		print("💀 %s has died from starvation!" % dragon.dragon_name)
+
 # === EXPERIENCE & LEVELING SYSTEM ===
 
 func gain_experience(dragon: Dragon, exp_amount: int):
@@ -187,6 +194,12 @@ func get_experience_for_level(level: int) -> int:
 
 func get_experience_to_next_level(dragon: Dragon) -> int:
 	"""Get experience needed for dragon's next level"""
+	if not dragon or dragon.level >= MAX_LEVEL:
+		return 0
+		
+	var next_level_exp = get_experience_for_level(dragon.level + 1)
+	return next_level_exp - dragon.experience
+
 # === MUTATION SYSTEM (Holy Shit Moment!) ===
 
 func attempt_chimera_mutation(dragon: Dragon) -> bool:
@@ -207,7 +220,7 @@ func attempt_chimera_mutation(dragon: Dragon) -> bool:
 
 # === STATE MANAGEMENT ===
 
-func set_dragon_state(dragon: Dragon, new_state: int):
+func set_dragon_state(dragon: Dragon, new_state: int) -> bool:
 	"""Change dragon's activity state"""
 	if not dragon or dragon.is_dead:
 		return false
@@ -228,6 +241,11 @@ func _get_state_name(state: int) -> String:
 	match state:
 		Dragon.DragonState.IDLE: return "idling"
 		Dragon.DragonState.DEFENDING: return "defending"
+		Dragon.DragonState.EXPLORING: return "exploring"
+		Dragon.DragonState.TRAINING: return "training"
+		Dragon.DragonState.RESTING: return "resting"
+		_: return "unknown"
+
 # === DEBUG & TESTING FUNCTIONS ===
 
 func force_level_up(dragon: Dragon, target_level: int = -1):
@@ -286,5 +304,3 @@ func get_dragon_status(dragon: Dragon) -> Dictionary:
 		"is_dead": dragon.is_dead,
 		"stats": "ATK:%d HP:%d SPD:%d" % [dragon.total_attack, dragon.total_health, dragon.total_speed]
 	}
-	_check_death_conditions(dragon)
-	timer.start()
