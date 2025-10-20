@@ -26,8 +26,3 @@ folder_colors={
 "res://scenes/": "green",
 "res://utils/": "purple"
 }
-
-[rendering]
-
-renderer/rendering_method="gl_compatibility"
-renderer/rendering_method.mobile="gl_compatibility"
