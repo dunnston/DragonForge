@@ -1,0 +1,6 @@
+[gd_scene load_steps=2 format=3 uid="uid://bubh4yn084t7j"]
+
+[ext_resource type="Script" uid="uid://b5pf3sj1rcebu" path="res://test_colors_simple.gd" id="1_ms8wy"]
+
+[node name="Main" type="Node"]
+script = ExtResource("1_ms8wy")

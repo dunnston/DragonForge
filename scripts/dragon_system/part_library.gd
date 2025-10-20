@@ -1,6 +1,5 @@
 extends Node
-class_name PartLibrary
-
+# Singleton access
 # Singleton access
 static var instance: PartLibrary
 

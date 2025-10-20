@@ -5,15 +5,13 @@ extends Node2D
 @onready var collection_info_label: Label = $CollectionInfo
 
 var factory: DragonFactory
-var part_library: PartLibrary
 
 func _ready():
 	# Create and initialize systems
-	part_library = PartLibrary.new()
 	factory = DragonFactory.new()
-	
-	add_child(part_library)
 	add_child(factory)
+	
+	# PartLibrary is now an autoload singleton, access it directly
 	
 	# Connect signals
 	factory.dragon_created.connect(_on_dragon_created)
@@ -77,12 +75,12 @@ func _test_part_library():
 	# Quick test of part library functionality
 	print("\n--- Part Library Test ---")
 	var fire_heads = []
-	var all_heads = part_library.get_parts_of_type(DragonPart.PartType.HEAD)
+	var all_heads = PartLibrary.get_parts_of_type(DragonPart.PartType.HEAD)
 	
 	for part in all_heads:
 		if part.element == DragonPart.Element.FIRE:
 			fire_heads.append(part)
 	
-	print("Total parts loaded: %d" % part_library.all_parts.size())
+	print("Total parts loaded: %d" % PartLibrary.all_parts.size())
 	print("Total head parts: %d" % all_heads.size())
 	print("Fire head parts: %d" % fire_heads.size())

@@ -1,5 +1,4 @@
 extends Node
-class_name DragonStateManager
 
 # Dragon State Management & Progression (Phase 2)
 # Manages hunger, fatigue, level progression, mutations, and AFK systems

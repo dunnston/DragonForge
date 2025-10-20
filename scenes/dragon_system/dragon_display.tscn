@@ -6,7 +6,6 @@
 script = ExtResource("1_days5")
 
 [node name="HeadSprite" type="ColorRect" parent="."]
-anchors_preset = -1
 offset_left = 50.0
 offset_top = 50.0
 offset_right = 130.0
@@ -14,7 +13,6 @@ offset_bottom = 110.0
 color = Color(0, 0, 0, 1)
 
 [node name="BodySprite" type="ColorRect" parent="."]
-anchors_preset = -1
 offset_left = 50.0
 offset_top = 120.0
 offset_right = 130.0
@@ -22,7 +20,6 @@ offset_bottom = 220.0
 color = Color(0, 0, 0, 1)
 
 [node name="TailSprite" type="ColorRect" parent="."]
-anchors_preset = -1
 offset_left = 50.0
 offset_top = 230.0
 offset_right = 130.0
@@ -30,7 +27,6 @@ offset_bottom = 270.0
 color = Color(0, 0, 0, 1)
 
 [node name="NameLabel" type="Label" parent="."]
-anchors_preset = -1
 offset_left = 150.0
 offset_top = 50.0
 offset_right = 350.0
@@ -39,7 +35,6 @@ text = "Dragon Name"
 autowrap_mode = 3
 
 [node name="StatsLabel" type="Label" parent="."]
-anchors_preset = -1
 offset_left = 150.0
 offset_top = 100.0
 offset_right = 450.0
