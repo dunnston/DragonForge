@@ -33,3 +33,7 @@ folder_colors={
 "res://scenes/": "green",
 "res://utils/": "purple"
 }
+
+[rendering]
+
+viewport/hdr_2d=true

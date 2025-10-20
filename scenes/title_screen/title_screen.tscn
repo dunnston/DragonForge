@@ -1,6 +1,7 @@
-[gd_scene load_steps=3 format=3 uid="uid://d0fdst08mrgk5"]
+[gd_scene load_steps=4 format=3 uid="uid://d0fdst08mrgk5"]
 
 [ext_resource type="Script" uid="uid://dsgr1ongq21c6" path="res://scenes/title_screen/title_screen.gd" id="1_4f7n1"]
+[ext_resource type="Theme" uid="uid://cwddx5qlkinib" path="res://themes/main_theme.tres" id="1_ri6bm"]
 [ext_resource type="PackedScene" uid="uid://ckmq8b7e6s3m2" path="res://scenes/main_scene/main_scene.tscn" id="2_bhe1c"]
 
 [node name="TitleScreen" type="Control"]
@@ -10,9 +11,19 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
+theme = ExtResource("1_ri6bm")
 script = ExtResource("1_4f7n1")
 main_scene = ExtResource("2_bhe1c")
 metadata/_edit_use_anchors_ = true
+
+[node name="ColorRect" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.15057173, 0.09353047, 0.16755936, 1)
 
 [node name="GameTitleLabel" type="RichTextLabel" parent="."]
 custom_minimum_size = Vector2(500, 0)
@@ -24,10 +35,9 @@ anchor_right = 0.9991319
 anchor_bottom = 0.23941977
 offset_bottom = -0.14400482
 grow_horizontal = 2
-theme_override_colors/default_color = Color(0.988088, 0.367419, 0.189237, 1)
-theme_override_font_sizes/normal_font_size = 72
+theme_override_font_sizes/normal_font_size = 128
 bbcode_enabled = true
-text = "[pulse]Game Name"
+text = "[pulse]Dragon Bones"
 fit_content = true
 horizontal_alignment = 1
 vertical_alignment = 1
@@ -35,21 +45,24 @@ metadata/_edit_use_anchors_ = true
 
 [node name="ButtonVBox" type="VBoxContainer" parent="."]
 layout_mode = 1
-anchors_preset = 8
+anchors_preset = -1
 anchor_left = 0.5
 anchor_top = 0.5
 anchor_right = 0.5
 anchor_bottom = 0.5
-offset_left = -128.0
+offset_left = -133.0
 offset_top = -100.0
-offset_right = 128.0
-offset_bottom = 100.0
+offset_right = 123.0
+offset_bottom = 222.0
 grow_horizontal = 2
 grow_vertical = 2
+theme_override_constants/separation = 22
 
 [node name="StartGameButton" type="Button" parent="ButtonVBox"]
+self_modulate = Color(1.0569379, 1.0569379, 1.0569379, 1)
 custom_minimum_size = Vector2(256, 64)
 layout_mode = 2
+focus_mode = 0
 text = "Start Game"
 
 [node name="SettingsButton" type="Button" parent="ButtonVBox"]
