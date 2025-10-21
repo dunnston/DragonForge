@@ -50,9 +50,9 @@ var factory: DragonFactory
 @onready var dragon_details_modal: Control = $DragonDetailsModal
 
 # === DRAGON CREATION STATE ===
-var selected_head: DragonPart.Element = -1
-var selected_body: DragonPart.Element = -1
-var selected_tail: DragonPart.Element = -1
+var selected_head_id: String = ""
+var selected_body_id: String = ""
+var selected_tail_id: String = ""
 var current_selecting_slot: String = ""  # Track which slot is being selected
 
 # === ELEMENT COLORS ===
@@ -85,18 +85,16 @@ func _ready():
 	if dragon_details_modal:
 		dragon_details_modal.dragon_updated.connect(_on_dragon_updated_from_modal)
 
-	# Connect to TreasureVault signals if available
+	# Connect to TreasureVault signals for gold
 	if TreasureVault:
 		TreasureVault.gold_changed.connect(_on_gold_changed)
-		TreasureVault.parts_changed.connect(_on_parts_changed)
 
-		# Initial update
-		_update_display()
-	else:
-		print("[FactoryManager] WARNING: TreasureVault not found!")
-		# Set default values for testing
-		_update_gold_display(100)
-		_update_parts_display()
+	# Connect to InventoryManager signals for parts
+	if InventoryManager and InventoryManager.instance:
+		InventoryManager.instance.slot_changed.connect(_on_inventory_changed)
+
+	# Initial update
+	_update_display()
 
 	# Make head/body/tail slots clickable
 	_setup_part_slot_buttons()
@@ -136,70 +134,109 @@ func _on_slot_clicked(slot_name: String):
 	if part_selector:
 		part_selector.open(part_type)
 
-func _on_part_selected(element: DragonPart.Element):
+func _on_part_selected(item_id: String):
 	# Update the appropriate slot based on which one was clicked
 	match current_selecting_slot:
 		"head":
-			selected_head = element
-			_update_slot_display(head_slot_label, head_slot_rect, element)
+			selected_head_id = item_id
+			_update_slot_display(head_slot_label, head_slot_rect, item_id)
 		"body":
-			selected_body = element
-			_update_slot_display(body_slot_label, body_slot_rect, element)
+			selected_body_id = item_id
+			_update_slot_display(body_slot_label, body_slot_rect, item_id)
 		"tail":
-			selected_tail = element
-			_update_slot_display(tail_slot_label, tail_slot_rect, element)
+			selected_tail_id = item_id
+			_update_slot_display(tail_slot_label, tail_slot_rect, item_id)
 
 	_check_can_create_dragon()
 
-func _update_slot_display(label: Label, rect: ColorRect, element: DragonPart.Element):
-	if element == -1:
+func _update_slot_display(label: Label, rect: ColorRect, item_id: String):
+	if item_id.is_empty():
 		label.text = "Empty"
 		label.add_theme_color_override("font_color", Color(0.5, 0.5, 0.5, 1))
 		rect.color = Color(0.2, 0.25, 0.2, 1)
 	else:
-		var element_name = DragonPart.Element.keys()[element]
-		label.text = element_name
-		label.add_theme_color_override("font_color", Color(0.9, 0.9, 0.9, 1))
-		rect.color = ELEMENT_COLORS.get(element, Color.WHITE) * 0.4
+		# Get item from database to display name and color
+		if ItemDatabase and ItemDatabase.instance:
+			var item = ItemDatabase.instance.get_item(item_id)
+			if item:
+				label.text = item.element
+				label.add_theme_color_override("font_color", Color(0.9, 0.9, 0.9, 1))
+				# Convert element string to enum for color lookup
+				var element_enum = _get_element_enum_from_string(item.element)
+				rect.color = ELEMENT_COLORS.get(element_enum, Color.WHITE) * 0.4
+		else:
+			label.text = item_id
+			label.add_theme_color_override("font_color", Color(0.9, 0.9, 0.9, 1))
+			rect.color = Color(0.5, 0.5, 0.5, 1)
+
+func _get_element_enum_from_string(element_str: String) -> DragonPart.Element:
+	match element_str.to_upper():
+		"FIRE": return DragonPart.Element.FIRE
+		"ICE": return DragonPart.Element.ICE
+		"LIGHTNING": return DragonPart.Element.LIGHTNING
+		"NATURE": return DragonPart.Element.NATURE
+		"SHADOW": return DragonPart.Element.SHADOW
+	return DragonPart.Element.FIRE  # Default
 
 func _check_can_create_dragon():
-	var can_create = selected_head != -1 and selected_body != -1 and selected_tail != -1
+	var can_create = not selected_head_id.is_empty() and not selected_body_id.is_empty() and not selected_tail_id.is_empty()
 	animate_button.disabled = not can_create
 
 # === DRAGON CREATION ===
 
 func _on_animate_button_pressed():
-	if selected_head == -1 or selected_body == -1 or selected_tail == -1:
+	if selected_head_id.is_empty() or selected_body_id.is_empty() or selected_tail_id.is_empty():
 		print("[FactoryManager] Cannot create dragon: missing parts")
 		return
 
+	# Check if InventoryManager is available
+	if not InventoryManager or not InventoryManager.instance:
+		print("[FactoryManager] ERROR: InventoryManager not available")
+		return
+
 	# Check if we have the parts in inventory
-	if not TreasureVault:
-		print("[FactoryManager] ERROR: TreasureVault not available")
+	if not InventoryManager.instance.has_item(selected_head_id, 1):
+		print("[FactoryManager] Not enough head parts in inventory!")
+		return
+	if not InventoryManager.instance.has_item(selected_body_id, 1):
+		print("[FactoryManager] Not enough body parts in inventory!")
+		return
+	if not InventoryManager.instance.has_item(selected_tail_id, 1):
+		print("[FactoryManager] Not enough tail parts in inventory!")
 		return
 
-	if not TreasureVault.can_build_dragon(selected_head, selected_body, selected_tail):
-		print("[FactoryManager] Not enough parts to build dragon!")
+	# Get Item objects from database
+	var head_item = ItemDatabase.instance.get_item(selected_head_id)
+	var body_item = ItemDatabase.instance.get_item(selected_body_id)
+	var tail_item = ItemDatabase.instance.get_item(selected_tail_id)
+
+	if not head_item or not body_item or not tail_item:
+		print("[FactoryManager] ERROR: Failed to get items from database!")
 		return
 
-	# Deduct parts from inventory
-	if not TreasureVault.spend_part(selected_head, 1):
-		print("[FactoryManager] Failed to spend head part!")
-		return
-	if not TreasureVault.spend_part(selected_body, 1):
-		print("[FactoryManager] Failed to spend body part!")
-		return
-	if not TreasureVault.spend_part(selected_tail, 1):
-		print("[FactoryManager] Failed to spend tail part!")
-		return
+	# Convert element strings to enums
+	var head_element = _get_element_enum_from_string(head_item.element)
+	var body_element = _get_element_enum_from_string(body_item.element)
+	var tail_element = _get_element_enum_from_string(tail_item.element)
 
 	# Get DragonPart objects from PartLibrary
-	var head_part = PartLibrary.get_part_by_element_and_type(selected_head, DragonPart.PartType.HEAD)
-	var body_part = PartLibrary.get_part_by_element_and_type(selected_body, DragonPart.PartType.BODY)
-	var tail_part = PartLibrary.get_part_by_element_and_type(selected_tail, DragonPart.PartType.TAIL)
+	var head_part = PartLibrary.get_part_by_element_and_type(head_element, DragonPart.PartType.HEAD)
+	var body_part = PartLibrary.get_part_by_element_and_type(body_element, DragonPart.PartType.BODY)
+	var tail_part = PartLibrary.get_part_by_element_and_type(tail_element, DragonPart.PartType.TAIL)
 
 	if not head_part or not body_part or not tail_part:
 		print("[FactoryManager] ERROR: Failed to get dragon parts from library!")
+		return
+
+	# Deduct parts from inventory
+	if not InventoryManager.instance.remove_item_by_id(selected_head_id, 1):
+		print("[FactoryManager] Failed to remove head part from inventory!")
+		return
+	if not InventoryManager.instance.remove_item_by_id(selected_body_id, 1):
+		print("[FactoryManager] Failed to remove body part from inventory!")
+		return
+	if not InventoryManager.instance.remove_item_by_id(selected_tail_id, 1):
+		print("[FactoryManager] Failed to remove tail part from inventory!")
 		return
 
 	# Create dragon
@@ -209,12 +246,12 @@ func _on_animate_button_pressed():
 		print("[FactoryManager] Dragon created: %s" % dragon.dragon_name)
 
 		# Reset slots
-		selected_head = -1
-		selected_body = -1
-		selected_tail = -1
-		_update_slot_display(head_slot_label, head_slot_rect, -1)
-		_update_slot_display(body_slot_label, body_slot_rect, -1)
-		_update_slot_display(tail_slot_label, tail_slot_rect, -1)
+		selected_head_id = ""
+		selected_body_id = ""
+		selected_tail_id = ""
+		_update_slot_display(head_slot_label, head_slot_rect, "")
+		_update_slot_display(body_slot_label, body_slot_rect, "")
+		_update_slot_display(tail_slot_label, tail_slot_rect, "")
 		_check_can_create_dragon()
 
 		# Update dragons list
@@ -239,14 +276,33 @@ func _update_gold_display(amount: int):
 	gold_label.text = str(amount)
 
 func _update_parts_display():
-	if not TreasureVault:
+	if not InventoryManager or not InventoryManager.instance:
 		return
 
-	fire_parts_count.text = str(TreasureVault.get_part_count(DragonPart.Element.FIRE))
-	ice_parts_count.text = str(TreasureVault.get_part_count(DragonPart.Element.ICE))
-	lightning_parts_count.text = str(TreasureVault.get_part_count(DragonPart.Element.LIGHTNING))
-	nature_parts_count.text = str(TreasureVault.get_part_count(DragonPart.Element.NATURE))
-	shadow_parts_count.text = str(TreasureVault.get_part_count(DragonPart.Element.SHADOW))
+	# Count all parts of each element from inventory
+	var fire_count = 0
+	var ice_count = 0
+	var lightning_count = 0
+	var nature_count = 0
+	var shadow_count = 0
+
+	# Get all dragon parts from inventory
+	var all_parts = InventoryManager.instance.get_all_dragon_parts()
+	for part_data in all_parts:
+		var item: Item = part_data["item"]
+		var quantity: int = part_data["quantity"]
+		match item.element.to_upper():
+			"FIRE": fire_count += quantity
+			"ICE": ice_count += quantity
+			"LIGHTNING": lightning_count += quantity
+			"NATURE": nature_count += quantity
+			"SHADOW": shadow_count += quantity
+
+	fire_parts_count.text = str(fire_count)
+	ice_parts_count.text = str(ice_count)
+	lightning_parts_count.text = str(lightning_count)
+	nature_parts_count.text = str(nature_count)
+	shadow_parts_count.text = str(shadow_count)
 
 func _update_scientists_display():
 	# TODO: Connect to ScientistManager when implemented
@@ -342,7 +398,8 @@ func _update_collection_display():
 func _on_gold_changed(new_amount: int, delta: int):
 	_update_gold_display(new_amount)
 
-func _on_parts_changed(element: DragonPart.Element, new_count: int):
+func _on_inventory_changed(slot_index: int):
+	# Update parts display when inventory changes
 	_update_parts_display()
 
 func _on_dragon_created(dragon: Dragon):

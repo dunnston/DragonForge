@@ -195,8 +195,12 @@ func _complete_exploration(dragon_id: String):
 	# Calculate rewards
 	var rewards = _calculate_rewards(dragon, duration_minutes)
 
-	# Apply rewards to vault
+	# Apply rewards to vault and inventory
 	_apply_rewards(rewards)
+
+	# Apply XP to dragon
+	if rewards["xp"] > 0 and DragonStateManager and DragonStateManager.instance:
+		DragonStateManager.instance.gain_experience(dragon, rewards["xp"])
 
 	# Apply costs (hunger, fatigue, damage)
 	_apply_exploration_costs(dragon, duration_minutes)
