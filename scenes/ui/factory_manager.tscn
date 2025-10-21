@@ -1,12 +1,10 @@
-[gd_scene load_steps=8 format=3 uid="uid://c8x2k4j5nan3p"]
+[gd_scene load_steps=6 format=3 uid="uid://c8x2k4j5m9n3p"]
 
 [ext_resource type="Script" path="res://scripts/ui/factory_manager.gd" id="1"]
-[ext_resource type="Theme" uid="uid://bo8g4sssf0ihw" path="res://themes/game_theme.tres" id="1_rymoh"]
-[ext_resource type="PackedScene" uid="uid://c3dy7oq2tsbw" path="res://scenes/ui/inventory_panel.tscn" id="2"]
+[ext_resource type="PackedScene" uid="uid://d7h8k9l0m1n2o" path="res://scenes/ui/inventory_panel.tscn" id="2"]
 [ext_resource type="PackedScene" uid="uid://b3c4d5e6f7g8h" path="res://scenes/ui/part_selector.tscn" id="3"]
-[ext_resource type="Texture2D" uid="uid://v72fnyfeh3ul" path="res://assets/cracked_texture.png" id="3_2n4c4"]
-[ext_resource type="PackedScene" uid="uid://ipjdvqjhnvk4" path="res://scenes/ui/dragon_tooltip.tscn" id="4"]
-[ext_resource type="PackedScene" uid="uid://dad0e1f2g3h4i" path="res://scenes/ui/dragon_details_modal.tscn" id="5"]
+[ext_resource type="PackedScene" uid="uid://h8i9j0k1l2m3n" path="res://scenes/ui/dragon_tooltip.tscn" id="4"]
+[ext_resource type="PackedScene" uid="uid://c9d0e1f2g3h4i" path="res://scenes/ui/dragon_details_modal.tscn" id="5"]
 
 [node name="FactoryManager" type="Control"]
 layout_mode = 3
@@ -211,7 +209,7 @@ color = Color(0.3, 0.5, 0.3, 1)
 layout_mode = 2
 theme_override_colors/font_color = Color(0.5, 1, 0.5, 1)
 theme_override_font_sizes/font_size = 16
-text = "BREEDER"
+text = "STICHER"
 horizontal_alignment = 1
 
 [node name="StatusLabel" type="Label" parent="MarginContainer/MainVBox/MainContent/LeftPanel/ScientistsVBox/BreederPanel/VBox"]

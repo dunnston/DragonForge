@@ -207,3 +207,47 @@ custom_minimum_size = Vector2(150, 40)
 layout_mode = 2
 theme_override_font_sizes/font_size = 14
 text = "Assign to Defense"
+
+[node name="HSeparator5" type="HSeparator" parent="CenterContainer/PanelContainer/MarginContainer/VBoxContainer"]
+layout_mode = 2
+
+[node name="ExplorationSection" type="VBoxContainer" parent="CenterContainer/PanelContainer/MarginContainer/VBoxContainer"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="Title" type="Label" parent="CenterContainer/PanelContainer/MarginContainer/VBoxContainer/ExplorationSection"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.5, 1, 0.5, 1)
+theme_override_font_sizes/font_size = 18
+text = "EXPLORATION"
+
+[node name="StatusLabel" type="Label" parent="CenterContainer/PanelContainer/MarginContainer/VBoxContainer/ExplorationSection"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.8, 1, 0.8, 1)
+theme_override_font_sizes/font_size = 14
+text = "Ready to explore"
+
+[node name="DurationButtons" type="HBoxContainer" parent="CenterContainer/PanelContainer/MarginContainer/VBoxContainer/ExplorationSection"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="Explore15Button" type="Button" parent="CenterContainer/PanelContainer/MarginContainer/VBoxContainer/ExplorationSection/DurationButtons"]
+custom_minimum_size = Vector2(100, 40)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 14
+text = "15 min"
+
+[node name="Explore30Button" type="Button" parent="CenterContainer/PanelContainer/MarginContainer/VBoxContainer/ExplorationSection/DurationButtons"]
+custom_minimum_size = Vector2(100, 40)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 14
+text = "30 min"
+
+[node name="Explore60Button" type="Button" parent="CenterContainer/PanelContainer/MarginContainer/VBoxContainer/ExplorationSection/DurationButtons"]
+custom_minimum_size = Vector2(100, 40)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 14
+text = "60 min"
