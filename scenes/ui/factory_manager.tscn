@@ -1,10 +1,12 @@
-[gd_scene load_steps=6 format=3 uid="uid://c8x2k4j5m9n3p"]
+[gd_scene load_steps=8 format=3 uid="uid://c8x2k4j5nan3p"]
 
-[ext_resource type="Script" path="res://scripts/ui/factory_manager.gd" id="1"]
-[ext_resource type="PackedScene" uid="uid://d7h8k9l0m1n2o" path="res://scenes/ui/inventory_panel.tscn" id="2"]
+[ext_resource type="Script" uid="uid://briemfklglw3k" path="res://scripts/ui/factory_manager.gd" id="1"]
+[ext_resource type="Theme" uid="uid://bo8g4sssf0ihw" path="res://themes/game_theme.tres" id="1_rymoh"]
+[ext_resource type="PackedScene" uid="uid://c3dy7oq2tsbw" path="res://scenes/ui/inventory_panel.tscn" id="2"]
 [ext_resource type="PackedScene" uid="uid://b3c4d5e6f7g8h" path="res://scenes/ui/part_selector.tscn" id="3"]
-[ext_resource type="PackedScene" uid="uid://h8i9j0k1l2m3n" path="res://scenes/ui/dragon_tooltip.tscn" id="4"]
-[ext_resource type="PackedScene" uid="uid://c9d0e1f2g3h4i" path="res://scenes/ui/dragon_details_modal.tscn" id="5"]
+[ext_resource type="Texture2D" uid="uid://v72fnyfeh3ul" path="res://assets/cracked_texture.png" id="3_2n4c4"]
+[ext_resource type="PackedScene" uid="uid://ipjdvqjhnvk4" path="res://scenes/ui/dragon_tooltip.tscn" id="4"]
+[ext_resource type="PackedScene" uid="uid://dad0e1f2g3h4i" path="res://scenes/ui/dragon_details_modal.tscn" id="5"]
 
 [node name="FactoryManager" type="Control"]
 layout_mode = 3
@@ -21,6 +23,10 @@ layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
+offset_left = 11.0
+offset_top = 47.5
+offset_right = 11.0
+offset_bottom = 47.5
 grow_horizontal = 2
 grow_vertical = 2
 color = Color(0.1, 0.12, 0.1, 1)
@@ -30,7 +36,10 @@ layout_mode = 1
 anchors_preset = -1
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_right = -81.42651
+offset_left = 10.999999
+offset_top = 47.499996
+offset_right = -70.42651
+offset_bottom = 47.5
 grow_horizontal = 2
 grow_vertical = 2
 scale = Vector2(1.0807291, 1.0087891)
@@ -42,9 +51,10 @@ layout_mode = 1
 anchors_preset = -1
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_top = -36.5
-offset_right = 10.0
-offset_bottom = 36.5
+offset_left = 11.0
+offset_top = 11.0
+offset_right = 21.0
+offset_bottom = 84.0
 grow_horizontal = 2
 grow_vertical = 2
 theme_override_constants/margin_left = 15
