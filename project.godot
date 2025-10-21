@@ -17,6 +17,8 @@ config/icon="res://icon.svg"
 
 [autoload]
 
+ItemDatabase="*res://scripts/inventory/item_database.gd"
+InventoryManager="*res://scripts/inventory/inventory_manager.gd"
 PartLibrary="*res://scripts/dragon_system/part_library.gd"
 DragonStateManager="*res://scripts/dragon_system/dragon_state_manager.gd"
 TreasureVault="*res://scripts/managers/treasure_vault.gd"

@@ -239,18 +239,31 @@ func _calculate_rewards(dragon: Dragon, duration_minutes: int) -> Dictionary:
 	rewards["gold"] = int(base_gold * level_multiplier)
 	rewards["xp"] = int(base_xp * level_multiplier)
 
-	# Dragon parts drop chance
+	# Dragon parts drop chance (now returns specific item IDs)
 	var parts_count = 0
 	match duration_minutes:
 		15: parts_count = 1 if randf() < PARTS_DROP_CHANCE else 0
 		30: parts_count = 2 if randf() < PARTS_DROP_CHANCE else 1
 		60: parts_count = 3 if randf() < PARTS_DROP_CHANCE else 2
 
-	for i in parts_count:
-		var random_element = DragonPart.Element.values().pick_random()
-		rewards["parts"].append(random_element)
+	# Select random dragon parts from database
+	var possible_parts = ["fire", "ice", "lightning", "nature", "shadow"]
+	var part_types = ["head", "body", "tail"]
 
-	# Item drops (random rolls)
+	for i in parts_count:
+		var random_element = possible_parts.pick_random()
+		var random_part_type = part_types.pick_random()
+		var part_id = "%s_%s" % [random_element, random_part_type]  # e.g. "fire_head"
+		rewards["parts"].append(part_id)
+
+	# Item drops (random rolls) - now uses item IDs from database
+	var item_id_map = {
+		"treats": "treat",
+		"health_pots": "health_potion",
+		"food": "food",
+		"toys": "toy"
+	}
+
 	for item_type in ITEM_DROP_CHANCES.keys():
 		var drop_chance = ITEM_DROP_CHANCES[item_type]
 
@@ -267,28 +280,30 @@ func _calculate_rewards(dragon: Dragon, duration_minutes: int) -> Dictionary:
 				item_count += 1
 
 		if item_count > 0:
-			rewards["items"][item_type] = item_count
+			var item_id = item_id_map[item_type]
+			rewards["items"][item_id] = item_count
 
 	return rewards
 
 func _apply_rewards(rewards: Dictionary):
-	"""Apply calculated rewards to the treasure vault"""
-	if not TreasureVault or not TreasureVault.instance:
-		print("[ExplorationManager] WARNING: TreasureVault not found!")
-		return
-
-	# Add gold
-	if rewards["gold"] > 0:
+	"""Apply calculated rewards to the inventory and vault"""
+	# Add gold to TreasureVault
+	if rewards["gold"] > 0 and TreasureVault and TreasureVault.instance:
 		TreasureVault.instance.add_gold(rewards["gold"])
 
-	# Add dragon parts
-	for part_element in rewards["parts"]:
-		TreasureVault.instance.add_part(part_element)
+	# Add items to InventoryManager
+	if not InventoryManager or not InventoryManager.instance:
+		print("[ExplorationManager] WARNING: InventoryManager not found!")
+		return
 
-	# Add items
-	for item_type in rewards["items"]:
-		var count = rewards["items"][item_type]
-		TreasureVault.instance.add_item(item_type, count)
+	# Add dragon parts (now as specific items)
+	for part_id in rewards["parts"]:
+		InventoryManager.instance.add_item_by_id(part_id, 1)
+
+	# Add consumable items
+	for item_id in rewards["items"]:
+		var count = rewards["items"][item_id]
+		InventoryManager.instance.add_item_by_id(item_id, count)
 
 # === EXPLORATION COSTS ===
 
