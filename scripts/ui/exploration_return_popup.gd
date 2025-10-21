@@ -65,28 +65,41 @@ func _display_rewards(rewards: Dictionary):
 		xp_label.add_theme_color_override("font_color", Color(1, 1, 0.5, 1))  # Yellow
 		rewards_container.add_child(xp_label)
 
-	# Dragon Parts
+	# Dragon Parts (now uses item IDs)
 	if rewards.has("parts") and rewards["parts"].size() > 0:
 		var parts_count = {}
-		for part_element in rewards["parts"]:
-			var element_name = DragonPart.Element.keys()[part_element]
-			if not parts_count.has(element_name):
-				parts_count[element_name] = 0
-			parts_count[element_name] += 1
+		for item_id in rewards["parts"]:
+			# Get item from database to get the display name
+			var item_name = item_id
+			if ItemDatabase and ItemDatabase.instance:
+				var item = ItemDatabase.instance.get_item(item_id)
+				if item:
+					item_name = item.name
 
-		for element_name in parts_count:
+			if not parts_count.has(item_name):
+				parts_count[item_name] = 0
+			parts_count[item_name] += 1
+
+		for item_name in parts_count:
 			var part_label = Label.new()
-			part_label.text = "+ %d %s Part(s)" % [parts_count[element_name], element_name.capitalize()]
+			part_label.text = "+ %d %s" % [parts_count[item_name], item_name]
 			part_label.add_theme_font_size_override("font_size", 16)
 			part_label.add_theme_color_override("font_color", Color(0.7, 0.9, 1, 1))  # Light blue
 			rewards_container.add_child(part_label)
 
-	# Items
+	# Items (consumables like treats, health potions, etc.)
 	if rewards.has("items"):
-		for item_type in rewards["items"]:
-			var count = rewards["items"][item_type]
+		for item_id in rewards["items"]:
+			var count = rewards["items"][item_id]
 			var item_label = Label.new()
-			var display_name = _get_item_display_name(item_type)
+
+			# Get display name from database
+			var display_name = item_id
+			if ItemDatabase and ItemDatabase.instance:
+				var item = ItemDatabase.instance.get_item(item_id)
+				if item:
+					display_name = item.name
+
 			item_label.text = "+ %d %s" % [count, display_name]
 			item_label.add_theme_font_size_override("font_size", 16)
 			item_label.add_theme_color_override("font_color", Color(0.8, 1, 0.8, 1))  # Light green
@@ -99,15 +112,6 @@ func _display_rewards(rewards: Dictionary):
 		no_rewards_label.add_theme_font_size_override("font_size", 16)
 		no_rewards_label.add_theme_color_override("font_color", Color(0.6, 0.6, 0.6, 1))  # Gray
 		rewards_container.add_child(no_rewards_label)
-
-func _get_item_display_name(item_type: String) -> String:
-	"""Convert item type to display name"""
-	match item_type:
-		"treats": return "Treat(s)"
-		"health_pots": return "Health Potion(s)"
-		"food": return "Food"
-		"toys": return "Toy(s)"
-	return item_type.capitalize()
 
 func _on_confirm_pressed():
 	confirmed.emit()
