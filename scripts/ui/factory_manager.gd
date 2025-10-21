@@ -29,6 +29,10 @@ var scientist_manager: ScientistManager
 @onready var tail_slot_label: Label = $MarginContainer/MainVBox/MainContent/CenterPanel/CreationVBox/TailSlot/VBox/SlotRect/PartLabel
 @onready var animate_button: Button = $MarginContainer/MainVBox/MainContent/CenterPanel/CreationVBox/AnimateButton
 
+@onready var head_slot_icon: TextureRect = $MarginContainer/MainVBox/MainContent/CenterPanel/CreationVBox/HeadSlot/VBox/SlotRect/PartIcon
+@onready var body_slot_icon: TextureRect = $MarginContainer/MainVBox/MainContent/CenterPanel/CreationVBox/BodySlot/VBox/SlotRect/PartIcon
+@onready var tail_slot_icon: TextureRect = $MarginContainer/MainVBox/MainContent/CenterPanel/CreationVBox/TailSlot/VBox/SlotRect/PartIcon
+
 @onready var head_slot_panel: PanelContainer = $MarginContainer/MainVBox/MainContent/CenterPanel/CreationVBox/HeadSlot
 @onready var body_slot_panel: PanelContainer = $MarginContainer/MainVBox/MainContent/CenterPanel/CreationVBox/BodySlot
 @onready var tail_slot_panel: PanelContainer = $MarginContainer/MainVBox/MainContent/CenterPanel/CreationVBox/TailSlot
@@ -169,35 +173,51 @@ func _on_part_selected(item_id: String):
 	match current_selecting_slot:
 		"head":
 			selected_head_id = item_id
-			_update_slot_display(head_slot_label, head_slot_rect, item_id)
+			_update_slot_display(head_slot_label, head_slot_rect, head_slot_icon, item_id)
 		"body":
 			selected_body_id = item_id
-			_update_slot_display(body_slot_label, body_slot_rect, item_id)
+			_update_slot_display(body_slot_label, body_slot_rect, body_slot_icon, item_id)
 		"tail":
 			selected_tail_id = item_id
-			_update_slot_display(tail_slot_label, tail_slot_rect, item_id)
+			_update_slot_display(tail_slot_label, tail_slot_rect, tail_slot_icon, item_id)
 
 	_check_can_create_dragon()
 
-func _update_slot_display(label: Label, rect: ColorRect, item_id: String):
+func _update_slot_display(label: Label, rect: ColorRect, icon: TextureRect, item_id: String):
 	if item_id.is_empty():
 		label.text = "Empty"
+		label.visible = true
 		label.add_theme_color_override("font_color", Color(0.5, 0.5, 0.5, 1))
 		rect.color = Color(0.2, 0.25, 0.2, 1)
+		icon.visible = false
+		icon.texture = null
 	else:
-		# Get item from database to display name and color
+		# Get item from database to display icon and color
 		if ItemDatabase and ItemDatabase.instance:
 			var item = ItemDatabase.instance.get_item(item_id)
 			if item:
-				label.text = item.element
+				# Try to load and display the icon
+				var icon_texture = item.get_icon()
+				if icon_texture:
+					icon.texture = icon_texture
+					icon.visible = true
+					label.visible = false  # Hide text when icon is shown
+				else:
+					# Fallback to text if icon fails to load
+					label.text = item.element
+					label.visible = true
+					icon.visible = false
+
 				label.add_theme_color_override("font_color", Color(0.9, 0.9, 0.9, 1))
 				# Convert element string to enum for color lookup
 				var element_enum = _get_element_enum_from_string(item.element)
 				rect.color = ELEMENT_COLORS.get(element_enum, Color.WHITE) * 0.4
 		else:
 			label.text = item_id
+			label.visible = true
 			label.add_theme_color_override("font_color", Color(0.9, 0.9, 0.9, 1))
 			rect.color = Color(0.5, 0.5, 0.5, 1)
+			icon.visible = false
 
 func _get_element_enum_from_string(element_str: String) -> DragonPart.Element:
 	match element_str.to_upper():
@@ -279,9 +299,9 @@ func _on_animate_button_pressed():
 		selected_head_id = ""
 		selected_body_id = ""
 		selected_tail_id = ""
-		_update_slot_display(head_slot_label, head_slot_rect, "")
-		_update_slot_display(body_slot_label, body_slot_rect, "")
-		_update_slot_display(tail_slot_label, tail_slot_rect, "")
+		_update_slot_display(head_slot_label, head_slot_rect, head_slot_icon, "")
+		_update_slot_display(body_slot_label, body_slot_rect, body_slot_icon, "")
+		_update_slot_display(tail_slot_label, tail_slot_rect, tail_slot_icon, "")
 		_check_can_create_dragon()
 
 		# Update dragons list
@@ -363,8 +383,23 @@ func _update_dragons_list():
 func _create_dragon_entry(dragon: Dragon) -> PanelContainer:
 	var panel = PanelContainer.new()
 
+	var hbox = HBoxContainer.new()
+	hbox.add_theme_constant_override("separation", 10)
+	panel.add_child(hbox)
+
+	# Dragon image
+	var dragon_image = TextureRect.new()
+	dragon_image.custom_minimum_size = Vector2(60, 60)
+	dragon_image.expand_mode = TextureRect.EXPAND_FIT_WIDTH_PROPORTIONAL
+	dragon_image.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	var texture = load("res://assets/Icons/dragons/fire-dragon.png")
+	if texture:
+		dragon_image.texture = texture
+	hbox.add_child(dragon_image)
+
+	# Dragon info vbox
 	var vbox = VBoxContainer.new()
-	panel.add_child(vbox)
+	hbox.add_child(vbox)
 
 	# Dragon name
 	var name_label = Label.new()

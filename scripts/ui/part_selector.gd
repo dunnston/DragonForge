@@ -86,11 +86,26 @@ func _create_part_box(item_id: String, item: Item, count: int) -> Control:
 	vbox.alignment = BoxContainer.ALIGNMENT_CENTER
 	container.add_child(vbox)
 
-	# Part icon (colored square)
-	var icon = ColorRect.new()
+	# Part icon (actual texture)
+	var icon = TextureRect.new()
 	icon.custom_minimum_size = Vector2(80, 80)
-	icon.color = ELEMENT_COLORS.get(item.element, Color.WHITE)
-	vbox.add_child(icon)
+	icon.expand_mode = TextureRect.EXPAND_FIT_WIDTH_PROPORTIONAL
+	icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+
+	# Try to load the actual icon
+	var icon_texture = item.get_icon()
+	if icon_texture:
+		icon.texture = icon_texture
+	else:
+		# Fallback to colored square if icon not found
+		var fallback = ColorRect.new()
+		fallback.custom_minimum_size = Vector2(80, 80)
+		fallback.color = ELEMENT_COLORS.get(item.element, Color.WHITE)
+		vbox.add_child(fallback)
+		icon = null
+
+	if icon:
+		vbox.add_child(icon)
 
 	# Element name
 	var name_label = Label.new()

@@ -40,10 +40,13 @@ func _create_part(part_type: DragonPart.PartType, element: DragonPart.Element) -
 			part.speed_bonus = 3 + _get_element_modifier(element, "speed")
 	
 	part.element_power = _get_element_power(element)
-	
+
+	# Set icon path for UI display
+	part.icon_path = _get_icon_path(element, part_type)
+
 	# TODO: Load actual sprite textures
 	# part.sprite_texture = load("res://assets/parts/%s_%s.png" % [part_type, element])
-	
+
 	return part
 
 func _get_element_modifier(element: DragonPart.Element, stat: String) -> int:
@@ -99,3 +102,14 @@ func get_part_by_element_and_type(element: DragonPart.Element, part_type: Dragon
 		if part.element == element:
 			return part
 	return null
+
+func _get_icon_path(element: DragonPart.Element, part_type: DragonPart.PartType) -> String:
+	"""Generate the icon path based on element and part type"""
+	var element_name = DragonPart.Element.keys()[element].to_lower()
+	var part_type_name = DragonPart.PartType.keys()[part_type].to_lower()
+
+	# Handle the misspelling in the actual icon filenames (lighting instead of lightning)
+	if element_name == "lightning":
+		element_name = "lighting"
+
+	return "res://assets/Icons/dragon_parts/%s-dragon-%s.png" % [element_name, part_type_name]

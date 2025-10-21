@@ -18,6 +18,7 @@ enum Element {
 @export var part_type: PartType
 @export var element: Element
 @export var sprite_texture: Texture2D
+@export var icon_path: String = ""  # Path to icon for UI display
 @export var rarity: int = 1  # 1-5 for future expansion
 
 # Stats each part contributes
@@ -29,3 +30,14 @@ enum Element {
 
 func get_part_id() -> String:
 	return "%s_%s" % [PartType.keys()[part_type], Element.keys()[element]]
+
+func get_icon() -> Texture2D:
+	"""Load and return the part icon for UI display"""
+	if icon_path.is_empty():
+		return null
+
+	if ResourceLoader.exists(icon_path):
+		return load(icon_path)
+	else:
+		print("[DragonPart] Icon not found: %s" % icon_path)
+		return null
