@@ -16,12 +16,10 @@ var scientist_manager: ScientistManager
 @onready var shadow_parts_count: Label = $MarginContainer/MainVBox/TopBar/PartsDisplay/PartsHBox/ShadowParts/Count
 
 # === UI ELEMENTS - Scientists ===
-@onready var breeder_panel: PanelContainer = $MarginContainer/MainVBox/MainContent/LeftPanel/ScientistsVBox/BreederPanel
-@onready var breeder_status: Label = $MarginContainer/MainVBox/MainContent/LeftPanel/ScientistsVBox/BreederPanel/VBox/StatusLabel
-@onready var trainer_panel: PanelContainer = $MarginContainer/MainVBox/MainContent/LeftPanel/ScientistsVBox/TrainerPanel
-@onready var trainer_status: Label = $MarginContainer/MainVBox/MainContent/LeftPanel/ScientistsVBox/TrainerPanel/VBox/StatusLabel
-@onready var caretaker_panel: PanelContainer = $MarginContainer/MainVBox/MainContent/LeftPanel/ScientistsVBox/CaretakerPanel
-@onready var caretaker_status: Label = $MarginContainer/MainVBox/MainContent/LeftPanel/ScientistsVBox/CaretakerPanel/VBox/StatusLabel
+@onready var stitcher_panel = $MarginContainer/MainVBox/MainContent/LeftPanel/ScientistsVBox/StitcherPanel
+@onready var caretaker_panel = $MarginContainer/MainVBox/MainContent/LeftPanel/ScientistsVBox/CaretakerPanel
+@onready var trainer_panel = $MarginContainer/MainVBox/MainContent/LeftPanel/ScientistsVBox/TrainerPanel
+@onready var hire_modal = $ScientistHireModal
 
 # === UI ELEMENTS - Dragon Creation ===
 @onready var head_slot_label: Label = $MarginContainer/MainVBox/MainContent/CenterPanel/CreationVBox/HeadSlot/VBox/SlotRect/PartLabel
@@ -132,16 +130,29 @@ func _setup_part_slot_buttons():
 	print("[FactoryManager] Slot buttons set up")
 
 func _setup_scientist_panel_buttons():
-	# Connect click handlers for scientist panels
-	breeder_panel.gui_input.connect(func(event): _on_scientist_panel_input(event, ScientistManager.ScientistType.STITCHER))
-	trainer_panel.gui_input.connect(func(event): _on_scientist_panel_input(event, ScientistManager.ScientistType.TRAINER))
-	caretaker_panel.gui_input.connect(func(event): _on_scientist_panel_input(event, ScientistManager.ScientistType.CARETAKER))
+	# Connect scientist panel signals
+	print("[FactoryManager] Setting up scientist panels...")
+	print("  - stitcher_panel: %s" % stitcher_panel)
+	print("  - caretaker_panel: %s" % caretaker_panel)
+	print("  - trainer_panel: %s" % trainer_panel)
+	print("  - hire_modal: %s" % hire_modal)
+
+	if stitcher_panel:
+		stitcher_panel.hire_requested.connect(_on_scientist_hire_requested)
+		stitcher_panel.fire_requested.connect(_on_scientist_fire_requested)
+		print("  - Connected stitcher_panel signals")
+
+	if caretaker_panel:
+		caretaker_panel.hire_requested.connect(_on_scientist_hire_requested)
+		caretaker_panel.fire_requested.connect(_on_scientist_fire_requested)
+		print("  - Connected caretaker_panel signals")
+
+	if trainer_panel:
+		trainer_panel.hire_requested.connect(_on_scientist_hire_requested)
+		trainer_panel.fire_requested.connect(_on_scientist_fire_requested)
+		print("  - Connected trainer_panel signals")
 
 	print("[FactoryManager] Scientist panel buttons set up")
-
-func _on_scientist_panel_input(event: InputEvent, type: ScientistManager.ScientistType):
-	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
-		_on_scientist_panel_clicked(type)
 
 func _on_slot_input(event: InputEvent, slot_name: String):
 	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
@@ -316,7 +327,6 @@ func _update_display():
 		_update_gold_display(TreasureVault.get_total_gold())
 		_update_parts_display()
 
-	_update_scientists_display()
 	_update_dragons_list()
 	_update_defense_display()
 	_update_exploration_display()
@@ -353,18 +363,6 @@ func _update_parts_display():
 	lightning_parts_count.text = str(lightning_count)
 	nature_parts_count.text = str(nature_count)
 	shadow_parts_count.text = str(shadow_count)
-
-func _update_scientists_display():
-	if not scientist_manager:
-		breeder_status.text = "Not hired"
-		trainer_status.text = "Not hired"
-		caretaker_status.text = "Not hired"
-		return
-
-	# Update each scientist's status
-	breeder_status.text = scientist_manager.get_scientist_status_text(ScientistManager.ScientistType.STITCHER)
-	trainer_status.text = scientist_manager.get_scientist_status_text(ScientistManager.ScientistType.TRAINER)
-	caretaker_status.text = scientist_manager.get_scientist_status_text(ScientistManager.ScientistType.CARETAKER)
 
 func _update_dragons_list():
 	# Clear existing list
@@ -488,60 +486,26 @@ func _on_view_inventory_pressed():
 
 # === SCIENTIST MANAGEMENT ===
 
-func _on_scientist_panel_clicked(type: ScientistManager.ScientistType):
-	if not scientist_manager:
-		return
-
-	# Toggle hire/fire based on current state
-	if scientist_manager.is_scientist_hired(type):
-		# Show confirmation dialog for firing
-		_show_scientist_fire_dialog(type)
+func _on_scientist_hire_requested(scientist_type: ScientistManager.ScientistType):
+	"""Show hire modal when scientist panel is clicked"""
+	print("[FactoryManager] Hire requested for type: %s" % scientist_type)
+	print("[FactoryManager] hire_modal is: %s" % hire_modal)
+	if hire_modal:
+		hire_modal.show_for_scientist(scientist_type)
 	else:
-		# Try to hire
-		_show_scientist_hire_dialog(type)
+		print("[FactoryManager] ERROR: hire_modal is null!")
 
-func _show_scientist_hire_dialog(type: ScientistManager.ScientistType):
-	var info = scientist_manager.get_scientist_info(type)
-	var scientist_name = info["name"]
-	var hire_cost = info["hire_cost"]
-	var ongoing_cost = info["ongoing_cost_per_minute"]
+func _on_scientist_fire_requested(scientist_type: ScientistManager.ScientistType):
+	"""Show confirmation dialog when fire button is clicked"""
+	var scientist_name = ScientistManager.instance.get_scientist_name(scientist_type)
 
-	# Create confirmation dialog
-	var dialog = AcceptDialog.new()
-	add_child(dialog)
-	dialog.title = "Hire %s?" % scientist_name
-	dialog.dialog_text = "Hire %s for %d gold?\n\nOngoing cost: %d gold/minute\n\n%s" % [
-		scientist_name,
-		hire_cost,
-		ongoing_cost,
-		info["description"]
-	]
-
-	dialog.confirmed.connect(func():
-		if scientist_manager.hire_scientist(type):
-			print("[FactoryManager] Successfully hired %s" % scientist_name)
-		dialog.queue_free()
-	)
-
-	dialog.canceled.connect(func():
-		dialog.queue_free()
-	)
-
-	dialog.popup_centered()
-
-func _show_scientist_fire_dialog(type: ScientistManager.ScientistType):
-	var info = scientist_manager.get_scientist_info(type)
-	var scientist_name = info["name"]
-
-	# Create confirmation dialog
 	var dialog = ConfirmationDialog.new()
 	add_child(dialog)
-	dialog.title = "Fire %s?" % scientist_name
-	dialog.dialog_text = "Fire %s?\n\nNo refund will be given.\nOngoing costs will stop." % scientist_name
+	dialog.title = "Fire " + scientist_name + "?"
+	dialog.dialog_text = "Are you sure you want to fire " + scientist_name + "?\n\nNo refund will be given.\nOngoing costs will stop."
 
 	dialog.confirmed.connect(func():
-		if scientist_manager.fire_scientist(type):
-			print("[FactoryManager] Successfully fired %s" % scientist_name)
+		ScientistManager.instance.fire_scientist(scientist_type)
 		dialog.queue_free()
 	)
 
@@ -550,15 +514,14 @@ func _show_scientist_fire_dialog(type: ScientistManager.ScientistType):
 	)
 
 	dialog.popup_centered()
+
 
 func _on_scientist_hired(type: ScientistManager.ScientistType):
 	print("[FactoryManager] Scientist hired: %s" % type)
-	_update_scientists_display()
 	_update_gold_display(TreasureVault.get_total_gold())
 
 func _on_scientist_fired(type: ScientistManager.ScientistType):
 	print("[FactoryManager] Scientist fired: %s" % type)
-	_update_scientists_display()
 
 func _on_scientist_action(type: ScientistManager.ScientistType, action_description: String):
 	print("[FactoryManager] Scientist action: %s - %s" % [type, action_description])

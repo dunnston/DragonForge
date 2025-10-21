@@ -397,3 +397,33 @@ func get_all_hired_scientists() -> Array:
 		if hired_scientists[type]:
 			hired.append(type)
 	return hired
+
+func get_scientist_name(type: ScientistType) -> String:
+	"""Get the display name of a scientist type"""
+	return SCIENTIST_DATA[type]["name"]
+
+func get_scientist_hire_cost(type: ScientistType) -> int:
+	"""Get the hire cost for a scientist type"""
+	return SCIENTIST_DATA[type]["hire_cost"]
+
+func get_scientist_ongoing_cost(type: ScientistType) -> int:
+	"""Get the ongoing cost per minute for a scientist type"""
+	return SCIENTIST_DATA[type]["ongoing_cost_per_minute"]
+
+func get_scientist_description(type: ScientistType) -> String:
+	"""Get the description of a scientist type"""
+	return SCIENTIST_DATA[type]["description"]
+
+# === WORK TIMER ACCESS (for UI progress bars) ===
+
+func get_stitcher_work_timer() -> Timer:
+	"""Get the stitcher work timer for progress tracking"""
+	return stitcher_work_timer
+
+func get_caretaker_work_timer() -> Timer:
+	"""Get the caretaker work timer for progress tracking"""
+	return caretaker_work_timer
+
+func get_trainer_work_timer() -> Timer:
+	"""Get the trainer work timer for progress tracking"""
+	return trainer_work_timer

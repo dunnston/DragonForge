@@ -1,0 +1,88 @@
+[gd_scene load_steps=2 format=3 uid="uid://c3lam6n8p2q4r"]
+
+[ext_resource type="Script" path="res://scripts/ui/scientist_hire_modal.gd" id="1_hire_modal"]
+
+[node name="ScientistHireModal" type="AcceptDialog"]
+title = "Hire Scientist"
+initial_position = 2
+size = Vector2i(400, 500)
+dialog_text = "Would you like to hire this scientist?"
+script = ExtResource("1_hire_modal")
+
+[node name="Content" type="VBoxContainer" parent="."]
+offset_left = 8.0
+offset_top = 8.0
+offset_right = 392.0
+offset_bottom = 451.0
+
+[node name="ScientistImage" type="TextureRect" parent="Content"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(200, 200)
+layout_mode = 2
+size_flags_horizontal = 4
+expand_mode = 1
+stretch_mode = 5
+
+[node name="Spacer1" type="Control" parent="Content"]
+custom_minimum_size = Vector2(0, 10)
+layout_mode = 2
+
+[node name="ScientistName" type="Label" parent="Content"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 24
+text = "SCIENTIST NAME"
+horizontal_alignment = 1
+
+[node name="Spacer2" type="Control" parent="Content"]
+custom_minimum_size = Vector2(0, 5)
+layout_mode = 2
+
+[node name="Description" type="Label" parent="Content"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Description of what this scientist does."
+horizontal_alignment = 1
+autowrap_mode = 2
+
+[node name="Spacer3" type="Control" parent="Content"]
+custom_minimum_size = Vector2(0, 20)
+layout_mode = 2
+
+[node name="CostPanel" type="PanelContainer" parent="Content"]
+layout_mode = 2
+
+[node name="CostInfo" type="VBoxContainer" parent="Content/CostPanel"]
+layout_mode = 2
+
+[node name="HireCostLabel" type="Label" parent="Content/CostPanel/CostInfo"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.8, 0.2, 1)
+theme_override_font_sizes/font_size = 16
+text = "Hire Cost: 100 gold"
+horizontal_alignment = 1
+
+[node name="OngoingCostLabel" type="Label" parent="Content/CostPanel/CostInfo"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.5, 0.2, 1)
+theme_override_font_sizes/font_size = 14
+text = "Ongoing: -5 gold/minute"
+horizontal_alignment = 1
+
+[node name="Spacer4" type="Control" parent="Content"]
+custom_minimum_size = Vector2(0, 10)
+layout_mode = 2
+
+[node name="WarningLabel" type="Label" parent="Content"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.3, 0.3, 1)
+theme_override_font_sizes/font_size = 12
+text = "Not enough gold!"
+horizontal_alignment = 1
+
+[connection signal="confirmed" from="." to="." method="_on_confirmed"]
+[connection signal="canceled" from="." to="." method="_on_canceled"]

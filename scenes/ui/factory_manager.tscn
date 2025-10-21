@@ -1,4 +1,4 @@
-[gd_scene load_steps=8 format=3 uid="uid://c8x2k4j5nan3p"]
+[gd_scene load_steps=11 format=3 uid="uid://c8x2k4j5nan3p"]
 
 [ext_resource type="Script" uid="uid://briemfklglw3k" path="res://scripts/ui/factory_manager.gd" id="1"]
 [ext_resource type="Theme" uid="uid://bo8g4sssf0ihw" path="res://themes/game_theme.tres" id="1_rymoh"]
@@ -6,7 +6,10 @@
 [ext_resource type="PackedScene" uid="uid://b3c4d5e6f7g8h" path="res://scenes/ui/part_selector.tscn" id="3"]
 [ext_resource type="Texture2D" uid="uid://v72fnyfeh3ul" path="res://assets/cracked_texture.png" id="3_2n4c4"]
 [ext_resource type="PackedScene" uid="uid://ipjdvqjhnvk4" path="res://scenes/ui/dragon_tooltip.tscn" id="4"]
-[ext_resource type="PackedScene" uid="uid://dad0e1f2g3h4i" path="res://scenes/ui/dragon_details_modal.tscn" id="5"]
+[ext_resource type="PackedScene" path="res://scenes/ui/scientist_panel.tscn" id="4_prvw3"]
+[ext_resource type="PackedScene" path="res://scenes/ui/dragon_details_modal.tscn" id="5"]
+[ext_resource type="PackedScene" uid="uid://c3k9m6n8p2q4r" path="res://scenes/ui/scientist_hire_modal.tscn" id="6_hire_modal"]
+[ext_resource type="PackedScene" path="res://scenes/ui/scientist_hire_modal.tscn" id="9_atd5s"]
 
 [node name="FactoryManager" type="Control"]
 layout_mode = 3
@@ -202,86 +205,20 @@ theme_override_font_sizes/font_size = 20
 text = "SCIENTISTS"
 horizontal_alignment = 1
 
-[node name="BreederPanel" type="PanelContainer" parent="MarginContainer/MainVBox/MainContent/LeftPanel/ScientistsVBox"]
+[node name="StitcherPanel" parent="MarginContainer/MainVBox/MainContent/LeftPanel/ScientistsVBox" instance=ExtResource("4_prvw3")]
+unique_name_in_owner = true
 layout_mode = 2
-size_flags_vertical = 3
+scientist_type = 0
 
-[node name="VBox" type="VBoxContainer" parent="MarginContainer/MainVBox/MainContent/LeftPanel/ScientistsVBox/BreederPanel"]
+[node name="CaretakerPanel" parent="MarginContainer/MainVBox/MainContent/LeftPanel/ScientistsVBox" instance=ExtResource("4_prvw3")]
+unique_name_in_owner = true
 layout_mode = 2
+scientist_type = 1
 
-[node name="ScientistIcon" type="ColorRect" parent="MarginContainer/MainVBox/MainContent/LeftPanel/ScientistsVBox/BreederPanel/VBox"]
-custom_minimum_size = Vector2(60, 60)
+[node name="TrainerPanel" parent="MarginContainer/MainVBox/MainContent/LeftPanel/ScientistsVBox" instance=ExtResource("4_prvw3")]
+unique_name_in_owner = true
 layout_mode = 2
-size_flags_horizontal = 4
-color = Color(0.3, 0.5, 0.3, 1)
-
-[node name="NameLabel" type="Label" parent="MarginContainer/MainVBox/MainContent/LeftPanel/ScientistsVBox/BreederPanel/VBox"]
-layout_mode = 2
-theme_override_colors/font_color = Color(0.5, 1, 0.5, 1)
-theme_override_font_sizes/font_size = 16
-text = "STICHER"
-horizontal_alignment = 1
-
-[node name="StatusLabel" type="Label" parent="MarginContainer/MainVBox/MainContent/LeftPanel/ScientistsVBox/BreederPanel/VBox"]
-layout_mode = 2
-theme_override_colors/font_color = Color(0.7, 0.7, 0.7, 1)
-theme_override_font_sizes/font_size = 11
-text = "Not hired"
-horizontal_alignment = 1
-
-[node name="TrainerPanel" type="PanelContainer" parent="MarginContainer/MainVBox/MainContent/LeftPanel/ScientistsVBox"]
-layout_mode = 2
-size_flags_vertical = 3
-
-[node name="VBox" type="VBoxContainer" parent="MarginContainer/MainVBox/MainContent/LeftPanel/ScientistsVBox/TrainerPanel"]
-layout_mode = 2
-
-[node name="ScientistIcon" type="ColorRect" parent="MarginContainer/MainVBox/MainContent/LeftPanel/ScientistsVBox/TrainerPanel/VBox"]
-custom_minimum_size = Vector2(60, 60)
-layout_mode = 2
-size_flags_horizontal = 4
-color = Color(0.3, 0.5, 0.3, 1)
-
-[node name="NameLabel" type="Label" parent="MarginContainer/MainVBox/MainContent/LeftPanel/ScientistsVBox/TrainerPanel/VBox"]
-layout_mode = 2
-theme_override_colors/font_color = Color(0.5, 1, 0.5, 1)
-theme_override_font_sizes/font_size = 16
-text = "TRAINER"
-horizontal_alignment = 1
-
-[node name="StatusLabel" type="Label" parent="MarginContainer/MainVBox/MainContent/LeftPanel/ScientistsVBox/TrainerPanel/VBox"]
-layout_mode = 2
-theme_override_colors/font_color = Color(0.7, 0.7, 0.7, 1)
-theme_override_font_sizes/font_size = 11
-text = "Not hired"
-horizontal_alignment = 1
-
-[node name="CaretakerPanel" type="PanelContainer" parent="MarginContainer/MainVBox/MainContent/LeftPanel/ScientistsVBox"]
-layout_mode = 2
-size_flags_vertical = 3
-
-[node name="VBox" type="VBoxContainer" parent="MarginContainer/MainVBox/MainContent/LeftPanel/ScientistsVBox/CaretakerPanel"]
-layout_mode = 2
-
-[node name="ScientistIcon" type="ColorRect" parent="MarginContainer/MainVBox/MainContent/LeftPanel/ScientistsVBox/CaretakerPanel/VBox"]
-custom_minimum_size = Vector2(60, 60)
-layout_mode = 2
-size_flags_horizontal = 4
-color = Color(0.3, 0.5, 0.3, 1)
-
-[node name="NameLabel" type="Label" parent="MarginContainer/MainVBox/MainContent/LeftPanel/ScientistsVBox/CaretakerPanel/VBox"]
-layout_mode = 2
-theme_override_colors/font_color = Color(0.5, 1, 0.5, 1)
-theme_override_font_sizes/font_size = 16
-text = "CARETAKER"
-horizontal_alignment = 1
-
-[node name="StatusLabel" type="Label" parent="MarginContainer/MainVBox/MainContent/LeftPanel/ScientistsVBox/CaretakerPanel/VBox"]
-layout_mode = 2
-theme_override_colors/font_color = Color(0.7, 0.7, 0.7, 1)
-theme_override_font_sizes/font_size = 11
-text = "Not hired"
-horizontal_alignment = 1
+scientist_type = 2
 
 [node name="CenterPanel" type="PanelContainer" parent="MarginContainer/MainVBox/MainContent"]
 layout_mode = 2
@@ -586,3 +523,7 @@ layout_mode = 0
 
 [node name="DragonDetailsModal" parent="." instance=ExtResource("5")]
 layout_mode = 1
+
+[node name="ScientistHireModal" parent="." instance=ExtResource("6_hire_modal")]
+unique_name_in_owner = true
+visible = false
