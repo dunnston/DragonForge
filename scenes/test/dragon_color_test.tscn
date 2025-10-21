@@ -1,0 +1,171 @@
+[gd_scene load_steps=3 format=3 uid="uid://b83ogq3bpaay0"]
+
+[ext_resource type="PackedScene" uid="uid://57erx6jtexcf" path="res://assets/Icons/dragons/dragon-base.tscn" id="1_dragon_base"]
+[ext_resource type="Script" uid="uid://gqlme1ml13rh" path="res://scripts/test/dragon_color_test.gd" id="2_test_script"]
+
+[node name="DragonColorTest" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("2_test_script")
+
+[node name="MarginContainer" type="MarginContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_left = 20
+theme_override_constants/margin_top = 20
+theme_override_constants/margin_right = 20
+theme_override_constants/margin_bottom = 20
+
+[node name="VBox" type="VBoxContainer" parent="MarginContainer"]
+layout_mode = 2
+theme_override_constants/separation = 20
+
+[node name="Title" type="Label" parent="MarginContainer/VBox"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 24
+text = "Dragon Color System Test"
+horizontal_alignment = 1
+
+[node name="HBox" type="HBoxContainer" parent="MarginContainer/VBox"]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/separation = 40
+
+[node name="DragonDisplay" type="CenterContainer" parent="MarginContainer/VBox/HBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="DragonBase" parent="MarginContainer/VBox/HBox/DragonDisplay" instance=ExtResource("1_dragon_base")]
+unique_name_in_owner = true
+position = Vector2(299, 227)
+scale = Vector2(0.3, 0.3)
+
+[node name="Controls" type="VBoxContainer" parent="MarginContainer/VBox/HBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 15
+
+[node name="HeadLabel" type="Label" parent="MarginContainer/VBox/HBox/Controls"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 16
+text = "Head Element:"
+
+[node name="HeadOptions" type="HBoxContainer" parent="MarginContainer/VBox/HBox/Controls"]
+layout_mode = 2
+
+[node name="FireHead" type="Button" parent="MarginContainer/VBox/HBox/Controls/HeadOptions"]
+layout_mode = 2
+text = "Fire"
+
+[node name="IceHead" type="Button" parent="MarginContainer/VBox/HBox/Controls/HeadOptions"]
+layout_mode = 2
+text = "Ice"
+
+[node name="LightningHead" type="Button" parent="MarginContainer/VBox/HBox/Controls/HeadOptions"]
+layout_mode = 2
+text = "Lightning"
+
+[node name="NatureHead" type="Button" parent="MarginContainer/VBox/HBox/Controls/HeadOptions"]
+layout_mode = 2
+text = "Nature"
+
+[node name="ShadowHead" type="Button" parent="MarginContainer/VBox/HBox/Controls/HeadOptions"]
+layout_mode = 2
+text = "Shadow"
+
+[node name="BodyLabel" type="Label" parent="MarginContainer/VBox/HBox/Controls"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 16
+text = "Body Element:"
+
+[node name="BodyOptions" type="HBoxContainer" parent="MarginContainer/VBox/HBox/Controls"]
+layout_mode = 2
+
+[node name="FireBody" type="Button" parent="MarginContainer/VBox/HBox/Controls/BodyOptions"]
+layout_mode = 2
+text = "Fire"
+
+[node name="IceBody" type="Button" parent="MarginContainer/VBox/HBox/Controls/BodyOptions"]
+layout_mode = 2
+text = "Ice"
+
+[node name="LightningBody" type="Button" parent="MarginContainer/VBox/HBox/Controls/BodyOptions"]
+layout_mode = 2
+text = "Lightning"
+
+[node name="NatureBody" type="Button" parent="MarginContainer/VBox/HBox/Controls/BodyOptions"]
+layout_mode = 2
+text = "Nature"
+
+[node name="ShadowBody" type="Button" parent="MarginContainer/VBox/HBox/Controls/BodyOptions"]
+layout_mode = 2
+text = "Shadow"
+
+[node name="TailLabel" type="Label" parent="MarginContainer/VBox/HBox/Controls"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 16
+text = "Tail Element:"
+
+[node name="TailOptions" type="HBoxContainer" parent="MarginContainer/VBox/HBox/Controls"]
+layout_mode = 2
+
+[node name="FireTail" type="Button" parent="MarginContainer/VBox/HBox/Controls/TailOptions"]
+layout_mode = 2
+text = "Fire"
+
+[node name="IceTail" type="Button" parent="MarginContainer/VBox/HBox/Controls/TailOptions"]
+layout_mode = 2
+text = "Ice"
+
+[node name="LightningTail" type="Button" parent="MarginContainer/VBox/HBox/Controls/TailOptions"]
+layout_mode = 2
+text = "Lightning"
+
+[node name="NatureTail" type="Button" parent="MarginContainer/VBox/HBox/Controls/TailOptions"]
+layout_mode = 2
+text = "Nature"
+
+[node name="ShadowTail" type="Button" parent="MarginContainer/VBox/HBox/Controls/TailOptions"]
+layout_mode = 2
+text = "Shadow"
+
+[node name="HSeparator" type="HSeparator" parent="MarginContainer/VBox/HBox/Controls"]
+layout_mode = 2
+
+[node name="PresetLabel" type="Label" parent="MarginContainer/VBox/HBox/Controls"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 16
+text = "Quick Presets:"
+
+[node name="Presets" type="HBoxContainer" parent="MarginContainer/VBox/HBox/Controls"]
+layout_mode = 2
+
+[node name="AllFire" type="Button" parent="MarginContainer/VBox/HBox/Controls/Presets"]
+layout_mode = 2
+text = "All Fire"
+
+[node name="AllIce" type="Button" parent="MarginContainer/VBox/HBox/Controls/Presets"]
+layout_mode = 2
+text = "All Ice"
+
+[node name="Rainbow" type="Button" parent="MarginContainer/VBox/HBox/Controls/Presets"]
+layout_mode = 2
+text = "Rainbow"
+
+[node name="Random" type="Button" parent="MarginContainer/VBox/HBox/Controls/Presets"]
+layout_mode = 2
+text = "Random"
+
+[node name="Info" type="Label" parent="MarginContainer/VBox"]
+layout_mode = 2
+text = "Click buttons to change dragon part elements and see the colors update in real-time!"
+horizontal_alignment = 1
+autowrap_mode = 2

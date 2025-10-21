@@ -420,15 +420,17 @@ func _update_button_states():
 	train_button.text = "Stop Training" if current_state == Dragon.DragonState.TRAINING else "Train"
 
 	# Rest: can toggle on/off, or switch from other states
-	# Disable if not fatigued at all
-	rest_button.disabled = current_dragon.fatigue_level < 0.1
+	# Disable if not fatigued at all AND not currently resting (allow stopping rest anytime)
+	rest_button.disabled = current_dragon.fatigue_level < 0.1 and current_state != Dragon.DragonState.RESTING
 	rest_button.text = "Stop Resting" if current_state == Dragon.DragonState.RESTING else "Rest"
 
 	# Defend: can toggle on/off, or switch from other states
+	# Disable if too fatigued (needs 50% rest) and not currently defending
+	defend_button.disabled = current_dragon.fatigue_level > 0.5 and current_state != Dragon.DragonState.DEFENDING
 	defend_button.text = "Stop Defending" if current_state == Dragon.DragonState.DEFENDING else "Defend"
 
-	# Exploration: can only explore if not currently exploring and not too fatigued
-	var can_explore = current_state != Dragon.DragonState.EXPLORING and current_dragon.fatigue_level <= 0.8
+	# Exploration: can only explore if not currently exploring and not too fatigued (needs 50% rest)
+	var can_explore = current_state != Dragon.DragonState.EXPLORING and current_dragon.fatigue_level <= 0.5
 	explore_15_button.disabled = not can_explore
 	explore_30_button.disabled = not can_explore
 	explore_60_button.disabled = not can_explore
@@ -443,8 +445,8 @@ func _update_button_states():
 	elif current_state != Dragon.DragonState.IDLE:
 		exploration_status_label.text = "Dragon is %s" % _get_state_text(current_dragon.current_state)
 		exploration_status_label.add_theme_color_override("font_color", Color(0.6, 0.6, 0.6, 1))
-	elif current_dragon.fatigue_level > 0.8:
-		exploration_status_label.text = "Too fatigued to explore"
+	elif current_dragon.fatigue_level > 0.5:
+		exploration_status_label.text = "Too fatigued to explore (needs 50% rest)"
 		exploration_status_label.add_theme_color_override("font_color", Color(1, 0.5, 0.5, 1))
 	else:
 		exploration_status_label.text = "Ready to explore!"
@@ -536,27 +538,12 @@ func _on_update_timer_timeout():
 
 func _on_exploration_completed(dragon: Dragon, rewards: Dictionary):
 	"""Called when any dragon completes exploration"""
-	# Only show popup if this is the current dragon being viewed
+	# Only update display if this is the current dragon being viewed
+	# (Popup is now handled by factory manager for all dragons)
 	if current_dragon and dragon.dragon_id == current_dragon.dragon_id:
-		_show_exploration_return_popup(dragon, rewards)
 		_update_display()
 		update_timer.stop()
 		dragon_updated.emit()
-
-func _show_exploration_return_popup(dragon: Dragon, rewards: Dictionary):
-	"""Show the exploration return popup with rewards"""
-	# Load and show the return popup
-	var popup_scene = load("res://scenes/ui/exploration_return_popup.tscn")
-	if not popup_scene:
-		print("ERROR: Could not load exploration_return_popup.tscn")
-		return
-
-	var popup = popup_scene.instantiate()
-	get_tree().root.add_child(popup)
-	popup.confirmed.connect(func():
-		popup.queue_free()
-	)
-	popup.show_return(dragon, rewards)
 
 func _update_exploration_button_labels():
 	"""Update button labels based on DEV_MODE"""

@@ -8,7 +8,10 @@ const HUNGER_RATE: float = 0.01 / 60.0  # 1% per minute (0.01 per 60 seconds)
 const STARVATION_THRESHOLD: float = 1.0  # 100% hunger triggers starvation
 const STARVATION_TIME: int = 6000  # 100 minutes until full starvation (100 minutes at 1% per min)
 const FATIGUE_TIME: int = 2700     # 45 minutes until tired from activity
-const REST_TIME: int = 900         # 15 minutes to recover from fatigue
+
+# Fatigue Recovery Rates (per 30 second update)
+const FATIGUE_RECOVERY_IDLE: float = 0.01    # 1% per 30 seconds (50 minutes to fully recover)
+const FATIGUE_RECOVERY_RESTING: float = 0.045  # 4.5% per 30 seconds (~11 minutes to fully recover)
 
 # Food/Healing Constants
 const FOOD_HUNGER_HEAL: float = 0.25  # Food heals 25% hunger
@@ -125,15 +128,21 @@ func feed_dragon(dragon: Dragon) -> bool:
 
 func _update_fatigue_system(dragon: Dragon, current_time: int):
 	"""Update dragon fatigue based on activity time"""
-	# Skip fatigue for idle or resting dragons
+	# Recover from fatigue during idle or rest
 	if dragon.current_state == Dragon.DragonState.IDLE or dragon.current_state == Dragon.DragonState.RESTING:
-		# Recover from fatigue during rest
 		if dragon.fatigue_level > 0.0:
-			var rest_time = current_time - dragon.state_start_time
-			if rest_time >= REST_TIME:
-				dragon.fatigue_level = 0.0  # Fully rested
+			# Use different recovery rates for IDLE vs RESTING
+			var recovery_amount = 0.0
+			if dragon.current_state == Dragon.DragonState.RESTING:
+				recovery_amount = FATIGUE_RECOVERY_RESTING  # 4.5% per 30 seconds
 			else:
-				dragon.fatigue_level = max(0.0, dragon.fatigue_level - (rest_time / float(REST_TIME)))
+				recovery_amount = FATIGUE_RECOVERY_IDLE  # 1% per 30 seconds
+
+			dragon.fatigue_level = max(0.0, dragon.fatigue_level - recovery_amount)
+
+			# Automatically stop resting when fully recovered
+			if dragon.fatigue_level <= 0.0 and dragon.current_state == Dragon.DragonState.RESTING:
+				set_dragon_state(dragon, Dragon.DragonState.IDLE)
 		return
 	
 	# Calculate fatigue for active dragons

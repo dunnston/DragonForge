@@ -20,6 +20,9 @@ signal wave_started(wave_number: int, enemies: Array)
 signal wave_completed(victory: bool, rewards: Dictionary)
 signal dragon_damaged(dragon: Dragon, damage: int)
 signal dragon_defended_successfully(dragon: Dragon, enemies_defeated: int)
+signal dragon_assigned_to_defense(dragon: Dragon)
+signal dragon_removed_from_defense(dragon: Dragon)
+signal defense_slots_full()
 
 func _ready():
 	if instance == null:
@@ -71,14 +74,25 @@ func assign_dragon_to_defense(dragon: Dragon) -> bool:
 
 	if defending_dragons.size() >= 3:
 		print("[DefenseManager] Maximum 3 defenders!")
+		defense_slots_full.emit()
 		return false
 
 	if dragon.current_health <= 0:
 		print("[DefenseManager] Dragon is dead!")
 		return false
 
+	# Check if dragon is too fatigued (must be at least 50% rested)
+	if dragon.fatigue_level > 0.5:
+		print("[DefenseManager] %s is too fatigued to defend (needs 50%% rest)!" % dragon.dragon_name)
+		return false
+
 	defending_dragons.append(dragon)
-	dragon.current_state = Dragon.DragonState.DEFENDING
+	# Use proper state setter to update state_start_time
+	if DragonStateManager and DragonStateManager.instance:
+		DragonStateManager.instance.set_dragon_state(dragon, Dragon.DragonState.DEFENDING)
+	else:
+		dragon.current_state = Dragon.DragonState.DEFENDING
+	dragon_assigned_to_defense.emit(dragon)
 	print("[DefenseManager] %s assigned to defense (Total: %d)" % [dragon.dragon_name, defending_dragons.size()])
 	return true
 
@@ -87,7 +101,12 @@ func remove_dragon_from_defense(dragon: Dragon) -> bool:
 		return false
 
 	defending_dragons.erase(dragon)
-	dragon.current_state = Dragon.DragonState.IDLE
+	# Use proper state setter to update state_start_time
+	if DragonStateManager and DragonStateManager.instance:
+		DragonStateManager.instance.set_dragon_state(dragon, Dragon.DragonState.IDLE)
+	else:
+		dragon.current_state = Dragon.DragonState.IDLE
+	dragon_removed_from_defense.emit(dragon)
 	print("[DefenseManager] %s removed from defense" % dragon.dragon_name)
 	return true
 

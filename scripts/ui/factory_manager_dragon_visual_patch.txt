@@ -1,0 +1,16 @@
+# Replace lines 388-396 in factory_manager.gd with:
+
+	# Dragon visual with shader-based coloring
+	var dragon_visual_scene = load("res://assets/Icons/dragons/dragon-base.tscn")
+	var dragon_visual: DragonVisual = dragon_visual_scene.instantiate()
+	dragon_visual.custom_minimum_size = Vector2(60, 60)
+	dragon_visual.scale = Vector2(0.15, 0.15)  # Scale down for list display
+
+	# Apply colors based on dragon's parts
+	dragon_visual.set_dragon_colors_from_parts(
+		dragon.head_part,
+		dragon.body_part,
+		dragon.tail_part
+	)
+
+	hbox.add_child(dragon_visual)

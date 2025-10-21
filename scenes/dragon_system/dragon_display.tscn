@@ -1,43 +1,29 @@
-[gd_scene load_steps=2 format=3 uid="uid://cqrh4xo6ikm40"]
+[gd_scene load_steps=3 format=3 uid="uid://cqrh4xo6ikm40"]
 
 [ext_resource type="Script" uid="uid://ce7defsohudc" path="res://scripts/dragon_system/dragon_display.gd" id="1_days5"]
+[ext_resource type="PackedScene" uid="uid://57erx6jtexcf" path="res://assets/Icons/dragons/dragon-base.tscn" id="2_dragon_visual"]
 
 [node name="Main" type="Node2D"]
 script = ExtResource("1_days5")
 
-[node name="HeadSprite" type="ColorRect" parent="."]
-offset_left = 50.0
-offset_top = 50.0
-offset_right = 130.0
-offset_bottom = 110.0
-color = Color(0, 0, 0, 1)
-
-[node name="BodySprite" type="ColorRect" parent="."]
-offset_left = 50.0
-offset_top = 120.0
-offset_right = 130.0
-offset_bottom = 220.0
-color = Color(0, 0, 0, 1)
-
-[node name="TailSprite" type="ColorRect" parent="."]
-offset_left = 50.0
-offset_top = 230.0
-offset_right = 130.0
-offset_bottom = 270.0
-color = Color(0, 0, 0, 1)
+[node name="DragonVisual" parent="." instance=ExtResource("2_dragon_visual")]
+unique_name_in_owner = true
+position = Vector2(90, 150)
 
 [node name="NameLabel" type="Label" parent="."]
-offset_left = 150.0
+offset_left = 200.0
 offset_top = 50.0
-offset_right = 350.0
+offset_right = 400.0
 offset_bottom = 100.0
+theme_override_font_sizes/font_size = 18
 text = "Dragon Name"
 autowrap_mode = 3
 
 [node name="StatsLabel" type="Label" parent="."]
-offset_left = 150.0
+offset_left = 200.0
 offset_top = 100.0
-offset_right = 450.0
+offset_right = 500.0
 offset_bottom = 200.0
+theme_override_font_sizes/font_size = 14
 text = "ATK: 0 | HP: 0/0 | SPD: 0"
 autowrap_mode = 3

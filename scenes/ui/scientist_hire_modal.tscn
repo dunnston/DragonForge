@@ -1,11 +1,13 @@
 [gd_scene load_steps=2 format=3 uid="uid://c3lam6n8p2q4r"]
 
-[ext_resource type="Script" path="res://scripts/ui/scientist_hire_modal.gd" id="1_hire_modal"]
+[ext_resource type="Script" uid="uid://fq0blgfspxl5" path="res://scripts/ui/scientist_hire_modal.gd" id="1_hire_modal"]
 
 [node name="ScientistHireModal" type="AcceptDialog"]
+oversampling_override = 1.0
 title = "Hire Scientist"
 initial_position = 2
-size = Vector2i(400, 500)
+size = Vector2i(400, 564)
+visible = true
 dialog_text = "Would you like to hire this scientist?"
 script = ExtResource("1_hire_modal")
 
@@ -13,8 +15,12 @@ script = ExtResource("1_hire_modal")
 offset_left = 8.0
 offset_top = 8.0
 offset_right = 392.0
-offset_bottom = 451.0
+offset_bottom = 515.0
 
+
+[node name="TopSpacer" type="Control" parent="Content"]
+custom_minimum_size = Vector2(0, 40)
+layout_mode = 2
 [node name="ScientistImage" type="TextureRect" parent="Content"]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(200, 200)
@@ -84,5 +90,5 @@ theme_override_font_sizes/font_size = 12
 text = "Not enough gold!"
 horizontal_alignment = 1
 
-[connection signal="confirmed" from="." to="." method="_on_confirmed"]
 [connection signal="canceled" from="." to="." method="_on_canceled"]
+[connection signal="confirmed" from="." to="." method="_on_confirmed"]

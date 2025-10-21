@@ -1,0 +1,70 @@
+[gd_scene load_steps=4 format=3 uid="uid://demo_scientist_panel"]
+
+[ext_resource type="PackedScene" uid="uid://b2j8h5k7m4n9p" path="res://scenes/ui/scientist_panel.tscn" id="1_panel"]
+[ext_resource type="PackedScene" uid="uid://c3k9m6n8p2q4r" path="res://scenes/ui/scientist_hire_modal.tscn" id="2_modal"]
+[ext_resource type="Script" path="res://scripts/ui/scientist_panel_demo.gd" id="3_demo"]
+
+[node name="ScientistPanelDemo" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("3_demo")
+
+[node name="CenterContainer" type="CenterContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="VBox" type="VBoxContainer" parent="CenterContainer"]
+layout_mode = 2
+
+[node name="Title" type="Label" parent="CenterContainer/VBox"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 24
+text = "Scientist Panel Demo"
+horizontal_alignment = 1
+
+[node name="Spacer1" type="Control" parent="CenterContainer/VBox"]
+custom_minimum_size = Vector2(0, 20)
+layout_mode = 2
+
+[node name="HBox" type="HBoxContainer" parent="CenterContainer/VBox"]
+layout_mode = 2
+theme_override_constants/separation = 20
+
+[node name="StitcherPanel" parent="CenterContainer/VBox/HBox" instance=ExtResource("1_panel")]
+unique_name_in_owner = true
+layout_mode = 2
+scientist_type = 0
+
+[node name="CaretakerPanel" parent="CenterContainer/VBox/HBox" instance=ExtResource("1_panel")]
+unique_name_in_owner = true
+layout_mode = 2
+scientist_type = 1
+
+[node name="TrainerPanel" parent="CenterContainer/VBox/HBox" instance=ExtResource("1_panel")]
+unique_name_in_owner = true
+layout_mode = 2
+scientist_type = 2
+
+[node name="Spacer2" type="Control" parent="CenterContainer/VBox"]
+custom_minimum_size = Vector2(0, 20)
+layout_mode = 2
+
+[node name="Instructions" type="Label" parent="CenterContainer/VBox"]
+layout_mode = 2
+text = "Click on a scientist panel to hire them
+Click the X button to fire them
+Watch the progress bar fill as they work"
+horizontal_alignment = 1
+autowrap_mode = 2
+
+[node name="HireModal" parent="." instance=ExtResource("2_modal")]
+unique_name_in_owner = true
+visible = false

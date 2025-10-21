@@ -1,0 +1,22 @@
+[gd_scene load_steps=6 format=3 uid="uid://57erx6jtexcf"]
+
+[ext_resource type="Texture2D" uid="uid://di4n6vqtig6xk" path="res://assets/Icons/dragons/fire-dragon-base-transparent.png" id="1_base"]
+[ext_resource type="Texture2D" uid="uid://c881cwg5wn7k0" path="res://assets/Icons/dragons/dragon-mask.png" id="2_mask"]
+[ext_resource type="Script" path="res://scripts/ui/dragon_visual.gd" id="3_script"]
+[ext_resource type="Shader" path="res://assets/shaders/dragon_color.gdshader" id="4_shader"]
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_dragon_color"]
+resource_local_to_scene = true
+shader = ExtResource("4_shader")
+shader_parameter/head_color = Color(1, 0, 0, 1)
+shader_parameter/body_color = Color(0, 1, 0, 1)
+shader_parameter/tail_color = Color(0, 0, 1, 1)
+shader_parameter/mask_texture = ExtResource("2_mask")
+
+[node name="DragonBase" type="Node2D"]
+script = ExtResource("3_script")
+
+[node name="Sprite2D" type="Sprite2D" parent="."]
+unique_name_in_owner = true
+material = SubResource("ShaderMaterial_dragon_color")
+texture = ExtResource("1_base")

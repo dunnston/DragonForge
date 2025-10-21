@@ -1,0 +1,46 @@
+[gd_scene load_steps=3 format=3 uid="uid://dragon_card_component"]
+
+[ext_resource type="PackedScene" uid="uid://57erx6jtexcf" path="res://assets/Icons/dragons/dragon-base.tscn" id="1_dragon_visual"]
+[ext_resource type="Script" path="res://scripts/ui/dragon_card.gd" id="2_dragon_card_script"]
+
+[node name="DragonCard" type="PanelContainer"]
+custom_minimum_size = Vector2(250, 100)
+script = ExtResource("2_dragon_card_script")
+
+[node name="HBox" type="HBoxContainer" parent="."]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="DragonContainer" type="CenterContainer" parent="HBox"]
+custom_minimum_size = Vector2(80, 80)
+layout_mode = 2
+
+[node name="DragonVisual" parent="HBox/DragonContainer" instance=ExtResource("1_dragon_visual")]
+unique_name_in_owner = true
+scale = Vector2(0.08, 0.08)
+position = Vector2(40, 40)
+
+[node name="InfoVBox" type="VBoxContainer" parent="HBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="NameLabel" type="Label" parent="HBox/InfoVBox"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.8, 1, 0.8, 1)
+theme_override_font_sizes/font_size = 16
+text = "Dragon Name"
+
+[node name="StatsLabel" type="Label" parent="HBox/InfoVBox"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.7, 0.7, 0.7, 1)
+theme_override_font_sizes/font_size = 12
+text = "HP: 100  Lvl: 1"
+
+[node name="StateLabel" type="Label" parent="HBox/InfoVBox"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.6, 0.9, 0.6, 1)
+theme_override_font_sizes/font_size = 12
+text = "Idle"

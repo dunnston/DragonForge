@@ -88,13 +88,15 @@ func start_exploration(dragon: Dragon, duration_minutes: int) -> bool:
 		exploration_failed.emit(dragon, "Dragon is dead")
 		return false
 
-	if dragon.current_state != Dragon.DragonState.IDLE:
-		exploration_failed.emit(dragon, "Dragon is not idle")
+	# Allow exploration from IDLE, RESTING, TRAINING, and DEFENDING states
+	# But not from EXPLORING (can't explore twice) or DEAD
+	if dragon.current_state == Dragon.DragonState.EXPLORING:
+		exploration_failed.emit(dragon, "Dragon is already exploring")
 		return false
 
-	# Check if dragon is too fatigued
-	if dragon.fatigue_level > 0.8:
-		exploration_failed.emit(dragon, "Dragon is too fatigued to explore")
+	# Check if dragon is too fatigued (must be at least 50% rested)
+	if dragon.fatigue_level > 0.5:
+		exploration_failed.emit(dragon, "Dragon is too fatigued to explore (needs 50% rest)")
 		return false
 
 	# Validate duration
@@ -110,8 +112,11 @@ func start_exploration(dragon: Dragon, duration_minutes: int) -> bool:
 
 	var current_time = Time.get_unix_time_from_system()
 
-	# Set dragon state
-	dragon.current_state = Dragon.DragonState.EXPLORING
+	# Set dragon state (use proper state setter to update state_start_time)
+	if DragonStateManager and DragonStateManager.instance:
+		DragonStateManager.instance.set_dragon_state(dragon, Dragon.DragonState.EXPLORING)
+	else:
+		dragon.current_state = Dragon.DragonState.EXPLORING
 	dragon.exploration_start_time = current_time
 	dragon.exploration_duration = duration_seconds
 
@@ -134,7 +139,11 @@ func cancel_exploration(dragon: Dragon) -> bool:
 		return false
 
 	active_explorations.erase(dragon.dragon_id)
-	dragon.current_state = Dragon.DragonState.IDLE
+	# Use proper state setter to update state_start_time
+	if DragonStateManager and DragonStateManager.instance:
+		DragonStateManager.instance.set_dragon_state(dragon, Dragon.DragonState.IDLE)
+	else:
+		dragon.current_state = Dragon.DragonState.IDLE
 	print("[ExplorationManager] %s exploration cancelled" % dragon.dragon_name)
 	return true
 
@@ -205,8 +214,11 @@ func _complete_exploration(dragon_id: String):
 	# Apply costs (hunger, fatigue, damage)
 	_apply_exploration_costs(dragon, duration_minutes)
 
-	# Return dragon to idle
-	dragon.current_state = Dragon.DragonState.IDLE
+	# Return dragon to idle (use proper state setter to update state_start_time)
+	if DragonStateManager and DragonStateManager.instance:
+		DragonStateManager.instance.set_dragon_state(dragon, Dragon.DragonState.IDLE)
+	else:
+		dragon.current_state = Dragon.DragonState.IDLE
 
 	# Emit completion signal
 	exploration_completed.emit(dragon, rewards)
