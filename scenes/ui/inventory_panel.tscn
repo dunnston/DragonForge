@@ -30,7 +30,7 @@ grow_horizontal = 2
 grow_vertical = 2
 
 [node name="PanelContainer" type="PanelContainer" parent="CenterContainer"]
-custom_minimum_size = Vector2(600, 500)
+custom_minimum_size = Vector2(750, 650)
 layout_mode = 2
 
 [node name="MarginContainer" type="MarginContainer" parent="CenterContainer/PanelContainer"]
@@ -54,6 +54,12 @@ theme_override_colors/font_color = Color(0.5, 1, 0.5, 1)
 theme_override_font_sizes/font_size = 32
 text = "TREASURE VAULT"
 
+[node name="GoldLabel" type="Label" parent="CenterContainer/PanelContainer/MarginContainer/VBoxContainer/Header"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.84, 0, 1)
+theme_override_font_sizes/font_size = 24
+text = "0 Gold"
+
 [node name="CloseButton" type="Button" parent="CenterContainer/PanelContainer/MarginContainer/VBoxContainer/Header"]
 custom_minimum_size = Vector2(40, 40)
 layout_mode = 2
@@ -63,166 +69,60 @@ text = "X"
 [node name="HSeparator" type="HSeparator" parent="CenterContainer/PanelContainer/MarginContainer/VBoxContainer"]
 layout_mode = 2
 
-[node name="VaultInfo" type="VBoxContainer" parent="CenterContainer/PanelContainer/MarginContainer/VBoxContainer"]
+[node name="InventorySection" type="VBoxContainer" parent="CenterContainer/PanelContainer/MarginContainer/VBoxContainer"]
 layout_mode = 2
-theme_override_constants/separation = 8
+size_flags_vertical = 3
+theme_override_constants/separation = 10
 
-[node name="VaultTierLabel" type="Label" parent="CenterContainer/PanelContainer/MarginContainer/VBoxContainer/VaultInfo"]
+[node name="SectionTitle" type="Label" parent="CenterContainer/PanelContainer/MarginContainer/VBoxContainer/InventorySection"]
 layout_mode = 2
-theme_override_colors/font_color = Color(1, 0.843, 0, 1)
+theme_override_colors/font_color = Color(0.5, 1, 0.5, 1)
 theme_override_font_sizes/font_size = 24
-text = "Vault Tier: 1"
+text = "INVENTORY"
 
-[node name="TotalValueLabel" type="Label" parent="CenterContainer/PanelContainer/MarginContainer/VBoxContainer/VaultInfo"]
+[node name="ScrollContainer" type="ScrollContainer" parent="CenterContainer/PanelContainer/MarginContainer/VBoxContainer/InventorySection"]
+custom_minimum_size = Vector2(0, 500)
 layout_mode = 2
-theme_override_colors/font_color = Color(0.8, 1, 0.8, 1)
-theme_override_font_sizes/font_size = 18
-text = "Total Value: 0 gold"
+size_flags_vertical = 3
 
-[node name="HSeparator2" type="HSeparator" parent="CenterContainer/PanelContainer/MarginContainer/VBoxContainer"]
+[node name="InventoryGrid" type="GridContainer" parent="CenterContainer/PanelContainer/MarginContainer/VBoxContainer/InventorySection/ScrollContainer"]
 layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/h_separation = 4
+theme_override_constants/v_separation = 4
+columns = 8
 
-[node name="GoldSection" type="VBoxContainer" parent="CenterContainer/PanelContainer/MarginContainer/VBoxContainer"]
+[node name="TooltipPanel" type="PanelContainer" parent="."]
+visible = false
+offset_right = 250.0
+offset_bottom = 100.0
+
+[node name="MarginContainer" type="MarginContainer" parent="TooltipPanel"]
 layout_mode = 2
-theme_override_constants/separation = 5
+theme_override_constants/margin_left = 10
+theme_override_constants/margin_top = 10
+theme_override_constants/margin_right = 10
+theme_override_constants/margin_bottom = 10
 
-[node name="SectionTitle" type="Label" parent="CenterContainer/PanelContainer/MarginContainer/VBoxContainer/GoldSection"]
-layout_mode = 2
-theme_override_colors/font_color = Color(0.5, 1, 0.5, 1)
-theme_override_font_sizes/font_size = 20
-text = "GOLD"
-
-[node name="GoldDisplay" type="HBoxContainer" parent="CenterContainer/PanelContainer/MarginContainer/VBoxContainer/GoldSection"]
-layout_mode = 2
-theme_override_constants/separation = 10
-
-[node name="Icon" type="ColorRect" parent="CenterContainer/PanelContainer/MarginContainer/VBoxContainer/GoldSection/GoldDisplay"]
-custom_minimum_size = Vector2(30, 30)
-layout_mode = 2
-color = Color(1, 0.843, 0, 1)
-
-[node name="Amount" type="Label" parent="CenterContainer/PanelContainer/MarginContainer/VBoxContainer/GoldSection/GoldDisplay"]
-layout_mode = 2
-theme_override_colors/font_color = Color(0.8, 1, 0.8, 1)
-theme_override_font_sizes/font_size = 18
-text = "0 (Vulnerable)"
-
-[node name="ProtectedGoldDisplay" type="HBoxContainer" parent="CenterContainer/PanelContainer/MarginContainer/VBoxContainer/GoldSection"]
-layout_mode = 2
-theme_override_constants/separation = 10
-
-[node name="Icon" type="ColorRect" parent="CenterContainer/PanelContainer/MarginContainer/VBoxContainer/GoldSection/ProtectedGoldDisplay"]
-custom_minimum_size = Vector2(30, 30)
-layout_mode = 2
-color = Color(0.5, 1, 0.5, 1)
-
-[node name="Amount" type="Label" parent="CenterContainer/PanelContainer/MarginContainer/VBoxContainer/GoldSection/ProtectedGoldDisplay"]
-layout_mode = 2
-theme_override_colors/font_color = Color(0.5, 1, 0.5, 1)
-theme_override_font_sizes/font_size = 18
-text = "0 (Protected)"
-
-[node name="HSeparator3" type="HSeparator" parent="CenterContainer/PanelContainer/MarginContainer/VBoxContainer"]
-layout_mode = 2
-
-[node name="PartsSection" type="VBoxContainer" parent="CenterContainer/PanelContainer/MarginContainer/VBoxContainer"]
+[node name="VBoxContainer" type="VBoxContainer" parent="TooltipPanel/MarginContainer"]
 layout_mode = 2
 theme_override_constants/separation = 5
 
-[node name="SectionTitle" type="Label" parent="CenterContainer/PanelContainer/MarginContainer/VBoxContainer/PartsSection"]
+[node name="NameLabel" type="Label" parent="TooltipPanel/MarginContainer/VBoxContainer"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.5, 1, 0.5, 1)
-theme_override_font_sizes/font_size = 20
-text = "DRAGON PARTS"
-
-[node name="PartsGrid" type="GridContainer" parent="CenterContainer/PanelContainer/MarginContainer/VBoxContainer/PartsSection"]
-layout_mode = 2
-theme_override_constants/h_separation = 15
-theme_override_constants/v_separation = 10
-columns = 2
-
-[node name="FireLabel" type="Label" parent="CenterContainer/PanelContainer/MarginContainer/VBoxContainer/PartsSection/PartsGrid"]
-layout_mode = 2
-theme_override_colors/font_color = Color(1, 0.3, 0.2, 1)
+theme_override_colors/font_color = Color(1, 1, 0.5, 1)
 theme_override_font_sizes/font_size = 16
-text = "FIRE:"
+text = "Item Name"
 
-[node name="FireCount" type="Label" parent="CenterContainer/PanelContainer/MarginContainer/VBoxContainer/PartsSection/PartsGrid"]
+[node name="DescLabel" type="Label" parent="TooltipPanel/MarginContainer/VBoxContainer"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.8, 1, 0.8, 1)
-theme_override_font_sizes/font_size = 16
-text = "0"
-
-[node name="IceLabel" type="Label" parent="CenterContainer/PanelContainer/MarginContainer/VBoxContainer/PartsSection/PartsGrid"]
-layout_mode = 2
-theme_override_colors/font_color = Color(0.4, 0.7, 1, 1)
-theme_override_font_sizes/font_size = 16
-text = "ICE:"
-
-[node name="IceCount" type="Label" parent="CenterContainer/PanelContainer/MarginContainer/VBoxContainer/PartsSection/PartsGrid"]
-layout_mode = 2
-theme_override_colors/font_color = Color(0.8, 1, 0.8, 1)
-theme_override_font_sizes/font_size = 16
-text = "0"
-
-[node name="LightningLabel" type="Label" parent="CenterContainer/PanelContainer/MarginContainer/VBoxContainer/PartsSection/PartsGrid"]
-layout_mode = 2
-theme_override_colors/font_color = Color(1, 1, 0.3, 1)
-theme_override_font_sizes/font_size = 16
-text = "LIGHTNING:"
-
-[node name="LightningCount" type="Label" parent="CenterContainer/PanelContainer/MarginContainer/VBoxContainer/PartsSection/PartsGrid"]
-layout_mode = 2
-theme_override_colors/font_color = Color(0.8, 1, 0.8, 1)
-theme_override_font_sizes/font_size = 16
-text = "0"
-
-[node name="NatureLabel" type="Label" parent="CenterContainer/PanelContainer/MarginContainer/VBoxContainer/PartsSection/PartsGrid"]
-layout_mode = 2
-theme_override_colors/font_color = Color(0.3, 1, 0.3, 1)
-theme_override_font_sizes/font_size = 16
-text = "NATURE:"
-
-[node name="NatureCount" type="Label" parent="CenterContainer/PanelContainer/MarginContainer/VBoxContainer/PartsSection/PartsGrid"]
-layout_mode = 2
-theme_override_colors/font_color = Color(0.8, 1, 0.8, 1)
-theme_override_font_sizes/font_size = 16
-text = "0"
-
-[node name="ShadowLabel" type="Label" parent="CenterContainer/PanelContainer/MarginContainer/VBoxContainer/PartsSection/PartsGrid"]
-layout_mode = 2
-theme_override_colors/font_color = Color(0.6, 0.4, 1, 1)
-theme_override_font_sizes/font_size = 16
-text = "SHADOW:"
-
-[node name="ShadowCount" type="Label" parent="CenterContainer/PanelContainer/MarginContainer/VBoxContainer/PartsSection/PartsGrid"]
-layout_mode = 2
-theme_override_colors/font_color = Color(0.8, 1, 0.8, 1)
-theme_override_font_sizes/font_size = 16
-text = "0"
-
-[node name="HSeparator4" type="HSeparator" parent="CenterContainer/PanelContainer/MarginContainer/VBoxContainer"]
-layout_mode = 2
-
-[node name="InfoSection" type="VBoxContainer" parent="CenterContainer/PanelContainer/MarginContainer/VBoxContainer"]
-layout_mode = 2
-theme_override_constants/separation = 5
-
-[node name="AttackRiskLabel" type="Label" parent="CenterContainer/PanelContainer/MarginContainer/VBoxContainer/InfoSection"]
-layout_mode = 2
-theme_override_colors/font_color = Color(1, 0.5, 0.5, 1)
-theme_override_font_sizes/font_size = 14
-text = "Attack Difficulty: 1.0x"
-
-[node name="AttackFreqLabel" type="Label" parent="CenterContainer/PanelContainer/MarginContainer/VBoxContainer/InfoSection"]
-layout_mode = 2
-theme_override_colors/font_color = Color(1, 0.5, 0.5, 1)
-theme_override_font_sizes/font_size = 14
-text = "Attack Frequency: 1.0x"
-
-[node name="WarningLabel" type="Label" parent="CenterContainer/PanelContainer/MarginContainer/VBoxContainer/InfoSection"]
-layout_mode = 2
-theme_override_colors/font_color = Color(1, 0.7, 0.3, 1)
+theme_override_colors/font_color = Color(0.8, 0.8, 0.8, 1)
 theme_override_font_sizes/font_size = 12
-text = "More treasure = stronger attacks!"
-horizontal_alignment = 1
+text = "Item description goes here"
+autowrap_mode = 2
+
+[node name="StatsLabel" type="Label" parent="TooltipPanel/MarginContainer/VBoxContainer"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.5, 1, 0.5, 1)
+theme_override_font_sizes/font_size = 12
+text = "Stats info"
