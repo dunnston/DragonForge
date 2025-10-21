@@ -245,6 +245,89 @@ func _get_state_name(state: int) -> String:
 		Dragon.DragonState.RESTING: return "resting"
 		_: return "unknown"
 
+# === ITEM USAGE (from Treasure Vault) ===
+
+func use_treat_on_dragon(dragon: Dragon) -> bool:
+	"""Use a treat to grant XP to dragon"""
+	if not dragon or dragon.is_dead:
+		return false
+
+	if not TreasureVault or not TreasureVault.instance:
+		return false
+
+	if not TreasureVault.instance.use_item("treats", 1):
+		print("[DragonStateManager] No treats available!")
+		return false
+
+	# Treats grant 50 XP
+	var xp_amount = 50
+	gain_experience(dragon, xp_amount)
+	print("[DragonStateManager] %s enjoyed a treat and gained %d XP!" % [dragon.dragon_name, xp_amount])
+	return true
+
+func use_health_pot_on_dragon(dragon: Dragon) -> bool:
+	"""Use a health potion to heal dragon to full health"""
+	if not dragon or dragon.is_dead:
+		return false
+
+	if dragon.current_health >= dragon.total_health:
+		print("[DragonStateManager] %s is already at full health!" % dragon.dragon_name)
+		return false
+
+	if not TreasureVault or not TreasureVault.instance:
+		return false
+
+	if not TreasureVault.instance.use_item("health_pots", 1):
+		print("[DragonStateManager] No health potions available!")
+		return false
+
+	# Heal to full
+	dragon.current_health = dragon.total_health
+	dragon_health_changed.emit(dragon, dragon.current_health, dragon.total_health)
+	print("[DragonStateManager] %s drank a health potion and is fully healed!" % dragon.dragon_name)
+	return true
+
+func use_food_on_dragon(dragon: Dragon) -> bool:
+	"""Use food to reset dragon hunger"""
+	if not dragon or dragon.is_dead:
+		return false
+
+	if dragon.hunger_level <= 0.0:
+		print("[DragonStateManager] %s is not hungry!" % dragon.dragon_name)
+		return false
+
+	if not TreasureVault or not TreasureVault.instance:
+		return false
+
+	if not TreasureVault.instance.use_item("food", 1):
+		print("[DragonStateManager] No food available!")
+		return false
+
+	# Reset hunger
+	dragon.last_fed_time = Time.get_unix_time_from_system()
+	dragon.hunger_level = 0.0
+	dragon_hunger_changed.emit(dragon, 0.0)
+	print("[DragonStateManager] %s ate food and is no longer hungry!" % dragon.dragon_name)
+	return true
+
+func use_toy_on_dragon(dragon: Dragon) -> bool:
+	"""Use toy to increase dragon happiness (placeholder for future system)"""
+	if not dragon or dragon.is_dead:
+		return false
+
+	if not TreasureVault or not TreasureVault.instance:
+		return false
+
+	if not TreasureVault.instance.use_item("toys", 1):
+		print("[DragonStateManager] No toys available!")
+		return false
+
+	# TODO: Implement happiness system
+	# For now, just provide a small XP bonus
+	gain_experience(dragon, 25)
+	print("[DragonStateManager] %s played with a toy and feels happy! (+25 XP)" % dragon.dragon_name)
+	return true
+
 # === DEBUG & TESTING FUNCTIONS ===
 
 func force_level_up(dragon: Dragon, target_level: int = -1):
