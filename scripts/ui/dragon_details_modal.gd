@@ -65,6 +65,7 @@ func _ready():
 func open_for_dragon(dragon: Dragon):
 	current_dragon = dragon
 	_update_display()
+	_update_exploration_button_labels()
 
 	# Start update timer if dragon is exploring
 	if current_dragon and current_dragon.current_state == Dragon.DragonState.EXPLORING:
@@ -227,6 +228,16 @@ func _show_exploration_return_popup(dragon: Dragon, rewards: Dictionary):
 		popup.queue_free()
 	)
 	popup.show_return(dragon, rewards)
+
+func _update_exploration_button_labels():
+	"""Update button labels based on DEV_MODE"""
+	if not ExplorationManager or not ExplorationManager.instance:
+		return
+
+	var time_unit = "sec" if ExplorationManager.DEV_MODE else "min"
+	explore_15_button.text = "15 %s" % time_unit
+	explore_30_button.text = "30 %s" % time_unit
+	explore_60_button.text = "60 %s" % time_unit
 
 func _input(event):
 	if event is InputEventKey and event.pressed and event.keycode == KEY_ESCAPE and visible:

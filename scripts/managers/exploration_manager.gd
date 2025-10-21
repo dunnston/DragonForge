@@ -5,13 +5,17 @@ extends Node
 # === SINGLETON ===
 static var instance: ExplorationManager
 
+# === DEV MODE (SET TO false FOR PRODUCTION) ===
+const DEV_MODE: bool = true  # When true, uses SECONDS instead of MINUTES for exploration
+const DEV_TIME_SCALE: int = 1  # 1 = seconds, 60 = minutes
+
 # === EXPLORATION TRACKING ===
 var active_explorations: Dictionary = {}  # {dragon_id: exploration_data}
 
 # === EXPLORATION DURATIONS (in seconds) ===
-const DURATION_SHORT: int = 900   # 15 minutes
-const DURATION_MEDIUM: int = 1800  # 30 minutes
-const DURATION_LONG: int = 3600    # 60 minutes
+const DURATION_SHORT: int = 900   # 15 minutes (or 15 seconds in DEV_MODE)
+const DURATION_MEDIUM: int = 1800  # 30 minutes (or 30 seconds in DEV_MODE)
+const DURATION_LONG: int = 3600    # 60 minutes (or 60 seconds in DEV_MODE)
 
 # === RISK/REWARD CONSTANTS ===
 # Base rewards (scaled by duration and dragon level)
@@ -46,9 +50,18 @@ func _ready():
 		queue_free()
 		return
 
-	# Check explorations every 10 seconds
+	# Print DEV_MODE status on startup
+	if DEV_MODE:
+		print("\n⚡ [EXPLORATION MANAGER] DEV MODE ENABLED ⚡")
+		print("   → Explorations use SECONDS instead of MINUTES")
+		print("   → 15min = 15sec, 30min = 30sec, 60min = 60sec")
+		print("   → Set DEV_MODE = false for production\n")
+	else:
+		print("[ExplorationManager] Production mode - using real-time durations")
+
+	# Check explorations every 10 seconds (or 1 second in dev mode for responsiveness)
 	var timer = Timer.new()
-	timer.wait_time = 10.0
+	timer.wait_time = 1.0 if DEV_MODE else 10.0
 	timer.timeout.connect(_check_explorations)
 	add_child(timer)
 	timer.start()
@@ -89,7 +102,12 @@ func start_exploration(dragon: Dragon, duration_minutes: int) -> bool:
 		print("[ExplorationManager] ERROR: Invalid duration %d (must be 15, 30, or 60)" % duration_minutes)
 		return false
 
+	# Calculate duration in seconds (uses seconds instead of minutes in DEV_MODE)
 	var duration_seconds = duration_minutes * 60
+	if DEV_MODE:
+		duration_seconds = duration_minutes  # Use seconds for fast testing
+		print("[ExplorationManager] [DEV MODE] Using %d SECONDS instead of minutes" % duration_minutes)
+
 	var current_time = Time.get_unix_time_from_system()
 
 	# Set dragon state
@@ -106,7 +124,8 @@ func start_exploration(dragon: Dragon, duration_minutes: int) -> bool:
 	}
 
 	exploration_started.emit(dragon, duration_minutes)
-	print("[ExplorationManager] %s started exploring for %d minutes" % [dragon.dragon_name, duration_minutes])
+	var time_unit = "seconds" if DEV_MODE else "minutes"
+	print("[ExplorationManager] %s started exploring for %d %s" % [dragon.dragon_name, duration_minutes, time_unit])
 	return true
 
 func cancel_exploration(dragon: Dragon) -> bool:
@@ -320,6 +339,7 @@ func get_active_explorations_count() -> int:
 func print_exploration_status():
 	"""Debug: Print all active explorations"""
 	print("\n=== EXPLORATION STATUS ===")
+	print("DEV_MODE: %s" % ("ENABLED (using seconds)" if DEV_MODE else "DISABLED (using minutes)"))
 	print("Active Explorations: %d" % active_explorations.size())
 
 	for dragon_id in active_explorations:
@@ -334,3 +354,20 @@ func print_exploration_status():
 			remaining
 		])
 	print("==========================\n")
+
+func complete_all_explorations():
+	"""Debug: Instantly complete ALL active explorations"""
+	var count = active_explorations.size()
+	var dragon_ids = active_explorations.keys().duplicate()
+
+	for dragon_id in dragon_ids:
+		_complete_exploration(dragon_id)
+
+	print("[ExplorationManager] DEBUG: Force-completed %d explorations" % count)
+
+func get_dev_mode_info() -> String:
+	"""Returns info about DEV_MODE status"""
+	if DEV_MODE:
+		return "DEV MODE ENABLED - Explorations use SECONDS instead of minutes (15s/30s/60s)"
+	else:
+		return "Production Mode - Explorations use real time (15min/30min/60min)"
