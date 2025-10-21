@@ -10,6 +10,12 @@ var gold: int = 100  # Starting gold
 var dragon_parts: Dictionary = {}  # {DragonPart.Element: count}
 var artifacts: Dictionary = {}  # Special items {artifact_name: count}
 
+# === EXPLORATION ITEMS ===
+var treats: int = 0  # Feed to dragon to level them up (grants XP)
+var health_pots: int = 0  # Use to heal dragon
+var food: int = 0  # Heals hunger
+var toys: int = 0  # Increase dragon happiness
+
 # === VAULT STATE ===
 var total_vault_value: int = 0  # Combined value of all resources
 var vault_tier: int = 1  # Visual tier (1-5) based on total value
@@ -42,6 +48,7 @@ signal vault_tier_changed(new_tier: int, old_tier: int)
 signal milestone_reached(value: int, reward_id: String)
 signal resources_stolen(stolen_resources: Dictionary)
 signal resources_protected(protected_resources: Dictionary)
+signal item_changed(item_type: String, new_count: int, delta: int)
 
 func _ready():
 	if instance == null:
@@ -150,6 +157,78 @@ func add_artifact(artifact_name: String, count: int = 1):
 func get_artifact_count(artifact_name: String) -> int:
 	return artifacts.get(artifact_name, 0)
 
+# === EXPLORATION ITEMS MANAGEMENT ===
+
+func add_item(item_type: String, count: int = 1):
+	"""Add exploration items (treats, health_pots, food, toys)"""
+	if count <= 0:
+		return
+
+	match item_type:
+		"treats":
+			treats += count
+			item_changed.emit("treats", treats, count)
+			print("[TreasureVault] +%d treats (Total: %d)" % [count, treats])
+		"health_pots":
+			health_pots += count
+			item_changed.emit("health_pots", health_pots, count)
+			print("[TreasureVault] +%d health pots (Total: %d)" % [count, health_pots])
+		"food":
+			food += count
+			item_changed.emit("food", food, count)
+			print("[TreasureVault] +%d food (Total: %d)" % [count, food])
+		"toys":
+			toys += count
+			item_changed.emit("toys", toys, count)
+			print("[TreasureVault] +%d toys (Total: %d)" % [count, toys])
+
+	_update_vault_value()
+
+func use_item(item_type: String, count: int = 1) -> bool:
+	"""Use/consume exploration items"""
+	if count <= 0:
+		return true
+
+	match item_type:
+		"treats":
+			if treats < count:
+				return false
+			treats -= count
+			item_changed.emit("treats", treats, -count)
+			print("[TreasureVault] -%d treats (Total: %d)" % [count, treats])
+		"health_pots":
+			if health_pots < count:
+				return false
+			health_pots -= count
+			item_changed.emit("health_pots", health_pots, -count)
+			print("[TreasureVault] -%d health pots (Total: %d)" % [count, health_pots])
+		"food":
+			if food < count:
+				return false
+			food -= count
+			item_changed.emit("food", food, -count)
+			print("[TreasureVault] -%d food (Total: %d)" % [count, food])
+		"toys":
+			if toys < count:
+				return false
+			toys -= count
+			item_changed.emit("toys", toys, -count)
+			print("[TreasureVault] -%d toys (Total: %d)" % [count, toys])
+		_:
+			return false
+
+	_update_vault_value()
+	return true
+
+func get_item_count(item_type: String) -> int:
+	"""Get count of specific item type"""
+	match item_type:
+		"treats": return treats
+		"health_pots": return health_pots
+		"food": return food
+		"toys": return toys
+	return 0
+
 # === VAULT VALUE & TIER SYSTEM ===
 
 func _update_vault_value():
@@ -165,6 +244,12 @@ func _update_vault_value():
 	# Artifacts worth 100 gold each
 	for artifact in artifacts:
 		new_value += artifacts[artifact] * 100
+
+	# Exploration items worth 10 gold each
+	new_value += treats * 10
+	new_value += health_pots * 10
+	new_value += food * 10
+	new_value += toys * 10
 
 	var old_value = total_vault_value
 	total_vault_value = new_value
@@ -325,6 +410,10 @@ func to_dict() -> Dictionary:
 		"dragon_parts": dragon_parts.duplicate(),
 		"protected_parts": protected_parts.duplicate(),
 		"artifacts": artifacts.duplicate(),
+		"treats": treats,
+		"health_pots": health_pots,
+		"food": food,
+		"toys": toys,
 		"milestones_reached": milestones_reached.duplicate(),
 		"total_vault_value": total_vault_value,
 		"vault_tier": vault_tier
@@ -336,6 +425,10 @@ func from_dict(data: Dictionary):
 	dragon_parts = data.get("dragon_parts", {})
 	protected_parts = data.get("protected_parts", {})
 	artifacts = data.get("artifacts", {})
+	treats = data.get("treats", 0)
+	health_pots = data.get("health_pots", 0)
+	food = data.get("food", 0)
+	toys = data.get("toys", 0)
 	milestones_reached = data.get("milestones_reached", [])
 	total_vault_value = data.get("total_vault_value", 0)
 	vault_tier = data.get("vault_tier", 1)
