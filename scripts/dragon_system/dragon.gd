@@ -2,8 +2,8 @@ extends Resource
 class_name Dragon
 
 # Time Constants (in seconds)
-const HUNGER_INTERVAL: int = 1800  # 30 minutes until hungry
-const STARVATION_TIME: int = 3600  # 1 hour until starvation penalties
+const HUNGER_RATE: float = 0.01 / 60.0  # 1% per minute (0.01 per 60 seconds)
+const STARVATION_TIME: int = 6000  # 100 minutes until full starvation
 const FATIGUE_TIME: int = 2700     # 45 minutes until tired from activity
 const REST_TIME: int = 900         # 15 minutes to recover from fatigue
 
@@ -57,6 +57,10 @@ var total_speed: int = 0
 # Life Systems (computed from timestamps)
 var hunger_level: float = 0.0     # 0.0 = fed, 1.0 = starving
 var fatigue_level: float = 0.0    # 0.0 = rested, 1.0 = exhausted
+var happiness_level: float = 0.5  # 0.0 = sad, 1.0 = happy (starts at 50%)
+
+# Equipped Items
+@export var equipped_toy_id: String = ""  # ID of equipped toy item
 
 # Phase 3: New Signals for Combat & Exploration
 signal assignment_changed(dragon: Dragon, old_state: DragonState, new_state: DragonState)
@@ -165,11 +169,11 @@ func get_combination_key() -> String:
 func update_life_systems() -> void:
 	# Update hunger and fatigue based on time passage
 	var current_time = Time.get_unix_time_from_system()
-	
-	# Calculate hunger level
+
+	# Calculate hunger level linearly (1% per minute)
 	var time_since_fed = current_time - last_fed_time
-	hunger_level = min(1.0, time_since_fed / float(HUNGER_INTERVAL))
-	
+	hunger_level = min(1.0, time_since_fed * HUNGER_RATE)
+
 	# Calculate fatigue level (based on activity state)
 	if current_state != DragonState.RESTING:
 		var time_in_state = current_time - state_start_time
@@ -179,7 +183,7 @@ func update_life_systems() -> void:
 		var time_resting = current_time - state_start_time
 		var fatigue_reduction = time_resting / float(REST_TIME)
 		fatigue_level = max(0.0, fatigue_level - fatigue_reduction)
-	
+
 	# Recalculate stats with new status effects
 	calculate_stats()
 

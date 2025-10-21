@@ -18,6 +18,13 @@ signal dragon_updated
 @onready var hunger_label: Label = $CenterContainer/PanelContainer/MarginContainer/VBoxContainer/StatusSection/HungerLabel
 @onready var fatigue_label: Label = $CenterContainer/PanelContainer/MarginContainer/VBoxContainer/StatusSection/FatigueLabel
 
+# Dynamic UI elements (created programmatically)
+var happiness_label: Label
+var toy_slot_label: Label
+var treat_button: Button
+var health_pot_button: Button
+var equip_toy_button: Button
+
 # Parts
 @onready var head_label: Label = $CenterContainer/PanelContainer/MarginContainer/VBoxContainer/PartsSection/HeadLabel
 @onready var body_label: Label = $CenterContainer/PanelContainer/MarginContainer/VBoxContainer/PartsSection/BodyLabel
@@ -60,7 +67,76 @@ func _ready():
 	if ExplorationManager and ExplorationManager.instance:
 		ExplorationManager.instance.exploration_completed.connect(_on_exploration_completed)
 
+	# Create dynamic UI elements
+	_create_happiness_ui()
+	_create_consumable_ui()
+	_create_toy_slot_ui()
+
 	hide()
+
+func _create_happiness_ui():
+	"""Add happiness label to status section"""
+	var status_section = $CenterContainer/PanelContainer/MarginContainer/VBoxContainer/StatusSection
+	happiness_label = Label.new()
+	happiness_label.name = "HappinessLabel"
+	status_section.add_child(happiness_label)
+
+func _create_consumable_ui():
+	"""Add consumable item buttons"""
+	var vbox = $CenterContainer/PanelContainer/MarginContainer/VBoxContainer
+
+	# Create items section
+	var items_section = VBoxContainer.new()
+	items_section.name = "ItemsSection"
+	vbox.add_child(items_section)
+
+	var items_label = Label.new()
+	items_label.text = "=== ITEMS ==="
+	items_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	items_section.add_child(items_label)
+
+	# Button container
+	var button_hbox = HBoxContainer.new()
+	button_hbox.alignment = BoxContainer.ALIGNMENT_CENTER
+	items_section.add_child(button_hbox)
+
+	# Treat button
+	treat_button = Button.new()
+	treat_button.text = "Use Treat (+XP/Happy)"
+	treat_button.pressed.connect(_on_treat_pressed)
+	button_hbox.add_child(treat_button)
+
+	# Health potion button
+	health_pot_button = Button.new()
+	health_pot_button.text = "Use Health Potion"
+	health_pot_button.pressed.connect(_on_health_pot_pressed)
+	button_hbox.add_child(health_pot_button)
+
+func _create_toy_slot_ui():
+	"""Add toy slot UI"""
+	var vbox = $CenterContainer/PanelContainer/MarginContainer/VBoxContainer
+
+	# Create toy section
+	var toy_section = VBoxContainer.new()
+	toy_section.name = "ToySection"
+	vbox.add_child(toy_section)
+
+	var toy_title = Label.new()
+	toy_title.text = "=== TOY SLOT ==="
+	toy_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	toy_section.add_child(toy_title)
+
+	# Toy status label
+	toy_slot_label = Label.new()
+	toy_slot_label.name = "ToySlotLabel"
+	toy_slot_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	toy_section.add_child(toy_slot_label)
+
+	# Equip/Unequip button
+	equip_toy_button = Button.new()
+	equip_toy_button.text = "Equip Toy"
+	equip_toy_button.pressed.connect(_on_equip_toy_pressed)
+	toy_section.add_child(equip_toy_button)
 
 func open_for_dragon(dragon: Dragon):
 	current_dragon = dragon
@@ -96,6 +172,19 @@ func _update_display():
 	state_label.text = "State: %s" % _get_state_text(current_dragon.current_state)
 	hunger_label.text = "Hunger: %d%%" % int(current_dragon.hunger_level * 100)
 	fatigue_label.text = "Fatigue: %d%%" % int(current_dragon.fatigue_level * 100)
+	if happiness_label:
+		happiness_label.text = "Happiness: %d%%" % int(current_dragon.happiness_level * 100)
+
+	# Toy slot
+	if toy_slot_label:
+		if current_dragon.equipped_toy_id != "":
+			toy_slot_label.text = "Equipped: %s (+2%%/min happiness)" % current_dragon.equipped_toy_id
+			if equip_toy_button:
+				equip_toy_button.text = "Unequip Toy"
+		else:
+			toy_slot_label.text = "No toy equipped"
+			if equip_toy_button:
+				equip_toy_button.text = "Equip Toy"
 
 	# Parts
 	head_label.text = "Head: %s" % _get_element_name(current_dragon.head_part.element)
@@ -109,24 +198,27 @@ func _update_button_states():
 	if not current_dragon:
 		return
 
-	# Can only perform actions if dragon is IDLE
-	var is_idle = current_dragon.current_state == Dragon.DragonState.IDLE
-	var is_exploring = current_dragon.current_state == Dragon.DragonState.EXPLORING
+	var current_state = current_dragon.current_state
+	var is_exploring = current_state == Dragon.DragonState.EXPLORING
 
-	# Feed: only if hungry and idle
-	feed_button.disabled = not is_idle or current_dragon.hunger_level < 0.1
+	# Feed: only if hungry (can feed anytime, will interrupt current activity)
+	feed_button.disabled = current_dragon.hunger_level < 0.1
 
-	# Train: only if not too fatigued and idle
-	train_button.disabled = not is_idle or current_dragon.fatigue_level > 0.8
+	# Train: can toggle on/off, or switch from other states
+	# Disable if too fatigued
+	train_button.disabled = current_dragon.fatigue_level > 0.8
+	train_button.text = "Stop Training" if current_state == Dragon.DragonState.TRAINING else "Train"
 
-	# Rest: only if fatigued and idle
-	rest_button.disabled = not is_idle or current_dragon.fatigue_level < 0.1
+	# Rest: can toggle on/off, or switch from other states
+	# Disable if not fatigued at all
+	rest_button.disabled = current_dragon.fatigue_level < 0.1
+	rest_button.text = "Stop Resting" if current_state == Dragon.DragonState.RESTING else "Rest"
 
-	# Defend: only if idle
-	defend_button.disabled = not is_idle
+	# Defend: can toggle on/off, or switch from other states
+	defend_button.text = "Stop Defending" if current_state == Dragon.DragonState.DEFENDING else "Defend"
 
-	# Exploration: only if idle and not too fatigued
-	var can_explore = is_idle and current_dragon.fatigue_level <= 0.8
+	# Exploration: can only explore if not currently exploring and not too fatigued
+	var can_explore = current_state != Dragon.DragonState.EXPLORING and current_dragon.fatigue_level <= 0.8
 	explore_15_button.disabled = not can_explore
 	explore_30_button.disabled = not can_explore
 	explore_60_button.disabled = not can_explore
@@ -138,7 +230,7 @@ func _update_button_states():
 		var seconds = remaining % 60
 		exploration_status_label.text = "Exploring... Returns in %d:%02d" % [minutes, seconds]
 		exploration_status_label.add_theme_color_override("font_color", Color(1, 1, 0.5, 1))
-	elif not is_idle:
+	elif current_state != Dragon.DragonState.IDLE:
 		exploration_status_label.text = "Dragon is %s" % _get_state_text(current_dragon.current_state)
 		exploration_status_label.add_theme_color_override("font_color", Color(0.6, 0.6, 0.6, 1))
 	elif current_dragon.fatigue_level > 0.8:
@@ -166,27 +258,54 @@ func _on_close_pressed():
 
 func _on_feed_pressed():
 	if current_dragon and DragonStateManager:
-		DragonStateManager.feed_dragon(current_dragon)
-		_update_display()
-		dragon_updated.emit()
+		# Use food from inventory (requires food item)
+		var success = DragonStateManager.use_food_on_dragon(current_dragon)
+		if success:
+			_update_display()
+			dragon_updated.emit()
+		# If use_food_on_dragon returns false, it already prints a message
 
 func _on_train_pressed():
-	if current_dragon and DragonStateManager:
+	if not current_dragon or not DragonStateManager:
+		return
+
+	# Toggle: if already training, stop and go to IDLE
+	if current_dragon.current_state == Dragon.DragonState.TRAINING:
+		DragonStateManager.set_dragon_state(current_dragon, Dragon.DragonState.IDLE)
+	else:
+		# Switch: start training (from any other state)
 		DragonStateManager.start_training(current_dragon)
-		_update_display()
-		dragon_updated.emit()
+
+	_update_display()
+	dragon_updated.emit()
 
 func _on_rest_pressed():
-	if current_dragon and DragonStateManager:
+	if not current_dragon or not DragonStateManager:
+		return
+
+	# Toggle: if already resting, stop and go to IDLE
+	if current_dragon.current_state == Dragon.DragonState.RESTING:
+		DragonStateManager.set_dragon_state(current_dragon, Dragon.DragonState.IDLE)
+	else:
+		# Switch: start resting (from any other state)
 		DragonStateManager.start_resting(current_dragon)
-		_update_display()
-		dragon_updated.emit()
+
+	_update_display()
+	dragon_updated.emit()
 
 func _on_defend_pressed():
-	if current_dragon and DefenseManager:
+	if not current_dragon or not DefenseManager:
+		return
+
+	# Toggle: if already defending, stop and go to IDLE
+	if current_dragon.current_state == Dragon.DragonState.DEFENDING:
+		DefenseManager.remove_dragon_from_defense(current_dragon)
+	else:
+		# Switch: start defending (from any other state)
 		DefenseManager.assign_dragon_to_defense(current_dragon)
-		_update_display()
-		dragon_updated.emit()
+
+	_update_display()
+	dragon_updated.emit()
 
 func _on_explore_pressed(duration_minutes: int):
 	if not current_dragon or not ExplorationManager or not ExplorationManager.instance:
@@ -238,6 +357,44 @@ func _update_exploration_button_labels():
 	explore_15_button.text = "15 %s" % time_unit
 	explore_30_button.text = "30 %s" % time_unit
 	explore_60_button.text = "60 %s" % time_unit
+
+func _on_treat_pressed():
+	"""Use a treat on the current dragon"""
+	if not current_dragon or not DragonStateManager:
+		return
+
+	var success = DragonStateManager.use_treat_on_dragon(current_dragon)
+	if success:
+		_update_display()
+		dragon_updated.emit()
+
+func _on_health_pot_pressed():
+	"""Use a health potion on the current dragon"""
+	if not current_dragon or not DragonStateManager:
+		return
+
+	var success = DragonStateManager.use_health_pot_on_dragon(current_dragon)
+	if success:
+		_update_display()
+		dragon_updated.emit()
+
+func _on_equip_toy_pressed():
+	"""Equip or unequip toy from dragon"""
+	if not current_dragon or not DragonStateManager:
+		return
+
+	# Toggle: if toy equipped, unequip it
+	if current_dragon.equipped_toy_id != "":
+		DragonStateManager.unequip_toy_from_dragon(current_dragon)
+		_update_display()
+		dragon_updated.emit()
+	else:
+		# Try to equip a toy - for now, just equip "toy" if available
+		# TODO: Add UI to select which toy to equip
+		var success = DragonStateManager.equip_toy_to_dragon(current_dragon, "toy")
+		if success:
+			_update_display()
+			dragon_updated.emit()
 
 func _input(event):
 	if event is InputEventKey and event.pressed and event.keycode == KEY_ESCAPE and visible:

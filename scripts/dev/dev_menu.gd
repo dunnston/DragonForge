@@ -38,8 +38,22 @@ func toggle_menu():
 		show()
 		# Refresh inventory display
 		_update_inventory_counts()
+		# Refresh dragon list in case new dragons were created
+		_refresh_dragon_selector()
 	else:
 		hide()
+
+func _refresh_dragon_selector():
+	"""Refresh the dragon selector dropdown"""
+	# Find the dragon selector in the items container
+	for child in items_container.get_children():
+		if child is HBoxContainer:
+			for subchild in child.get_children():
+				if subchild is OptionButton and subchild.name == "DragonSelector":
+					_refresh_dragon_list(subchild)
+					return
+
+var current_dragon: Dragon = null
 
 func _populate_items():
 	"""Create buttons for all items in the database"""
@@ -50,6 +64,11 @@ func _populate_items():
 	# Clear existing items
 	for child in items_container.get_children():
 		child.queue_free()
+
+	# Add section: Dragon Debug Controls
+	_add_dragon_debug_section()
+
+	_add_separator()
 
 	# Add section: Dragon Parts
 	_add_section_label("DRAGON PARTS")
@@ -195,3 +214,183 @@ func _on_add_all_pressed():
 	InventoryManager.instance.add_starting_items()
 	print("[DevMenu] Added starting items!")
 	_update_inventory_counts()
+
+# === DRAGON DEBUG SECTION ===
+
+func _add_dragon_debug_section():
+	"""Add dragon debugging controls"""
+	_add_section_label("DRAGON DEBUG")
+
+	# Dragon selector
+	var selector_hbox = HBoxContainer.new()
+	var selector_label = Label.new()
+	selector_label.text = "Select Dragon:"
+	selector_hbox.add_child(selector_label)
+
+	var dragon_selector = OptionButton.new()
+	dragon_selector.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	dragon_selector.item_selected.connect(_on_dragon_selected)
+	dragon_selector.name = "DragonSelector"
+	selector_hbox.add_child(dragon_selector)
+	items_container.add_child(selector_hbox)
+
+	# Populate dragons
+	_refresh_dragon_list(dragon_selector)
+
+	# Hunger controls
+	var hunger_label = Label.new()
+	hunger_label.text = "Hunger:"
+	hunger_label.add_theme_font_size_override("font_size", 12)
+	items_container.add_child(hunger_label)
+
+	var hunger_hbox = HBoxContainer.new()
+	_add_button_to_hbox(hunger_hbox, "0%", func(): _set_dragon_hunger(0.0))
+	_add_button_to_hbox(hunger_hbox, "50%", func(): _set_dragon_hunger(0.5))
+	_add_button_to_hbox(hunger_hbox, "100%", func(): _set_dragon_hunger(1.0))
+	items_container.add_child(hunger_hbox)
+
+	# Fatigue controls
+	var fatigue_label = Label.new()
+	fatigue_label.text = "Fatigue:"
+	fatigue_label.add_theme_font_size_override("font_size", 12)
+	items_container.add_child(fatigue_label)
+
+	var fatigue_hbox = HBoxContainer.new()
+	_add_button_to_hbox(fatigue_hbox, "0%", func(): _set_dragon_fatigue(0.0))
+	_add_button_to_hbox(fatigue_hbox, "50%", func(): _set_dragon_fatigue(0.5))
+	_add_button_to_hbox(fatigue_hbox, "100%", func(): _set_dragon_fatigue(1.0))
+	items_container.add_child(fatigue_hbox)
+
+	# Health controls
+	var health_label = Label.new()
+	health_label.text = "Health:"
+	health_label.add_theme_font_size_override("font_size", 12)
+	items_container.add_child(health_label)
+
+	var health_hbox = HBoxContainer.new()
+	_add_button_to_hbox(health_hbox, "Damage 25%", func(): _damage_dragon(0.25))
+	_add_button_to_hbox(health_hbox, "Damage 50%", func(): _damage_dragon(0.5))
+	_add_button_to_hbox(health_hbox, "Heal Full", _heal_dragon_full)
+	items_container.add_child(health_hbox)
+
+	# Level controls
+	var level_label = Label.new()
+	level_label.text = "Level & XP:"
+	level_label.add_theme_font_size_override("font_size", 12)
+	items_container.add_child(level_label)
+
+	var level_hbox = HBoxContainer.new()
+	_add_button_to_hbox(level_hbox, "+1 Level", _level_up_dragon)
+	_add_button_to_hbox(level_hbox, "Max Level", _max_level_dragon)
+	_add_button_to_hbox(level_hbox, "+100 XP", func(): _add_xp_dragon(100))
+	items_container.add_child(level_hbox)
+
+	# Time controls
+	var time_label = Label.new()
+	time_label.text = "Time Passage:"
+	time_label.add_theme_font_size_override("font_size", 12)
+	items_container.add_child(time_label)
+
+	var time_hbox = HBoxContainer.new()
+	_add_button_to_hbox(time_hbox, "30 min", func(): _simulate_time(0.5))
+	_add_button_to_hbox(time_hbox, "1 hour", func(): _simulate_time(1.0))
+	_add_button_to_hbox(time_hbox, "2 hours", func(): _simulate_time(2.0))
+	items_container.add_child(time_hbox)
+
+	# Mutation button
+	var mutation_btn = Button.new()
+	mutation_btn.text = "Force Chimera Mutation"
+	mutation_btn.pressed.connect(_force_mutation)
+	items_container.add_child(mutation_btn)
+
+	# Reset button
+	var reset_btn = Button.new()
+	reset_btn.text = "Reset Dragon to Perfect Condition"
+	reset_btn.pressed.connect(_reset_dragon)
+	items_container.add_child(reset_btn)
+
+func _add_button_to_hbox(hbox: HBoxContainer, text: String, callback: Callable):
+	"""Helper to add a button to an HBoxContainer"""
+	var btn = Button.new()
+	btn.text = text
+	btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	btn.pressed.connect(callback)
+	hbox.add_child(btn)
+
+func _refresh_dragon_list(selector: OptionButton):
+	"""Populate dragon selector"""
+	selector.clear()
+
+	if not DragonStateManager or not DragonStateManager.instance:
+		selector.add_item("No dragons available")
+		return
+
+	var dragons = DragonStateManager.instance.managed_dragons.values()
+	if dragons.is_empty():
+		selector.add_item("No dragons available")
+		return
+
+	for i in range(dragons.size()):
+		var dragon = dragons[i]
+		selector.add_item(dragon.dragon_name, i)
+
+	# Auto-select first dragon
+	if dragons.size() > 0:
+		selector.select(0)
+		current_dragon = dragons[0]
+
+func _on_dragon_selected(index: int):
+	"""Dragon selected in dropdown"""
+	if not DragonStateManager or not DragonStateManager.instance:
+		return
+
+	var dragons = DragonStateManager.instance.managed_dragons.values()
+	if index >= 0 and index < dragons.size():
+		current_dragon = dragons[index]
+		print("[DevMenu] Selected dragon: %s" % current_dragon.dragon_name)
+
+# === DRAGON DEBUG FUNCTIONS ===
+
+func _set_dragon_hunger(percent: float):
+	if current_dragon and DragonStateManager.instance:
+		DragonStateManager.instance.force_hunger(current_dragon, percent)
+
+func _set_dragon_fatigue(percent: float):
+	if current_dragon and DragonStateManager.instance:
+		DragonStateManager.instance.force_fatigue(current_dragon, percent)
+
+func _damage_dragon(percent: float):
+	if current_dragon and DragonStateManager.instance:
+		DragonStateManager.instance.force_damage(current_dragon, percent)
+
+func _heal_dragon_full():
+	if current_dragon:
+		current_dragon.current_health = current_dragon.total_health
+		if DragonStateManager.instance:
+			DragonStateManager.instance.dragon_health_changed.emit(current_dragon, current_dragon.current_health, current_dragon.total_health)
+		print("🧪 DEBUG: Fully healed %s" % current_dragon.dragon_name)
+
+func _level_up_dragon():
+	if current_dragon and DragonStateManager.instance:
+		DragonStateManager.instance.force_level_up(current_dragon)
+
+func _max_level_dragon():
+	if current_dragon and DragonStateManager.instance:
+		DragonStateManager.instance.force_level_up(current_dragon, 10)
+
+func _add_xp_dragon(amount: int):
+	if current_dragon and DragonStateManager.instance:
+		DragonStateManager.instance.gain_experience(current_dragon, amount)
+		print("🧪 DEBUG: Added %d XP to %s" % [amount, current_dragon.dragon_name])
+
+func _simulate_time(hours: float):
+	if current_dragon and DragonStateManager.instance:
+		DragonStateManager.instance.simulate_time_passage(current_dragon, hours)
+
+func _force_mutation():
+	if current_dragon and DragonStateManager.instance:
+		DragonStateManager.instance.force_mutation(current_dragon)
+
+func _reset_dragon():
+	if current_dragon and DragonStateManager.instance:
+		DragonStateManager.instance.reset_dragon_state(current_dragon)
