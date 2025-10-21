@@ -243,19 +243,32 @@ func _on_stitcher_work():
 	var body_id = _get_item_id_for_part(body)
 	var tail_id = _get_item_id_for_part(tail)
 
+	print("[Stitcher] Attempting to remove parts: %s, %s, %s" % [head_id, body_id, tail_id])
+
 	if not inventory_manager.remove_item_by_id(head_id, 1):
+		print("[Stitcher] ERROR: Failed to remove head part: %s" % head_id)
 		return
+	print("[Stitcher] Removed head part: %s" % head_id)
+
 	if not inventory_manager.remove_item_by_id(body_id, 1):
+		print("[Stitcher] ERROR: Failed to remove body part: %s" % body_id)
 		return
+	print("[Stitcher] Removed body part: %s" % body_id)
+
 	if not inventory_manager.remove_item_by_id(tail_id, 1):
+		print("[Stitcher] ERROR: Failed to remove tail part: %s" % tail_id)
 		return
+	print("[Stitcher] Removed tail part: %s" % tail_id)
 
 	# Create the dragon
+	print("[Stitcher] Creating dragon with parts...")
 	var dragon = dragon_factory.create_dragon(head, body, tail)
 
 	if dragon:
 		scientist_action_performed.emit(ScientistType.STITCHER, "Created dragon: %s" % dragon.dragon_name)
 		print("[Stitcher] Auto-created dragon: %s" % dragon.dragon_name)
+	else:
+		print("[Stitcher] ERROR: dragon_factory.create_dragon() returned null!")
 
 func _get_available_part(part_type: DragonPart.PartType) -> DragonPart:
 	"""Get a random available dragon part from inventory"""
@@ -290,7 +303,8 @@ func _get_item_id_for_part(part: DragonPart) -> String:
 
 	var element_str = DragonPart.Element.keys()[part.element].to_lower()
 	var type_str = DragonPart.PartType.keys()[part.part_type].to_lower()
-	return "dragon_%s_%s" % [type_str, element_str]
+	# Format: "fire_head", "ice_body", etc. (matches items.json)
+	return "%s_%s" % [element_str, type_str]
 
 func _get_element_enum_from_string(element_str: String) -> DragonPart.Element:
 	"""Convert element string to enum"""
