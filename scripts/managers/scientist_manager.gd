@@ -83,6 +83,11 @@ func _setup_manager_references():
 	dragon_state_manager = DragonStateManager.instance
 	inventory_manager = InventoryManager.instance
 
+	print("[ScientistManager] Manager references:")
+	print("  - TreasureVault: %s" % (treasure_vault != null))
+	print("  - DragonStateManager: %s" % (dragon_state_manager != null))
+	print("  - InventoryManager: %s" % (inventory_manager != null))
+
 	if not treasure_vault:
 		push_error("ScientistManager: TreasureVault not found!")
 	if not dragon_state_manager:
@@ -103,6 +108,7 @@ func _setup_automation_timers():
 	stitcher_work_timer.wait_time = 60.0
 	stitcher_work_timer.timeout.connect(_on_stitcher_work)
 	stitcher_work_timer.start()
+	print("[ScientistManager] Stitcher work timer started (60s intervals)")
 
 	# Caretaker: Checks and cares for dragons every 30 seconds
 	caretaker_work_timer = Timer.new()
@@ -211,7 +217,14 @@ func _on_stitcher_work():
 	if not hired_scientists[ScientistType.STITCHER]:
 		return
 
-	if not dragon_factory or not inventory_manager:
+	print("[Stitcher] Work timer triggered - checking for parts...")
+
+	if not dragon_factory:
+		print("[Stitcher] ERROR: No dragon_factory reference!")
+		return
+
+	if not inventory_manager:
+		print("[Stitcher] ERROR: No inventory_manager reference!")
 		return
 
 	# Try to get parts for a dragon
@@ -219,8 +232,10 @@ func _on_stitcher_work():
 	var body = _get_available_part(DragonPart.PartType.BODY)
 	var tail = _get_available_part(DragonPart.PartType.TAIL)
 
+	print("[Stitcher] Found parts - Head: %s, Body: %s, Tail: %s" % [head != null, body != null, tail != null])
+
 	if not head or not body or not tail:
-		# Silently skip if no parts available
+		print("[Stitcher] Not enough parts available to create dragon")
 		return
 
 	# Remove parts from inventory
