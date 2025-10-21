@@ -3,15 +3,16 @@ extends Control
 
 signal dragon_updated
 
-@onready var close_button: Button = $CenterContainer/PanelContainer/MarginContainer/VBoxContainer/Header/CloseButton
-@onready var name_label: Label = $CenterContainer/PanelContainer/MarginContainer/VBoxContainer/Header/NameLabel
+@onready var close_button: Button = $CenterContainer/PanelContainer/MarginContainer/MainVBox/TopBar/CloseButton
+@onready var name_label: Label = $CenterContainer/PanelContainer/MarginContainer/MainVBox/ContentContainer/LeftPanel/NameLabel
+@onready var dragon_visual: DragonVisual = %DragonVisual
 
 # Stats
-@onready var level_label: Label = $CenterContainer/PanelContainer/MarginContainer/VBoxContainer/StatsSection/LevelLabel
-@onready var attack_label: Label = $CenterContainer/PanelContainer/MarginContainer/VBoxContainer/StatsSection/AttackLabel
-@onready var health_label: Label = $CenterContainer/PanelContainer/MarginContainer/VBoxContainer/StatsSection/HealthLabel
-@onready var speed_label: Label = $CenterContainer/PanelContainer/MarginContainer/VBoxContainer/StatsSection/SpeedLabel
-@onready var xp_label: Label = $CenterContainer/PanelContainer/MarginContainer/VBoxContainer/StatsSection/XPLabel
+@onready var level_label: Label = $CenterContainer/PanelContainer/MarginContainer/MainVBox/ContentContainer/RightPanel/StatsSection/LevelLabel
+@onready var attack_label: Label = $CenterContainer/PanelContainer/MarginContainer/MainVBox/ContentContainer/RightPanel/StatsSection/AttackLabel
+@onready var health_label: Label = $CenterContainer/PanelContainer/MarginContainer/MainVBox/ContentContainer/RightPanel/StatsSection/HealthLabel
+@onready var speed_label: Label = $CenterContainer/PanelContainer/MarginContainer/MainVBox/ContentContainer/RightPanel/StatsSection/SpeedLabel
+@onready var xp_label: Label = $CenterContainer/PanelContainer/MarginContainer/MainVBox/ContentContainer/RightPanel/StatsSection/XPLabel
 
 # Advanced Stats Panel (created dynamically)
 var view_all_stats_button: Button
@@ -19,9 +20,9 @@ var advanced_stats_panel: VBoxContainer
 var is_advanced_stats_visible: bool = false
 
 # Status
-@onready var state_label: Label = $CenterContainer/PanelContainer/MarginContainer/VBoxContainer/StatusSection/StateLabel
-@onready var hunger_label: Label = $CenterContainer/PanelContainer/MarginContainer/VBoxContainer/StatusSection/HungerLabel
-@onready var fatigue_label: Label = $CenterContainer/PanelContainer/MarginContainer/VBoxContainer/StatusSection/FatigueLabel
+@onready var state_label: Label = $CenterContainer/PanelContainer/MarginContainer/MainVBox/ContentContainer/RightPanel/StatusSection/StateLabel
+@onready var hunger_label: Label = $CenterContainer/PanelContainer/MarginContainer/MainVBox/ContentContainer/RightPanel/StatusSection/HungerLabel
+@onready var fatigue_label: Label = $CenterContainer/PanelContainer/MarginContainer/MainVBox/ContentContainer/RightPanel/StatusSection/FatigueLabel
 
 # Dynamic UI elements (created programmatically)
 var happiness_label: Label
@@ -31,21 +32,21 @@ var health_pot_button: Button
 var equip_toy_button: Button
 
 # Parts
-@onready var head_label: Label = $CenterContainer/PanelContainer/MarginContainer/VBoxContainer/PartsSection/HeadLabel
-@onready var body_label: Label = $CenterContainer/PanelContainer/MarginContainer/VBoxContainer/PartsSection/BodyLabel
-@onready var tail_label: Label = $CenterContainer/PanelContainer/MarginContainer/VBoxContainer/PartsSection/TailLabel
+@onready var head_label: Label = $CenterContainer/PanelContainer/MarginContainer/MainVBox/ContentContainer/RightPanel/PartsSection/HeadLabel
+@onready var body_label: Label = $CenterContainer/PanelContainer/MarginContainer/MainVBox/ContentContainer/RightPanel/PartsSection/BodyLabel
+@onready var tail_label: Label = $CenterContainer/PanelContainer/MarginContainer/MainVBox/ContentContainer/RightPanel/PartsSection/TailLabel
 
 # Action buttons
-@onready var feed_button: Button = $CenterContainer/PanelContainer/MarginContainer/VBoxContainer/ActionsSection/ButtonsGrid/FeedButton
-@onready var train_button: Button = $CenterContainer/PanelContainer/MarginContainer/VBoxContainer/ActionsSection/ButtonsGrid/TrainButton
-@onready var rest_button: Button = $CenterContainer/PanelContainer/MarginContainer/VBoxContainer/ActionsSection/ButtonsGrid/RestButton
-@onready var defend_button: Button = $CenterContainer/PanelContainer/MarginContainer/VBoxContainer/ActionsSection/ButtonsGrid/DefendButton
+@onready var feed_button: Button = $CenterContainer/PanelContainer/MarginContainer/MainVBox/BottomPanel/SectionsContainer/ActionsSection/ButtonsGrid/FeedButton
+@onready var train_button: Button = $CenterContainer/PanelContainer/MarginContainer/MainVBox/BottomPanel/SectionsContainer/ActionsSection/ButtonsGrid/TrainButton
+@onready var rest_button: Button = $CenterContainer/PanelContainer/MarginContainer/MainVBox/BottomPanel/SectionsContainer/ActionsSection/ButtonsGrid/RestButton
+@onready var defend_button: Button = $CenterContainer/PanelContainer/MarginContainer/MainVBox/BottomPanel/SectionsContainer/ActionsSection/ButtonsGrid/DefendButton
 
 # Exploration
-@onready var exploration_status_label: Label = $CenterContainer/PanelContainer/MarginContainer/VBoxContainer/ExplorationSection/StatusLabel
-@onready var explore_15_button: Button = $CenterContainer/PanelContainer/MarginContainer/VBoxContainer/ExplorationSection/DurationButtons/Explore15Button
-@onready var explore_30_button: Button = $CenterContainer/PanelContainer/MarginContainer/VBoxContainer/ExplorationSection/DurationButtons/Explore30Button
-@onready var explore_60_button: Button = $CenterContainer/PanelContainer/MarginContainer/VBoxContainer/ExplorationSection/DurationButtons/Explore60Button
+@onready var exploration_status_label: Label = $CenterContainer/PanelContainer/MarginContainer/MainVBox/BottomPanel/SectionsContainer/ExplorationSection/StatusLabel
+@onready var explore_15_button: Button = $CenterContainer/PanelContainer/MarginContainer/MainVBox/BottomPanel/SectionsContainer/ExplorationSection/DurationButtons/Explore15Button
+@onready var explore_30_button: Button = $CenterContainer/PanelContainer/MarginContainer/MainVBox/BottomPanel/SectionsContainer/ExplorationSection/DurationButtons/Explore30Button
+@onready var explore_60_button: Button = $CenterContainer/PanelContainer/MarginContainer/MainVBox/BottomPanel/SectionsContainer/ExplorationSection/DurationButtons/Explore60Button
 
 var current_dragon: Dragon = null
 var update_timer: Timer
@@ -82,75 +83,99 @@ func _ready():
 
 func _create_happiness_ui():
 	"""Add happiness label to status section"""
-	var status_section = $CenterContainer/PanelContainer/MarginContainer/VBoxContainer/StatusSection
+	var status_section = $CenterContainer/PanelContainer/MarginContainer/MainVBox/ContentContainer/RightPanel/StatusSection
 	happiness_label = Label.new()
 	happiness_label.name = "HappinessLabel"
+	happiness_label.add_theme_color_override("font_color", Color(1, 0.8, 1, 1))
+	happiness_label.add_theme_font_size_override("font_size", 14)
 	status_section.add_child(happiness_label)
 
 func _create_consumable_ui():
 	"""Add consumable item buttons"""
-	var vbox = $CenterContainer/PanelContainer/MarginContainer/VBoxContainer
+	var right_panel = $CenterContainer/PanelContainer/MarginContainer/MainVBox/ContentContainer/RightPanel
 
 	# Create items section
 	var items_section = VBoxContainer.new()
 	items_section.name = "ItemsSection"
-	vbox.add_child(items_section)
+	items_section.add_theme_constant_override("separation", 8)
+	right_panel.add_child(items_section)
+
+	# Separator
+	var separator = HSeparator.new()
+	right_panel.add_child(separator)
+	right_panel.move_child(separator, right_panel.get_child_count() - 2)
 
 	var items_label = Label.new()
-	items_label.text = "=== ITEMS ==="
-	items_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	items_label.text = "ITEMS"
+	items_label.add_theme_color_override("font_color", Color(0.5, 1, 0.5, 1))
+	items_label.add_theme_font_size_override("font_size", 18)
 	items_section.add_child(items_label)
 
 	# Button container
 	var button_hbox = HBoxContainer.new()
-	button_hbox.alignment = BoxContainer.ALIGNMENT_CENTER
+	button_hbox.add_theme_constant_override("separation", 10)
 	items_section.add_child(button_hbox)
 
 	# Treat button
 	treat_button = Button.new()
 	treat_button.text = "Use Treat (+XP/Happy)"
+	treat_button.custom_minimum_size = Vector2(150, 35)
+	treat_button.add_theme_font_size_override("font_size", 12)
 	treat_button.pressed.connect(_on_treat_pressed)
 	button_hbox.add_child(treat_button)
 
 	# Health potion button
 	health_pot_button = Button.new()
 	health_pot_button.text = "Use Health Potion"
+	health_pot_button.custom_minimum_size = Vector2(150, 35)
+	health_pot_button.add_theme_font_size_override("font_size", 12)
 	health_pot_button.pressed.connect(_on_health_pot_pressed)
 	button_hbox.add_child(health_pot_button)
 
 func _create_toy_slot_ui():
 	"""Add toy slot UI"""
-	var vbox = $CenterContainer/PanelContainer/MarginContainer/VBoxContainer
+	var right_panel = $CenterContainer/PanelContainer/MarginContainer/MainVBox/ContentContainer/RightPanel
+
+	# Separator
+	var separator = HSeparator.new()
+	right_panel.add_child(separator)
 
 	# Create toy section
 	var toy_section = VBoxContainer.new()
 	toy_section.name = "ToySection"
-	vbox.add_child(toy_section)
+	toy_section.add_theme_constant_override("separation", 8)
+	right_panel.add_child(toy_section)
 
 	var toy_title = Label.new()
-	toy_title.text = "=== TOY SLOT ==="
-	toy_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	toy_title.text = "TOY SLOT"
+	toy_title.add_theme_color_override("font_color", Color(0.5, 1, 0.5, 1))
+	toy_title.add_theme_font_size_override("font_size", 18)
 	toy_section.add_child(toy_title)
 
 	# Toy status label
 	toy_slot_label = Label.new()
 	toy_slot_label.name = "ToySlotLabel"
-	toy_slot_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	toy_slot_label.add_theme_color_override("font_color", Color(0.8, 1, 0.8, 1))
+	toy_slot_label.add_theme_font_size_override("font_size", 14)
 	toy_section.add_child(toy_slot_label)
 
 	# Equip/Unequip button
 	equip_toy_button = Button.new()
 	equip_toy_button.text = "Equip Toy"
+	equip_toy_button.custom_minimum_size = Vector2(150, 35)
+	equip_toy_button.add_theme_font_size_override("font_size", 12)
 	equip_toy_button.pressed.connect(_on_equip_toy_pressed)
 	toy_section.add_child(equip_toy_button)
 
 func _create_advanced_stats_ui():
 	"""Add advanced stats panel with view all stats button"""
-	var stats_section = $CenterContainer/PanelContainer/MarginContainer/VBoxContainer/StatsSection
+	var stats_section = $CenterContainer/PanelContainer/MarginContainer/MainVBox/ContentContainer/RightPanel/StatsSection
 
 	# Add button to toggle advanced stats
 	view_all_stats_button = Button.new()
 	view_all_stats_button.text = "View All Stats ▼"
+	view_all_stats_button.custom_minimum_size = Vector2(150, 30)
+	view_all_stats_button.add_theme_font_size_override("font_size", 12)
 	view_all_stats_button.pressed.connect(_on_view_all_stats_pressed)
 	stats_section.add_child(view_all_stats_button)
 
@@ -242,6 +267,13 @@ func open_for_dragon(dragon: Dragon):
 func _update_display():
 	if not current_dragon:
 		return
+	# Update dragon visual colors
+	if dragon_visual:
+		dragon_visual.set_dragon_colors_from_parts(
+			current_dragon.head_part,
+			current_dragon.body_part,
+			current_dragon.tail_part
+		)
 
 	# Name
 	name_label.text = current_dragon.dragon_name if current_dragon.dragon_name else "Unnamed Dragon"

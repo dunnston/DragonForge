@@ -1,9 +1,9 @@
-[gd_scene load_steps=2 format=3 uid="uid://dad0e1f2g3h4i"]
+[gd_scene load_steps=3 format=3 uid="uid://dad0e1f2g3h4i"]
 
-[ext_resource type="Script" path="res://scripts/ui/dragon_details_modal.gd" id="1"]
+[ext_resource type="Script" uid="uid://cwnb7rhnjnkdt" path="res://scripts/ui/dragon_details_modal.gd" id="1"]
+[ext_resource type="PackedScene" uid="uid://57erx6jtexcf" path="res://assets/Icons/dragons/dragon-base.tscn" id="2_dragon_visual"]
 
 [node name="DragonDetailsModal" type="Control"]
-visible = false
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
@@ -30,7 +30,7 @@ grow_horizontal = 2
 grow_vertical = 2
 
 [node name="PanelContainer" type="PanelContainer" parent="CenterContainer"]
-custom_minimum_size = Vector2(400, 500)
+custom_minimum_size = Vector2(700, 600)
 layout_mode = 2
 
 [node name="MarginContainer" type="MarginContainer" parent="CenterContainer/PanelContainer"]
@@ -40,213 +40,249 @@ theme_override_constants/margin_top = 20
 theme_override_constants/margin_right = 20
 theme_override_constants/margin_bottom = 20
 
-[node name="VBoxContainer" type="VBoxContainer" parent="CenterContainer/PanelContainer/MarginContainer"]
+[node name="MainVBox" type="VBoxContainer" parent="CenterContainer/PanelContainer/MarginContainer"]
 layout_mode = 2
 theme_override_constants/separation = 15
 
-[node name="Header" type="HBoxContainer" parent="CenterContainer/PanelContainer/MarginContainer/VBoxContainer"]
+[node name="TopBar" type="Control" parent="CenterContainer/PanelContainer/MarginContainer/MainVBox"]
+custom_minimum_size = Vector2(0, 50)
 layout_mode = 2
 
-[node name="NameLabel" type="Label" parent="CenterContainer/PanelContainer/MarginContainer/VBoxContainer/Header"]
-layout_mode = 2
-size_flags_horizontal = 3
-theme_override_colors/font_color = Color(0.5, 1, 0.5, 1)
-theme_override_font_sizes/font_size = 24
-text = "Dragon Name"
-
-[node name="CloseButton" type="Button" parent="CenterContainer/PanelContainer/MarginContainer/VBoxContainer/Header"]
+[node name="CloseButton" type="Button" parent="CenterContainer/PanelContainer/MarginContainer/MainVBox/TopBar"]
 custom_minimum_size = Vector2(40, 40)
-layout_mode = 2
+layout_mode = 1
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -40.0
+offset_bottom = 40.0
+grow_horizontal = 0
 theme_override_font_sizes/font_size = 20
 text = "X"
 
-[node name="HSeparator" type="HSeparator" parent="CenterContainer/PanelContainer/MarginContainer/VBoxContainer"]
+[node name="ContentContainer" type="HBoxContainer" parent="CenterContainer/PanelContainer/MarginContainer/MainVBox"]
 layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/separation = 20
 
-[node name="StatsSection" type="VBoxContainer" parent="CenterContainer/PanelContainer/MarginContainer/VBoxContainer"]
+[node name="LeftPanel" type="VBoxContainer" parent="CenterContainer/PanelContainer/MarginContainer/MainVBox/ContentContainer"]
+custom_minimum_size = Vector2(250, 0)
+layout_mode = 2
+theme_override_constants/separation = 15
+
+[node name="NameLabel" type="Label" parent="CenterContainer/PanelContainer/MarginContainer/MainVBox/ContentContainer/LeftPanel"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.5, 1, 0.5, 1)
+theme_override_font_sizes/font_size = 24
+text = "Dragon Name"
+horizontal_alignment = 1
+
+[node name="DragonVisualContainer" type="CenterContainer" parent="CenterContainer/PanelContainer/MarginContainer/MainVBox/ContentContainer/LeftPanel"]
+custom_minimum_size = Vector2(0, 200)
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="DragonVisual" parent="CenterContainer/PanelContainer/MarginContainer/MainVBox/ContentContainer/LeftPanel/DragonVisualContainer" instance=ExtResource("2_dragon_visual")]
+unique_name_in_owner = true
+position = Vector2(129, 163.5)
+scale = Vector2(0.25, 0.25)
+
+[node name="RightPanel" type="VBoxContainer" parent="CenterContainer/PanelContainer/MarginContainer/MainVBox/ContentContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 15
+
+[node name="StatsSection" type="VBoxContainer" parent="CenterContainer/PanelContainer/MarginContainer/MainVBox/ContentContainer/RightPanel"]
 layout_mode = 2
 theme_override_constants/separation = 8
 
-[node name="Title" type="Label" parent="CenterContainer/PanelContainer/MarginContainer/VBoxContainer/StatsSection"]
+[node name="Title" type="Label" parent="CenterContainer/PanelContainer/MarginContainer/MainVBox/ContentContainer/RightPanel/StatsSection"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.5, 1, 0.5, 1)
 theme_override_font_sizes/font_size = 18
 text = "STATS"
 
-[node name="LevelLabel" type="Label" parent="CenterContainer/PanelContainer/MarginContainer/VBoxContainer/StatsSection"]
+[node name="LevelLabel" type="Label" parent="CenterContainer/PanelContainer/MarginContainer/MainVBox/ContentContainer/RightPanel/StatsSection"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.8, 1, 0.8, 1)
 theme_override_font_sizes/font_size = 14
 text = "Level: 1"
 
-[node name="AttackLabel" type="Label" parent="CenterContainer/PanelContainer/MarginContainer/VBoxContainer/StatsSection"]
+[node name="AttackLabel" type="Label" parent="CenterContainer/PanelContainer/MarginContainer/MainVBox/ContentContainer/RightPanel/StatsSection"]
 layout_mode = 2
 theme_override_colors/font_color = Color(1, 0.4, 0.4, 1)
 theme_override_font_sizes/font_size = 14
 text = "Attack: 0"
 
-[node name="HealthLabel" type="Label" parent="CenterContainer/PanelContainer/MarginContainer/VBoxContainer/StatsSection"]
+[node name="HealthLabel" type="Label" parent="CenterContainer/PanelContainer/MarginContainer/MainVBox/ContentContainer/RightPanel/StatsSection"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.4, 1, 0.4, 1)
 theme_override_font_sizes/font_size = 14
 text = "Health: 0/0"
 
-[node name="SpeedLabel" type="Label" parent="CenterContainer/PanelContainer/MarginContainer/VBoxContainer/StatsSection"]
+[node name="SpeedLabel" type="Label" parent="CenterContainer/PanelContainer/MarginContainer/MainVBox/ContentContainer/RightPanel/StatsSection"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.4, 0.8, 1, 1)
 theme_override_font_sizes/font_size = 14
 text = "Speed: 0"
 
-[node name="XPLabel" type="Label" parent="CenterContainer/PanelContainer/MarginContainer/VBoxContainer/StatsSection"]
+[node name="XPLabel" type="Label" parent="CenterContainer/PanelContainer/MarginContainer/MainVBox/ContentContainer/RightPanel/StatsSection"]
 layout_mode = 2
 theme_override_colors/font_color = Color(1, 1, 0.5, 1)
 theme_override_font_sizes/font_size = 14
 text = "XP: 0/100"
 
-[node name="HSeparator2" type="HSeparator" parent="CenterContainer/PanelContainer/MarginContainer/VBoxContainer"]
+[node name="HSeparator1" type="HSeparator" parent="CenterContainer/PanelContainer/MarginContainer/MainVBox/ContentContainer/RightPanel"]
 layout_mode = 2
 
-[node name="StatusSection" type="VBoxContainer" parent="CenterContainer/PanelContainer/MarginContainer/VBoxContainer"]
+[node name="StatusSection" type="VBoxContainer" parent="CenterContainer/PanelContainer/MarginContainer/MainVBox/ContentContainer/RightPanel"]
 layout_mode = 2
 theme_override_constants/separation = 8
 
-[node name="Title" type="Label" parent="CenterContainer/PanelContainer/MarginContainer/VBoxContainer/StatusSection"]
+[node name="Title" type="Label" parent="CenterContainer/PanelContainer/MarginContainer/MainVBox/ContentContainer/RightPanel/StatusSection"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.5, 1, 0.5, 1)
 theme_override_font_sizes/font_size = 18
 text = "STATUS"
 
-[node name="StateLabel" type="Label" parent="CenterContainer/PanelContainer/MarginContainer/VBoxContainer/StatusSection"]
+[node name="StateLabel" type="Label" parent="CenterContainer/PanelContainer/MarginContainer/MainVBox/ContentContainer/RightPanel/StatusSection"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.8, 1, 0.8, 1)
 theme_override_font_sizes/font_size = 14
 text = "State: Idle"
 
-[node name="HungerLabel" type="Label" parent="CenterContainer/PanelContainer/MarginContainer/VBoxContainer/StatusSection"]
+[node name="HungerLabel" type="Label" parent="CenterContainer/PanelContainer/MarginContainer/MainVBox/ContentContainer/RightPanel/StatusSection"]
 layout_mode = 2
 theme_override_colors/font_color = Color(1, 0.8, 0.4, 1)
 theme_override_font_sizes/font_size = 14
 text = "Hunger: 0%"
 
-[node name="FatigueLabel" type="Label" parent="CenterContainer/PanelContainer/MarginContainer/VBoxContainer/StatusSection"]
+[node name="FatigueLabel" type="Label" parent="CenterContainer/PanelContainer/MarginContainer/MainVBox/ContentContainer/RightPanel/StatusSection"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.8, 0.6, 1, 1)
 theme_override_font_sizes/font_size = 14
 text = "Fatigue: 0%"
 
-[node name="HSeparator3" type="HSeparator" parent="CenterContainer/PanelContainer/MarginContainer/VBoxContainer"]
+[node name="HSeparator2" type="HSeparator" parent="CenterContainer/PanelContainer/MarginContainer/MainVBox/ContentContainer/RightPanel"]
 layout_mode = 2
 
-[node name="PartsSection" type="VBoxContainer" parent="CenterContainer/PanelContainer/MarginContainer/VBoxContainer"]
+[node name="PartsSection" type="VBoxContainer" parent="CenterContainer/PanelContainer/MarginContainer/MainVBox/ContentContainer/RightPanel"]
 layout_mode = 2
 theme_override_constants/separation = 8
 
-[node name="Title" type="Label" parent="CenterContainer/PanelContainer/MarginContainer/VBoxContainer/PartsSection"]
+[node name="Title" type="Label" parent="CenterContainer/PanelContainer/MarginContainer/MainVBox/ContentContainer/RightPanel/PartsSection"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.5, 1, 0.5, 1)
 theme_override_font_sizes/font_size = 18
 text = "PARTS"
 
-[node name="HeadLabel" type="Label" parent="CenterContainer/PanelContainer/MarginContainer/VBoxContainer/PartsSection"]
+[node name="HeadLabel" type="Label" parent="CenterContainer/PanelContainer/MarginContainer/MainVBox/ContentContainer/RightPanel/PartsSection"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.8, 1, 0.8, 1)
 theme_override_font_sizes/font_size = 14
 text = "Head: Fire"
 
-[node name="BodyLabel" type="Label" parent="CenterContainer/PanelContainer/MarginContainer/VBoxContainer/PartsSection"]
+[node name="BodyLabel" type="Label" parent="CenterContainer/PanelContainer/MarginContainer/MainVBox/ContentContainer/RightPanel/PartsSection"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.8, 1, 0.8, 1)
 theme_override_font_sizes/font_size = 14
 text = "Body: Ice"
 
-[node name="TailLabel" type="Label" parent="CenterContainer/PanelContainer/MarginContainer/VBoxContainer/PartsSection"]
+[node name="TailLabel" type="Label" parent="CenterContainer/PanelContainer/MarginContainer/MainVBox/ContentContainer/RightPanel/PartsSection"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.8, 1, 0.8, 1)
 theme_override_font_sizes/font_size = 14
 text = "Tail: Lightning"
 
-[node name="HSeparator4" type="HSeparator" parent="CenterContainer/PanelContainer/MarginContainer/VBoxContainer"]
+[node name="BottomPanel" type="VBoxContainer" parent="CenterContainer/PanelContainer/MarginContainer/MainVBox"]
+layout_mode = 2
+theme_override_constants/separation = 15
+
+[node name="HSeparator3" type="HSeparator" parent="CenterContainer/PanelContainer/MarginContainer/MainVBox/BottomPanel"]
 layout_mode = 2
 
-[node name="ActionsSection" type="VBoxContainer" parent="CenterContainer/PanelContainer/MarginContainer/VBoxContainer"]
+[node name="SectionsContainer" type="HBoxContainer" parent="CenterContainer/PanelContainer/MarginContainer/MainVBox/BottomPanel"]
 layout_mode = 2
+theme_override_constants/separation = 20
+
+[node name="ActionsSection" type="VBoxContainer" parent="CenterContainer/PanelContainer/MarginContainer/MainVBox/BottomPanel/SectionsContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
 theme_override_constants/separation = 8
 
-[node name="Title" type="Label" parent="CenterContainer/PanelContainer/MarginContainer/VBoxContainer/ActionsSection"]
+[node name="Title" type="Label" parent="CenterContainer/PanelContainer/MarginContainer/MainVBox/BottomPanel/SectionsContainer/ActionsSection"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.5, 1, 0.5, 1)
 theme_override_font_sizes/font_size = 18
 text = "ACTIONS"
 
-[node name="ButtonsGrid" type="GridContainer" parent="CenterContainer/PanelContainer/MarginContainer/VBoxContainer/ActionsSection"]
+[node name="ButtonsGrid" type="GridContainer" parent="CenterContainer/PanelContainer/MarginContainer/MainVBox/BottomPanel/SectionsContainer/ActionsSection"]
 layout_mode = 2
 theme_override_constants/h_separation = 10
 theme_override_constants/v_separation = 10
 columns = 2
 
-[node name="FeedButton" type="Button" parent="CenterContainer/PanelContainer/MarginContainer/VBoxContainer/ActionsSection/ButtonsGrid"]
-custom_minimum_size = Vector2(150, 40)
+[node name="FeedButton" type="Button" parent="CenterContainer/PanelContainer/MarginContainer/MainVBox/BottomPanel/SectionsContainer/ActionsSection/ButtonsGrid"]
+custom_minimum_size = Vector2(130, 40)
 layout_mode = 2
 theme_override_font_sizes/font_size = 14
 text = "Feed"
 
-[node name="TrainButton" type="Button" parent="CenterContainer/PanelContainer/MarginContainer/VBoxContainer/ActionsSection/ButtonsGrid"]
-custom_minimum_size = Vector2(150, 40)
+[node name="TrainButton" type="Button" parent="CenterContainer/PanelContainer/MarginContainer/MainVBox/BottomPanel/SectionsContainer/ActionsSection/ButtonsGrid"]
+custom_minimum_size = Vector2(130, 40)
 layout_mode = 2
 theme_override_font_sizes/font_size = 14
 text = "Train"
 
-[node name="RestButton" type="Button" parent="CenterContainer/PanelContainer/MarginContainer/VBoxContainer/ActionsSection/ButtonsGrid"]
-custom_minimum_size = Vector2(150, 40)
+[node name="RestButton" type="Button" parent="CenterContainer/PanelContainer/MarginContainer/MainVBox/BottomPanel/SectionsContainer/ActionsSection/ButtonsGrid"]
+custom_minimum_size = Vector2(130, 40)
 layout_mode = 2
 theme_override_font_sizes/font_size = 14
 text = "Rest"
 
-[node name="DefendButton" type="Button" parent="CenterContainer/PanelContainer/MarginContainer/VBoxContainer/ActionsSection/ButtonsGrid"]
-custom_minimum_size = Vector2(150, 40)
+[node name="DefendButton" type="Button" parent="CenterContainer/PanelContainer/MarginContainer/MainVBox/BottomPanel/SectionsContainer/ActionsSection/ButtonsGrid"]
+custom_minimum_size = Vector2(130, 40)
 layout_mode = 2
 theme_override_font_sizes/font_size = 14
 text = "Assign to Defense"
 
-[node name="HSeparator5" type="HSeparator" parent="CenterContainer/PanelContainer/MarginContainer/VBoxContainer"]
+[node name="ExplorationSection" type="VBoxContainer" parent="CenterContainer/PanelContainer/MarginContainer/MainVBox/BottomPanel/SectionsContainer"]
 layout_mode = 2
-
-[node name="ExplorationSection" type="VBoxContainer" parent="CenterContainer/PanelContainer/MarginContainer/VBoxContainer"]
-layout_mode = 2
+size_flags_horizontal = 3
 theme_override_constants/separation = 8
 
-[node name="Title" type="Label" parent="CenterContainer/PanelContainer/MarginContainer/VBoxContainer/ExplorationSection"]
+[node name="Title" type="Label" parent="CenterContainer/PanelContainer/MarginContainer/MainVBox/BottomPanel/SectionsContainer/ExplorationSection"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.5, 1, 0.5, 1)
 theme_override_font_sizes/font_size = 18
 text = "EXPLORATION"
 
-[node name="StatusLabel" type="Label" parent="CenterContainer/PanelContainer/MarginContainer/VBoxContainer/ExplorationSection"]
+[node name="StatusLabel" type="Label" parent="CenterContainer/PanelContainer/MarginContainer/MainVBox/BottomPanel/SectionsContainer/ExplorationSection"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.8, 1, 0.8, 1)
 theme_override_font_sizes/font_size = 14
 text = "Ready to explore"
 
-[node name="DurationButtons" type="HBoxContainer" parent="CenterContainer/PanelContainer/MarginContainer/VBoxContainer/ExplorationSection"]
+[node name="DurationButtons" type="HBoxContainer" parent="CenterContainer/PanelContainer/MarginContainer/MainVBox/BottomPanel/SectionsContainer/ExplorationSection"]
 layout_mode = 2
 theme_override_constants/separation = 10
 
-[node name="Explore15Button" type="Button" parent="CenterContainer/PanelContainer/MarginContainer/VBoxContainer/ExplorationSection/DurationButtons"]
-custom_minimum_size = Vector2(100, 40)
+[node name="Explore15Button" type="Button" parent="CenterContainer/PanelContainer/MarginContainer/MainVBox/BottomPanel/SectionsContainer/ExplorationSection/DurationButtons"]
+custom_minimum_size = Vector2(80, 40)
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_font_sizes/font_size = 14
 text = "15 min"
 
-[node name="Explore30Button" type="Button" parent="CenterContainer/PanelContainer/MarginContainer/VBoxContainer/ExplorationSection/DurationButtons"]
-custom_minimum_size = Vector2(100, 40)
+[node name="Explore30Button" type="Button" parent="CenterContainer/PanelContainer/MarginContainer/MainVBox/BottomPanel/SectionsContainer/ExplorationSection/DurationButtons"]
+custom_minimum_size = Vector2(80, 40)
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_font_sizes/font_size = 14
 text = "30 min"
 
-[node name="Explore60Button" type="Button" parent="CenterContainer/PanelContainer/MarginContainer/VBoxContainer/ExplorationSection/DurationButtons"]
-custom_minimum_size = Vector2(100, 40)
+[node name="Explore60Button" type="Button" parent="CenterContainer/PanelContainer/MarginContainer/MainVBox/BottomPanel/SectionsContainer/ExplorationSection/DurationButtons"]
+custom_minimum_size = Vector2(80, 40)
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_font_sizes/font_size = 14
