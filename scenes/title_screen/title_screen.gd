@@ -2,7 +2,7 @@ extends Control
 #TitleScreen.gd
 
 @export var main_scene: PackedScene 
-
+@export var dragon_factory_scene: PackedScene 
 
 
 
@@ -11,7 +11,7 @@ func _ready() -> void:
 
 
 func _on_start_game_button_pressed() -> void:
-	get_tree().change_scene_to_packed(main_scene)
+	get_tree().change_scene_to_packed(dragon_factory_scene)
 
 
 func _on_settings_button_pressed() -> void:

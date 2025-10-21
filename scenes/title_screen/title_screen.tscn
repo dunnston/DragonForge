@@ -1,8 +1,19 @@
-[gd_scene load_steps=4 format=3 uid="uid://d0fdst08mrgk5"]
+[gd_scene load_steps=8 format=3 uid="uid://d0fdst08mrgk5"]
 
 [ext_resource type="Script" uid="uid://dsgr1ongq21c6" path="res://scenes/title_screen/title_screen.gd" id="1_4f7n1"]
-[ext_resource type="Theme" uid="uid://cwddx5qlkinib" path="res://themes/main_theme.tres" id="1_ri6bm"]
+[ext_resource type="Theme" uid="uid://cwddx5qlkinib" path="res://themes/main_menu_theme.tres" id="1_ri6bm"]
 [ext_resource type="PackedScene" uid="uid://ckmq8b7e6s3m2" path="res://scenes/main_scene/main_scene.tscn" id="2_bhe1c"]
+[ext_resource type="Shader" uid="uid://be3njucr226nj" path="res://scenes/title_screen/title_screen.gdshader" id="4_5uxxq"]
+[ext_resource type="PackedScene" uid="uid://c8x2k4j5nan3p" path="res://scenes/ui/factory_manager.tscn" id="4_cxcmr"]
+[ext_resource type="Texture2D" uid="uid://v72fnyfeh3ul" path="res://assets/cracked_texture.png" id="4_d6x3v"]
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_cxcmr"]
+shader = ExtResource("4_5uxxq")
+shader_parameter/shimmer_speed = 0.93100004096262
+shader_parameter/shimmer_width = 0.00999999977648
+shader_parameter/shimmer_color = Color(0.7372549, 0.02745098, 0.4745098, 0.8980392)
+shader_parameter/shimmer_strength = 0.0050000002375
+shader_parameter/pulse_speed = 10.0
 
 [node name="TitleScreen" type="Control"]
 layout_mode = 3
@@ -14,6 +25,7 @@ grow_vertical = 2
 theme = ExtResource("1_ri6bm")
 script = ExtResource("1_4f7n1")
 main_scene = ExtResource("2_bhe1c")
+dragon_factory_scene = ExtResource("4_cxcmr")
 metadata/_edit_use_anchors_ = true
 
 [node name="ColorRect" type="ColorRect" parent="."]
@@ -24,6 +36,19 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 color = Color(0.15057173, 0.09353047, 0.16755936, 1)
+
+[node name="TextureRect" type="TextureRect" parent="ColorRect"]
+modulate = Color(1, 1, 1, 0.99215686)
+self_modulate = Color(1, 0.7607843, 0.9882353, 0.6313726)
+material = SubResource("ShaderMaterial_cxcmr")
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+texture = ExtResource("4_d6x3v")
+expand_mode = 2
 
 [node name="GameTitleLabel" type="RichTextLabel" parent="."]
 custom_minimum_size = Vector2(500, 0)
