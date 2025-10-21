@@ -24,6 +24,7 @@ enum Element {
 @export var attack_bonus: int = 0
 @export var health_bonus: int = 0
 @export var speed_bonus: int = 0
+@export var defense_bonus: int = 0
 @export var element_power: int = 0  # Special element bonus
 
 func get_part_id() -> String:

@@ -53,6 +53,21 @@ enum DragonState { IDLE, DEFENDING, EXPLORING, TRAINING, RESTING, DEAD }
 var total_attack: int = 0
 var total_health: int = 0
 var total_speed: int = 0
+var total_defense: int = 0
+
+# Elemental Attack (determined by parts)
+var primary_element: DragonPart.Element = DragonPart.Element.FIRE
+var secondary_elements: Array[DragonPart.Element] = []
+var elemental_attack_bonus: float = 1.0  # Multiplier for matching elements
+
+# Elemental Defense (1.0 = normal, 0.5 = resistant, 1.5 = weak)
+var elemental_resistances: Dictionary = {
+	DragonPart.Element.FIRE: 1.0,
+	DragonPart.Element.ICE: 1.0,
+	DragonPart.Element.LIGHTNING: 1.0,
+	DragonPart.Element.NATURE: 1.0,
+	DragonPart.Element.SHADOW: 1.0
+}
 
 # Life Systems (computed from timestamps)
 var hunger_level: float = 0.0     # 0.0 = fed, 1.0 = starving
@@ -103,6 +118,7 @@ func calculate_stats() -> void:
 	total_attack = 10 + (head_part.attack_bonus * level)
 	total_health = 50 + (body_part.health_bonus * level)
 	total_speed = 5 + (tail_part.speed_bonus * level)
+	total_defense = 5 + (body_part.defense_bonus * level)
 	
 	# Initialize current_health if not set
 	if current_health <= 0:
@@ -118,12 +134,31 @@ func calculate_stats() -> void:
 	# Apply starvation/fatigue penalties
 	_apply_status_penalties()
 
+	# Calculate elemental resistances
+	_calculate_elemental_resistances()
+
+	# Calculate elemental attack
+	_calculate_elemental_attack()
+
 func _apply_chimera_mutation() -> void:
 	# Chimera dragons get massive stat bonuses!
 	total_attack = int(total_attack * 2.5)
 	total_health = int(total_health * 2.0)
 	total_speed = int(total_speed * 1.5)
-	
+	total_defense = int(total_defense * 2.0)
+
+	# Chimera dragons have superior elemental balance
+	# Reduce all weaknesses and improve all resistances
+	for element in elemental_resistances:
+		if elemental_resistances[element] < 1.0:  # Resistance
+			elemental_resistances[element] = max(0.3, elemental_resistances[element] - 0.2)  # Even more resistant
+		elif elemental_resistances[element] > 1.0:  # Weakness
+			elemental_resistances[element] = min(1.2, elemental_resistances[element] - 0.3)  # Less weak
+
+	# Chimera dragons have enhanced elemental attacks
+	# Boost elemental attack bonus by 20% (1.3 -> 1.5, 1.15 -> 1.35, 1.0 -> 1.2)
+	elemental_attack_bonus += 0.2
+
 	# Update current health proportionally if it was at max
 	if current_health >= (total_health / 2.0):
 		current_health = total_health
@@ -131,17 +166,19 @@ func _apply_chimera_mutation() -> void:
 func _apply_element_synergy() -> void:
 	# Check for element combinations that provide synergy bonuses
 	var elements = [head_part.element, body_part.element, tail_part.element]
-	
+
 	# All same element = pure bonus
 	if elements[0] == elements[1] and elements[1] == elements[2]:
 		total_attack += 5 * level
 		total_health += 10 * level
 		total_speed += 2 * level
+		total_defense += 3 * level
 	# Two same elements = partial bonus
 	elif elements[0] == elements[1] or elements[1] == elements[2] or elements[0] == elements[2]:
 		total_attack += 2 * level
 		total_health += 5 * level
 		total_speed += 1 * level
+		total_defense += 1 * level
 
 func _apply_status_penalties() -> void:
 	# Apply hunger penalties
@@ -149,11 +186,86 @@ func _apply_status_penalties() -> void:
 		var penalty = (hunger_level - 0.5) * 0.4  # Up to 20% penalty at max hunger
 		total_attack = int(total_attack * (1.0 - penalty))
 		total_speed = int(total_speed * (1.0 - penalty))
-	
+
 	# Apply fatigue penalties
 	if fatigue_level > 0.7:
 		var penalty = (fatigue_level - 0.7) * 0.5  # Up to 15% penalty at max fatigue
 		total_attack = int(total_attack * (1.0 - penalty))
+
+func _calculate_elemental_resistances() -> void:
+	# Reset all resistances to neutral
+	for element in DragonPart.Element.values():
+		elemental_resistances[element] = 1.0
+
+	# Count how many parts of each element the dragon has
+	var element_counts: Dictionary = {}
+	var parts = [head_part, body_part, tail_part]
+
+	for part in parts:
+		if part:
+			if not element_counts.has(part.element):
+				element_counts[part.element] = 0
+			element_counts[part.element] += 1
+
+	# Grant resistance based on parts (0.1 resistance per part = up to 30% resistance)
+	for element in element_counts:
+		var resistance_bonus = element_counts[element] * 0.1
+		elemental_resistances[element] = max(0.5, 1.0 - resistance_bonus)  # Min 50% damage taken
+
+	# Apply elemental weaknesses (counters)
+	for element in element_counts:
+		var weakness_element = _get_element_weakness(element)
+		if weakness_element != -1:
+			# Each part of an element makes you weaker to its counter (10% per part)
+			var weakness_penalty = element_counts[element] * 0.1
+			elemental_resistances[weakness_element] = min(1.5, elemental_resistances[weakness_element] + weakness_penalty)
+
+func _get_element_weakness(element: DragonPart.Element) -> int:
+	# Returns the element this element is weak against
+	match element:
+		DragonPart.Element.FIRE:
+			return DragonPart.Element.ICE  # Fire weak to Ice
+		DragonPart.Element.ICE:
+			return DragonPart.Element.FIRE  # Ice weak to Fire
+		DragonPart.Element.LIGHTNING:
+			return DragonPart.Element.NATURE  # Lightning weak to Nature (grounded)
+		DragonPart.Element.NATURE:
+			return DragonPart.Element.SHADOW  # Nature weak to Shadow (decay)
+		DragonPart.Element.SHADOW:
+			return DragonPart.Element.LIGHTNING  # Shadow weak to Lightning (light)
+	return -1
+
+func _calculate_elemental_attack() -> void:
+	# Primary element comes from HEAD part (determines attack type)
+	if head_part:
+		primary_element = head_part.element
+
+	# Secondary elements from other parts
+	secondary_elements.clear()
+	if body_part and body_part.element != primary_element:
+		secondary_elements.append(body_part.element)
+	if tail_part and tail_part.element != primary_element and (not body_part or tail_part.element != body_part.element):
+		secondary_elements.append(tail_part.element)
+
+	# Calculate elemental attack bonus based on element matching
+	var element_counts: Dictionary = {}
+	var parts = [head_part, body_part, tail_part]
+
+	for part in parts:
+		if part:
+			if not element_counts.has(part.element):
+				element_counts[part.element] = 0
+			element_counts[part.element] += 1
+
+	# Pure element dragons (all 3 parts same) get +30% elemental damage
+	if element_counts.has(primary_element) and element_counts[primary_element] == 3:
+		elemental_attack_bonus = 1.3
+	# 2 matching parts = +15% elemental damage
+	elif element_counts.has(primary_element) and element_counts[primary_element] == 2:
+		elemental_attack_bonus = 1.15
+	# Mixed elements = normal damage but can hit multiple weaknesses
+	else:
+		elemental_attack_bonus = 1.0
 
 func get_combination_key() -> String:
 	# Create a unique key for this dragon combination
@@ -236,12 +348,38 @@ func _get_experience_for_level(target_level: int) -> int:
 func take_damage(amount: int) -> void:
 	if is_dead:
 		return
-		
+
 	current_health = max(0, current_health - amount)
 	health_changed.emit(self, current_health, total_health)
-	
+
 	if current_health <= 0:
 		_die()
+
+func calculate_elemental_damage_against(target: Dragon) -> int:
+	"""Calculate total damage this dragon would deal to a target, including elemental bonuses"""
+	if not target or is_dead:
+		return 0
+
+	# Base damage from attack stat
+	var base_damage = total_attack
+
+	# Apply elemental attack bonus (pure element dragons hit harder)
+	var elemental_damage = base_damage * elemental_attack_bonus
+
+	# Apply target's elemental resistance to primary element
+	var resistance_multiplier = target.get_elemental_resistance(primary_element)
+	var final_damage = elemental_damage * resistance_multiplier
+
+	# Mixed element dragons can exploit multiple weaknesses
+	# Add bonus damage for each secondary element the target is weak to
+	if secondary_elements.size() > 0:
+		for secondary_element in secondary_elements:
+			var secondary_resistance = target.get_elemental_resistance(secondary_element)
+			# If target is weak to this secondary element, add 15% of base attack as bonus damage
+			if secondary_resistance > 1.0:
+				final_damage += base_damage * 0.15 * (secondary_resistance - 1.0)
+
+	return int(final_damage)
 
 func _die() -> void:
 	if is_dead:
@@ -261,3 +399,21 @@ func get_health() -> int:
 
 func get_speed() -> int:
 	return total_speed
+
+func get_defense() -> int:
+	return total_defense
+
+func get_elemental_resistance(element: DragonPart.Element) -> float:
+	return elemental_resistances.get(element, 1.0)
+
+func get_all_elemental_resistances() -> Dictionary:
+	return elemental_resistances.duplicate()
+
+func get_primary_element() -> DragonPart.Element:
+	return primary_element
+
+func get_secondary_elements() -> Array[DragonPart.Element]:
+	return secondary_elements.duplicate()
+
+func get_elemental_attack_bonus() -> float:
+	return elemental_attack_bonus

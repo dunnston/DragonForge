@@ -13,6 +13,11 @@ signal dragon_updated
 @onready var speed_label: Label = $CenterContainer/PanelContainer/MarginContainer/VBoxContainer/StatsSection/SpeedLabel
 @onready var xp_label: Label = $CenterContainer/PanelContainer/MarginContainer/VBoxContainer/StatsSection/XPLabel
 
+# Advanced Stats Panel (created dynamically)
+var view_all_stats_button: Button
+var advanced_stats_panel: VBoxContainer
+var is_advanced_stats_visible: bool = false
+
 # Status
 @onready var state_label: Label = $CenterContainer/PanelContainer/MarginContainer/VBoxContainer/StatusSection/StateLabel
 @onready var hunger_label: Label = $CenterContainer/PanelContainer/MarginContainer/VBoxContainer/StatusSection/HungerLabel
@@ -71,6 +76,7 @@ func _ready():
 	_create_happiness_ui()
 	_create_consumable_ui()
 	_create_toy_slot_ui()
+	_create_advanced_stats_ui()
 
 	hide()
 
@@ -138,6 +144,88 @@ func _create_toy_slot_ui():
 	equip_toy_button.pressed.connect(_on_equip_toy_pressed)
 	toy_section.add_child(equip_toy_button)
 
+func _create_advanced_stats_ui():
+	"""Add advanced stats panel with view all stats button"""
+	var stats_section = $CenterContainer/PanelContainer/MarginContainer/VBoxContainer/StatsSection
+
+	# Add button to toggle advanced stats
+	view_all_stats_button = Button.new()
+	view_all_stats_button.text = "View All Stats ▼"
+	view_all_stats_button.pressed.connect(_on_view_all_stats_pressed)
+	stats_section.add_child(view_all_stats_button)
+
+	# Create advanced stats panel (hidden by default)
+	advanced_stats_panel = VBoxContainer.new()
+	advanced_stats_panel.name = "AdvancedStatsPanel"
+	advanced_stats_panel.visible = false
+	advanced_stats_panel.add_theme_constant_override("separation", 8)
+	stats_section.add_child(advanced_stats_panel)
+
+	# Add separator
+	var separator = HSeparator.new()
+	advanced_stats_panel.add_child(separator)
+
+	# Defense stat
+	var defense_title = Label.new()
+	defense_title.text = "Defense & Elements"
+	defense_title.add_theme_color_override("font_color", Color(1, 1, 0.5, 1))
+	defense_title.add_theme_font_size_override("font_size", 16)
+	advanced_stats_panel.add_child(defense_title)
+
+	# These will be populated when dragon is displayed
+	# Defense label
+	var defense_label = Label.new()
+	defense_label.name = "DefenseLabel"
+	defense_label.add_theme_color_override("font_color", Color(0.8, 0.6, 1, 1))
+	defense_label.add_theme_font_size_override("font_size", 14)
+	advanced_stats_panel.add_child(defense_label)
+
+	# Primary element
+	var primary_element_label = Label.new()
+	primary_element_label.name = "PrimaryElementLabel"
+	primary_element_label.add_theme_font_size_override("font_size", 14)
+	advanced_stats_panel.add_child(primary_element_label)
+
+	# Elemental attack bonus
+	var attack_bonus_label = Label.new()
+	attack_bonus_label.name = "AttackBonusLabel"
+	attack_bonus_label.add_theme_font_size_override("font_size", 14)
+	advanced_stats_panel.add_child(attack_bonus_label)
+
+	# Secondary elements
+	var secondary_elements_label = Label.new()
+	secondary_elements_label.name = "SecondaryElementsLabel"
+	secondary_elements_label.add_theme_font_size_override("font_size", 14)
+	advanced_stats_panel.add_child(secondary_elements_label)
+
+	# Separator before resistances
+	var sep2 = HSeparator.new()
+	advanced_stats_panel.add_child(sep2)
+
+	# Elemental resistances title
+	var resistances_title = Label.new()
+	resistances_title.text = "Elemental Resistances"
+	resistances_title.add_theme_color_override("font_color", Color(1, 1, 0.5, 1))
+	resistances_title.add_theme_font_size_override("font_size", 16)
+	advanced_stats_panel.add_child(resistances_title)
+
+	# Resistance labels (one for each element)
+	for element in DragonPart.Element.values():
+		var resistance_label = Label.new()
+		resistance_label.name = "Resistance_%s" % DragonPart.Element.keys()[element]
+		resistance_label.add_theme_font_size_override("font_size", 13)
+		advanced_stats_panel.add_child(resistance_label)
+
+func _on_view_all_stats_pressed():
+	"""Toggle advanced stats panel visibility"""
+	is_advanced_stats_visible = !is_advanced_stats_visible
+	advanced_stats_panel.visible = is_advanced_stats_visible
+	view_all_stats_button.text = "View All Stats ▲" if is_advanced_stats_visible else "View All Stats ▼"
+
+	# Update the display when showing
+	if is_advanced_stats_visible:
+		_update_advanced_stats_display()
+
 func open_for_dragon(dragon: Dragon):
 	current_dragon = dragon
 	_update_display()
@@ -193,6 +281,96 @@ func _update_display():
 
 	# Update button states
 	_update_button_states()
+
+	# Update advanced stats if panel is visible
+	if is_advanced_stats_visible:
+		_update_advanced_stats_display()
+
+func _update_advanced_stats_display():
+	"""Update the advanced stats panel with current dragon stats"""
+	if not current_dragon or not advanced_stats_panel:
+		return
+
+	# Defense stat
+	var defense_label = advanced_stats_panel.get_node_or_null("DefenseLabel")
+	if defense_label:
+		defense_label.text = "Defense: %d" % current_dragon.get_defense()
+
+	# Primary element
+	var primary_element_label = advanced_stats_panel.get_node_or_null("PrimaryElementLabel")
+	if primary_element_label:
+		var element_name = _get_element_name(current_dragon.get_primary_element())
+		var element_color = _get_element_color(current_dragon.get_primary_element())
+		primary_element_label.text = "Primary Element: %s (from Head)" % element_name
+		primary_element_label.add_theme_color_override("font_color", element_color)
+
+	# Elemental attack bonus
+	var attack_bonus_label = advanced_stats_panel.get_node_or_null("AttackBonusLabel")
+	if attack_bonus_label:
+		var bonus = current_dragon.get_elemental_attack_bonus()
+		var bonus_percent = int((bonus - 1.0) * 100)
+		var bonus_text = "+%d%%" % bonus_percent if bonus_percent > 0 else "Normal"
+		attack_bonus_label.text = "Elemental Attack Bonus: %s (%.1fx)" % [bonus_text, bonus]
+		attack_bonus_label.add_theme_color_override("font_color", Color(1, 0.8, 0.4, 1))
+
+	# Secondary elements
+	var secondary_elements_label = advanced_stats_panel.get_node_or_null("SecondaryElementsLabel")
+	if secondary_elements_label:
+		var secondary_elements = current_dragon.get_secondary_elements()
+		if secondary_elements.size() > 0:
+			var element_names = []
+			for element in secondary_elements:
+				element_names.append(_get_element_name(element))
+			secondary_elements_label.text = "Secondary Elements: %s" % ", ".join(element_names)
+			secondary_elements_label.add_theme_color_override("font_color", Color(0.8, 0.8, 1, 1))
+		else:
+			secondary_elements_label.text = "Secondary Elements: None (Pure Dragon)"
+			secondary_elements_label.add_theme_color_override("font_color", Color(0.6, 0.6, 0.6, 1))
+
+	# Elemental resistances
+	var resistances = current_dragon.get_all_elemental_resistances()
+	for element in DragonPart.Element.values():
+		var resistance_label = advanced_stats_panel.get_node_or_null("Resistance_%s" % DragonPart.Element.keys()[element])
+		if resistance_label:
+			var resistance_value = resistances.get(element, 1.0)
+			var element_name = _get_element_name(element)
+			var element_color = _get_element_color(element)
+
+			# Format resistance text
+			var resistance_text = ""
+			var text_color = Color.WHITE
+			if resistance_value < 1.0:
+				# Resistant (takes less damage)
+				var reduction = int((1.0 - resistance_value) * 100)
+				resistance_text = "%s: -%d%% damage (%.2fx)" % [element_name, reduction, resistance_value]
+				text_color = Color(0.5, 1, 0.5, 1)  # Green for resistance
+			elif resistance_value > 1.0:
+				# Weak (takes more damage)
+				var increase = int((resistance_value - 1.0) * 100)
+				resistance_text = "%s: +%d%% damage (%.2fx)" % [element_name, increase, resistance_value]
+				text_color = Color(1, 0.5, 0.5, 1)  # Red for weakness
+			else:
+				# Neutral
+				resistance_text = "%s: Normal (1.0x)" % element_name
+				text_color = Color(0.8, 0.8, 0.8, 1)  # Gray for neutral
+
+			resistance_label.text = resistance_text
+			resistance_label.add_theme_color_override("font_color", text_color)
+
+func _get_element_color(element: DragonPart.Element) -> Color:
+	"""Get color for element display"""
+	match element:
+		DragonPart.Element.FIRE:
+			return Color(1, 0.4, 0.2, 1)  # Red-orange
+		DragonPart.Element.ICE:
+			return Color(0.4, 0.8, 1, 1)  # Cyan
+		DragonPart.Element.LIGHTNING:
+			return Color(1, 1, 0.3, 1)  # Yellow
+		DragonPart.Element.NATURE:
+			return Color(0.4, 1, 0.4, 1)  # Green
+		DragonPart.Element.SHADOW:
+			return Color(0.7, 0.4, 1, 1)  # Purple
+	return Color.WHITE
 
 func _update_button_states():
 	if not current_dragon:

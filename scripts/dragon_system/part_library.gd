@@ -35,6 +35,7 @@ func _create_part(part_type: DragonPart.PartType, element: DragonPart.Element) -
 			part.attack_bonus = 5 + _get_element_modifier(element, "attack")
 		DragonPart.PartType.BODY:
 			part.health_bonus = 10 + _get_element_modifier(element, "health")
+			part.defense_bonus = 4 + _get_element_modifier(element, "defense")
 		DragonPart.PartType.TAIL:
 			part.speed_bonus = 3 + _get_element_modifier(element, "speed")
 	
@@ -51,13 +52,23 @@ func _get_element_modifier(element: DragonPart.Element, stat: String) -> int:
 		DragonPart.Element.FIRE:
 			return 3 if stat == "attack" else 0
 		DragonPart.Element.ICE:
-			return 3 if stat == "health" else 0
+			if stat == "health":
+				return 3
+			elif stat == "defense":
+				return 3
+			else:
+				return 0
 		DragonPart.Element.LIGHTNING:
 			return 3 if stat == "speed" else 0
 		DragonPart.Element.NATURE:
 			return 2  # Balanced
 		DragonPart.Element.SHADOW:
-			return 2 if stat == "attack" else 1
+			if stat == "attack":
+				return 2
+			elif stat == "defense":
+				return 2
+			else:
+				return 1
 	return 0
 
 func _get_element_power(element: DragonPart.Element) -> int:
