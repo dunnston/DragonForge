@@ -1,0 +1,322 @@
+{
+	"dragon_parts": {
+		"fire_head": {
+			"id": "fire_head",
+			"name": "Fire Head",
+			"type": "dragon_part",
+			"part_type": "HEAD",
+			"element": "FIRE",
+			"description": "A fierce dragon head wreathed in flames",
+			"icon": "res://assets/icons/parts/fire_head.png",
+			"stackable": true,
+			"max_stack": 99,
+			"rarity": 1,
+			"stats": {
+				"attack": 10,
+				"health": 0,
+				"speed": 0
+			}
+		},
+		"fire_body": {
+			"id": "fire_body",
+			"name": "Fire Body",
+			"type": "dragon_part",
+			"part_type": "BODY",
+			"element": "FIRE",
+			"description": "A powerful body radiating intense heat",
+			"icon": "res://assets/icons/parts/fire_body.png",
+			"stackable": true,
+			"max_stack": 99,
+			"rarity": 1,
+			"stats": {
+				"attack": 0,
+				"health": 20,
+				"speed": 0
+			}
+		},
+		"fire_tail": {
+			"id": "fire_tail",
+			"name": "Fire Tail",
+			"type": "dragon_part",
+			"part_type": "TAIL",
+			"element": "FIRE",
+			"description": "A blazing tail that leaves embers in its wake",
+			"icon": "res://assets/icons/parts/fire_tail.png",
+			"stackable": true,
+			"max_stack": 99,
+			"rarity": 1,
+			"stats": {
+				"attack": 0,
+				"health": 0,
+				"speed": 5
+			}
+		},
+		"ice_head": {
+			"id": "ice_head",
+			"name": "Ice Head",
+			"type": "dragon_part",
+			"part_type": "HEAD",
+			"element": "ICE",
+			"description": "A crystalline head that freezes enemies",
+			"icon": "res://assets/icons/parts/ice_head.png",
+			"stackable": true,
+			"max_stack": 99,
+			"rarity": 1,
+			"stats": {
+				"attack": 10,
+				"health": 0,
+				"speed": 0
+			}
+		},
+		"ice_body": {
+			"id": "ice_body",
+			"name": "Ice Body",
+			"type": "dragon_part",
+			"part_type": "BODY",
+			"element": "ICE",
+			"description": "An icy body as hard as diamond",
+			"icon": "res://assets/icons/parts/ice_body.png",
+			"stackable": true,
+			"max_stack": 99,
+			"rarity": 1,
+			"stats": {
+				"attack": 0,
+				"health": 20,
+				"speed": 0
+			}
+		},
+		"ice_tail": {
+			"id": "ice_tail",
+			"name": "Ice Tail",
+			"type": "dragon_part",
+			"part_type": "TAIL",
+			"element": "ICE",
+			"description": "A frozen tail that can shatter foes",
+			"icon": "res://assets/icons/parts/ice_tail.png",
+			"stackable": true,
+			"max_stack": 99,
+			"rarity": 1,
+			"stats": {
+				"attack": 0,
+				"health": 0,
+				"speed": 5
+			}
+		},
+		"lightning_head": {
+			"id": "lightning_head",
+			"name": "Lightning Head",
+			"type": "dragon_part",
+			"part_type": "HEAD",
+			"element": "LIGHTNING",
+			"description": "A crackling head charged with electricity",
+			"icon": "res://assets/icons/parts/lightning_head.png",
+			"stackable": true,
+			"max_stack": 99,
+			"rarity": 1,
+			"stats": {
+				"attack": 10,
+				"health": 0,
+				"speed": 0
+			}
+		},
+		"lightning_body": {
+			"id": "lightning_body",
+			"name": "Lightning Body",
+			"type": "dragon_part",
+			"part_type": "BODY",
+			"element": "LIGHTNING",
+			"description": "A body surging with electrical energy",
+			"icon": "res://assets/icons/parts/lightning_body.png",
+			"stackable": true,
+			"max_stack": 99,
+			"rarity": 1,
+			"stats": {
+				"attack": 0,
+				"health": 20,
+				"speed": 0
+			}
+		},
+		"lightning_tail": {
+			"id": "lightning_tail",
+			"name": "Lightning Tail",
+			"type": "dragon_part",
+			"part_type": "TAIL",
+			"element": "LIGHTNING",
+			"description": "A lightning-fast tail that strikes like thunder",
+			"icon": "res://assets/icons/parts/lightning_tail.png",
+			"stackable": true,
+			"max_stack": 99,
+			"rarity": 1,
+			"stats": {
+				"attack": 0,
+				"health": 0,
+				"speed": 5
+			}
+		},
+		"nature_head": {
+			"id": "nature_head",
+			"name": "Nature Head",
+			"type": "dragon_part",
+			"part_type": "HEAD",
+			"element": "NATURE",
+			"description": "A verdant head entwined with living vines",
+			"icon": "res://assets/icons/parts/nature_head.png",
+			"stackable": true,
+			"max_stack": 99,
+			"rarity": 1,
+			"stats": {
+				"attack": 10,
+				"health": 0,
+				"speed": 0
+			}
+		},
+		"nature_body": {
+			"id": "nature_body",
+			"name": "Nature Body",
+			"type": "dragon_part",
+			"part_type": "BODY",
+			"element": "NATURE",
+			"description": "A robust body covered in bark and moss",
+			"icon": "res://assets/icons/parts/nature_body.png",
+			"stackable": true,
+			"max_stack": 99,
+			"rarity": 1,
+			"stats": {
+				"attack": 0,
+				"health": 20,
+				"speed": 0
+			}
+		},
+		"nature_tail": {
+			"id": "nature_tail",
+			"name": "Nature Tail",
+			"type": "dragon_part",
+			"part_type": "TAIL",
+			"element": "NATURE",
+			"description": "A tail that blooms with deadly thorns",
+			"icon": "res://assets/icons/parts/nature_tail.png",
+			"stackable": true,
+			"max_stack": 99,
+			"rarity": 1,
+			"stats": {
+				"attack": 0,
+				"health": 0,
+				"speed": 5
+			}
+		},
+		"shadow_head": {
+			"id": "shadow_head",
+			"name": "Shadow Head",
+			"type": "dragon_part",
+			"part_type": "HEAD",
+			"element": "SHADOW",
+			"description": "A dark head that melts into shadows",
+			"icon": "res://assets/icons/parts/shadow_head.png",
+			"stackable": true,
+			"max_stack": 99,
+			"rarity": 1,
+			"stats": {
+				"attack": 10,
+				"health": 0,
+				"speed": 0
+			}
+		},
+		"shadow_body": {
+			"id": "shadow_body",
+			"name": "Shadow Body",
+			"type": "dragon_part",
+			"part_type": "BODY",
+			"element": "SHADOW",
+			"description": "A mysterious body cloaked in darkness",
+			"icon": "res://assets/icons/parts/shadow_body.png",
+			"stackable": true,
+			"max_stack": 99,
+			"rarity": 1,
+			"stats": {
+				"attack": 0,
+				"health": 20,
+				"speed": 0
+			}
+		},
+		"shadow_tail": {
+			"id": "shadow_tail",
+			"name": "Shadow Tail",
+			"type": "dragon_part",
+			"part_type": "TAIL",
+			"element": "SHADOW",
+			"description": "A shadowy tail that moves unseen",
+			"icon": "res://assets/icons/parts/shadow_tail.png",
+			"stackable": true,
+			"max_stack": 99,
+			"rarity": 1,
+			"stats": {
+				"attack": 0,
+				"health": 0,
+				"speed": 5
+			}
+		}
+	},
+	"consumables": {
+		"treat": {
+			"id": "treat",
+			"name": "Dragon Treat",
+			"type": "consumable",
+			"category": "xp_boost",
+			"description": "A delicious snack that dragons love. Grants 50 XP.",
+			"icon": "res://assets/icons/items/treat.png",
+			"stackable": true,
+			"max_stack": 99,
+			"rarity": 1,
+			"effect": {
+				"type": "xp_gain",
+				"amount": 50
+			}
+		},
+		"health_potion": {
+			"id": "health_potion",
+			"name": "Health Potion",
+			"type": "consumable",
+			"category": "healing",
+			"description": "A mystical potion that restores a dragon to full health.",
+			"icon": "res://assets/icons/items/health_potion.png",
+			"stackable": true,
+			"max_stack": 99,
+			"rarity": 1,
+			"effect": {
+				"type": "heal",
+				"amount": "full"
+			}
+		},
+		"food": {
+			"id": "food",
+			"name": "Dragon Food",
+			"type": "consumable",
+			"category": "food",
+			"description": "Nutritious food that satisfies a dragon's hunger.",
+			"icon": "res://assets/icons/items/food.png",
+			"stackable": true,
+			"max_stack": 99,
+			"rarity": 1,
+			"effect": {
+				"type": "feed",
+				"amount": "full"
+			}
+		},
+		"toy": {
+			"id": "toy",
+			"name": "Dragon Toy",
+			"type": "consumable",
+			"category": "happiness",
+			"description": "A fun toy that makes dragons happy and grants 25 XP.",
+			"icon": "res://assets/icons/items/toy.png",
+			"stackable": true,
+			"max_stack": 99,
+			"rarity": 1,
+			"effect": {
+				"type": "happiness_xp",
+				"happiness": 10,
+				"xp": 25
+			}
+		}
+	}
+}

@@ -1,7 +1,7 @@
-# Part Selector - Visual inventory grid for selecting dragon parts
+# Part Selector - Visual inventory grid for selecting dragon parts from inventory
 extends Control
 
-signal part_selected(element: DragonPart.Element)
+signal part_selected(item_id: String)
 
 @onready var title_label: Label = $CenterContainer/PanelContainer/MarginContainer/VBoxContainer/Header/Title
 @onready var close_button: Button = $CenterContainer/PanelContainer/MarginContainer/VBoxContainer/Header/CloseButton
@@ -10,19 +10,11 @@ signal part_selected(element: DragonPart.Element)
 var current_part_type: DragonPart.PartType = DragonPart.PartType.HEAD
 
 const ELEMENT_COLORS = {
-	DragonPart.Element.FIRE: Color(1, 0.3, 0.2),
-	DragonPart.Element.ICE: Color(0.4, 0.7, 1),
-	DragonPart.Element.LIGHTNING: Color(1, 1, 0.3),
-	DragonPart.Element.NATURE: Color(0.3, 1, 0.3),
-	DragonPart.Element.SHADOW: Color(0.6, 0.4, 1)
-}
-
-const ELEMENT_NAMES = {
-	DragonPart.Element.FIRE: "Fire",
-	DragonPart.Element.ICE: "Ice",
-	DragonPart.Element.LIGHTNING: "Lightning",
-	DragonPart.Element.NATURE: "Nature",
-	DragonPart.Element.SHADOW: "Shadow"
+	"FIRE": Color(1, 0.3, 0.2),
+	"ICE": Color(0.4, 0.7, 1),
+	"LIGHTNING": Color(1, 1, 0.3),
+	"NATURE": Color(0.3, 1, 0.3),
+	"SHADOW": Color(0.6, 0.4, 1)
 }
 
 func _ready():
@@ -40,29 +32,55 @@ func open(part_type: DragonPart.PartType):
 	for child in parts_grid.get_children():
 		child.queue_free()
 
-	# Populate grid with available parts
+	# Populate grid with available parts from inventory
 	_populate_parts_grid()
 
 	show()
 
 func _populate_parts_grid():
-	if not TreasureVault:
+	if not InventoryManager or not InventoryManager.instance:
+		print("[PartSelector] ERROR: InventoryManager not available")
 		return
 
-	# Create a box for each element type
-	for element in DragonPart.Element.values():
-		var count = TreasureVault.get_part_count(element)
+	# Get the part type string (HEAD, BODY, TAIL)
+	var type_string = DragonPart.PartType.keys()[current_part_type]
 
-		# Create part box
-		var part_box = _create_part_box(element, count)
+	# Get all dragon parts of this type from inventory
+	var available_parts = InventoryManager.instance.get_dragon_parts_by_type(type_string)
+
+	# Group by element for organized display
+	var parts_by_element: Dictionary = {}
+
+	for part_data in available_parts:
+		var item: Item = part_data["item"]
+		var element = item.element
+		if not parts_by_element.has(element):
+			parts_by_element[element] = {
+				"item_id": part_data["item_id"],
+				"item": item,
+				"quantity": 0
+			}
+		parts_by_element[element]["quantity"] += part_data["quantity"]
+
+	# If no parts available, show message
+	if parts_by_element.is_empty():
+		var message = Label.new()
+		message.text = "No %s parts in inventory!\nUse Dev Menu (`) to add parts." % type_string.to_lower()
+		message.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		message.add_theme_font_size_override("font_size", 16)
+		message.add_theme_color_override("font_color", Color(1, 0.5, 0.5, 1))
+		parts_grid.add_child(message)
+		return
+
+	# Create a box for each element that has parts
+	for element in parts_by_element.keys():
+		var data = parts_by_element[element]
+		var part_box = _create_part_box(data["item_id"], data["item"], data["quantity"])
 		parts_grid.add_child(part_box)
 
-func _create_part_box(element: DragonPart.Element, count: int) -> Control:
+func _create_part_box(item_id: String, item: Item, count: int) -> Control:
 	var container = PanelContainer.new()
 	container.custom_minimum_size = Vector2(120, 120)
-
-	# Disable if no parts available
-	var available = count > 0
 
 	var vbox = VBoxContainer.new()
 	vbox.alignment = BoxContainer.ALIGNMENT_CENTER
@@ -71,16 +89,14 @@ func _create_part_box(element: DragonPart.Element, count: int) -> Control:
 	# Part icon (colored square)
 	var icon = ColorRect.new()
 	icon.custom_minimum_size = Vector2(80, 80)
-	icon.color = ELEMENT_COLORS[element]
-	if not available:
-		icon.color = icon.color.darkened(0.5)
+	icon.color = ELEMENT_COLORS.get(item.element, Color.WHITE)
 	vbox.add_child(icon)
 
 	# Element name
 	var name_label = Label.new()
-	name_label.text = ELEMENT_NAMES[element]
+	name_label.text = item.element.capitalize()
 	name_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	name_label.add_theme_color_override("font_color", Color(0.8, 1, 0.8, 1) if available else Color(0.5, 0.5, 0.5, 1))
+	name_label.add_theme_color_override("font_color", Color(0.8, 1, 0.8, 1))
 	name_label.add_theme_font_size_override("font_size", 14)
 	vbox.add_child(name_label)
 
@@ -88,29 +104,24 @@ func _create_part_box(element: DragonPart.Element, count: int) -> Control:
 	var count_label = Label.new()
 	count_label.text = "×%d" % count
 	count_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	count_label.add_theme_color_override("font_color", Color(1, 0.843, 0, 1) if available else Color(0.5, 0.5, 0.5, 1))
+	count_label.add_theme_color_override("font_color", Color(1, 0.843, 0, 1))
 	count_label.add_theme_font_size_override("font_size", 12)
 	vbox.add_child(count_label)
 
-	# Make clickable if available
-	if available:
-		var button = Button.new()
-		button.flat = true
-		button.custom_minimum_size = Vector2(120, 120)
-		button.pressed.connect(func(): _on_part_selected(element))
-		container.add_child(button)
+	# Make clickable
+	var button = Button.new()
+	button.flat = true
+	button.custom_minimum_size = Vector2(120, 120)
+	button.pressed.connect(func(): _on_part_selected(item_id))
+	container.add_child(button)
 
-		# Add hover tooltip
-		button.tooltip_text = "%s %s part (%d available)" % [
-			ELEMENT_NAMES[element],
-			DragonPart.PartType.keys()[current_part_type].capitalize(),
-			count
-		]
+	# Add hover tooltip
+	button.tooltip_text = "%s (%d available)" % [item.get_display_name(), count]
 
 	return container
 
-func _on_part_selected(element: DragonPart.Element):
-	part_selected.emit(element)
+func _on_part_selected(item_id: String):
+	part_selected.emit(item_id)
 	hide()
 
 func _on_close_pressed():
