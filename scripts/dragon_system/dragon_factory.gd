@@ -12,26 +12,28 @@ func create_dragon(head: DragonPart, body: DragonPart, tail: DragonPart) -> Drag
 	if not head or not body or not tail:
 		push_error("Cannot create dragon with missing parts")
 		return null
-	
+
 	var dragon = Dragon.new(head, body, tail)
-	
+
 	# Check for Chimera Mutation (Holy Shit Moment!)
 	if DragonStateManager.instance:
 		DragonStateManager.instance.attempt_chimera_mutation(dragon)
-	
+		# Register dragon for state management
+		DragonStateManager.instance.register_dragon(dragon)
+
 	active_dragons.append(dragon)
-	
+
 	# Track collection
 	var combo_key = dragon.get_combination_key()
 	if not dragon_collection.has(combo_key):
 		dragon_collection[combo_key] = true
 		print("New dragon discovered: %s" % combo_key)
-	
+
 	dragon_created.emit(dragon)
-	
+
 	# Trigger AI name generation (async)
 	_generate_dragon_name(dragon)
-	
+
 	return dragon
 
 func _generate_dragon_name(dragon: Dragon):
