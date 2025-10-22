@@ -20,7 +20,7 @@
 
 3. **Dragon Base Scene** - `assets/Icons/dragons/dragon-base.tscn`
    - Instantiable scene with shader material
-   - References: fire-dragon-base-transparent.png + dragon-mask.png
+   - References: dragon-base-clean.png + dragon-mask.png
    - Scale: Adjust per use case
 
 4. **Test Scene** - `scenes/test/dragon_color_test.tscn`
@@ -166,7 +166,7 @@ You can update this file at any time - the shader will automatically use the new
 - `scenes/test/dragon_color_test.tscn` - Fixed scale to 0.3
 
 ### Files You Created
-- `assets/Icons/dragons/fire-dragon-base-transparent.png` - Base texture
+- `assets/Icons/dragons/dragon-base-clean.png` - Base texture (cleaned up edges)
 - `assets/Icons/dragons/dragon-mask.png` - Color mask (can be updated anytime!)
 
 ---
