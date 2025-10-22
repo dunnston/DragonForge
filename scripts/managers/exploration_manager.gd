@@ -402,3 +402,51 @@ func get_dev_mode_info() -> String:
 		return "DEV MODE ENABLED - Explorations use SECONDS instead of minutes (15s/30s/60s)"
 	else:
 		return "Production Mode - Explorations use real time (15min/30min/60min)"
+
+# === SAVE/LOAD SERIALIZATION ===
+
+func to_dict() -> Dictionary:
+	"""Serialize active explorations to a dictionary for saving"""
+	var data = {
+		"active_explorations": []
+	}
+
+	for dragon_id in active_explorations.keys():
+		var exploration = active_explorations[dragon_id]
+		data["active_explorations"].append({
+			"dragon_id": dragon_id,
+			"start_time": exploration["start_time"],
+			"duration": exploration["duration"],
+			"duration_minutes": exploration["duration_minutes"]
+		})
+
+	return data
+
+func from_dict(data: Dictionary, dragon_factory: DragonFactory):
+	"""Restore active explorations from saved data"""
+	if not data.has("active_explorations"):
+		return
+
+	active_explorations.clear()
+
+	for exploration_data in data["active_explorations"]:
+		var dragon_id = exploration_data["dragon_id"]
+		var dragon = dragon_factory.get_dragon_by_id(dragon_id)
+
+		if not dragon:
+			print("[ExplorationManager] WARNING: Could not find dragon %s for exploration" % dragon_id)
+			continue
+
+		# Restore exploration data
+		active_explorations[dragon_id] = {
+			"start_time": exploration_data["start_time"],
+			"duration": exploration_data["duration"],
+			"duration_minutes": exploration_data["duration_minutes"],
+			"dragon": dragon
+		}
+
+		# Restore dragon's exploration state
+		dragon.exploration_start_time = exploration_data["start_time"]
+		dragon.exploration_duration = exploration_data["duration"]
+
+		print("[ExplorationManager] Restored exploration for %s" % dragon.dragon_name)

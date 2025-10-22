@@ -40,6 +40,8 @@ func toggle_menu():
 		_update_inventory_counts()
 		# Refresh dragon list in case new dragons were created
 		_refresh_dragon_selector()
+		# Refresh save info
+		_refresh_save_info()
 	else:
 		hide()
 
@@ -53,6 +55,12 @@ func _refresh_dragon_selector():
 					_refresh_dragon_list(subchild)
 					return
 
+func _refresh_save_info():
+	"""Refresh the save info label"""
+	var label = items_container.get_node_or_null("SaveInfoLabel")
+	if label:
+		_update_save_info_label(label)
+
 var current_dragon: Dragon = null
 
 func _populate_items():
@@ -64,6 +72,11 @@ func _populate_items():
 	# Clear existing items
 	for child in items_container.get_children():
 		child.queue_free()
+
+	# Add section: Save/Load Controls
+	_add_save_load_section()
+
+	_add_separator()
 
 	# Add section: Dragon Debug Controls
 	_add_dragon_debug_section()
@@ -214,6 +227,137 @@ func _on_add_all_pressed():
 	InventoryManager.instance.add_starting_items()
 	print("[DevMenu] Added starting items!")
 	_update_inventory_counts()
+
+# === SAVE/LOAD SECTION ===
+
+func _add_save_load_section():
+	"""Add save/load controls"""
+	_add_section_label("SAVE / LOAD SYSTEM")
+
+	# Save info label
+	var save_info_label = Label.new()
+	save_info_label.name = "SaveInfoLabel"
+	save_info_label.add_theme_font_size_override("font_size", 12)
+	save_info_label.add_theme_color_override("font_color", Color(0.8, 0.8, 0.8, 1))
+	_update_save_info_label(save_info_label)
+	items_container.add_child(save_info_label)
+
+	# Save/Load buttons row
+	var save_load_hbox = HBoxContainer.new()
+	save_load_hbox.add_theme_constant_override("separation", 10)
+
+	var save_button = Button.new()
+	save_button.text = "Save Game"
+	save_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	save_button.pressed.connect(_on_save_game_pressed)
+	save_load_hbox.add_child(save_button)
+
+	var load_button = Button.new()
+	load_button.text = "Load Game"
+	load_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	load_button.pressed.connect(_on_load_game_pressed)
+	save_load_hbox.add_child(load_button)
+
+	items_container.add_child(save_load_hbox)
+
+	# Delete save button
+	var delete_button = Button.new()
+	delete_button.text = "Delete Save File"
+	delete_button.pressed.connect(_on_delete_save_pressed)
+	delete_button.add_theme_color_override("font_color", Color(1.0, 0.3, 0.3, 1))
+	items_container.add_child(delete_button)
+
+	# Auto-save toggle
+	var auto_save_hbox = HBoxContainer.new()
+	var auto_save_label = Label.new()
+	auto_save_label.text = "Auto-save:"
+	auto_save_hbox.add_child(auto_save_label)
+
+	var auto_save_check = CheckButton.new()
+	auto_save_check.name = "AutoSaveCheckbox"
+	auto_save_check.button_pressed = SaveLoadManager.instance.auto_save_enabled if SaveLoadManager and SaveLoadManager.instance else true
+	auto_save_check.toggled.connect(_on_auto_save_toggled)
+	auto_save_hbox.add_child(auto_save_check)
+
+	var auto_save_info = Label.new()
+	auto_save_info.text = "(every 2 minutes)"
+	auto_save_info.add_theme_font_size_override("font_size", 11)
+	auto_save_info.add_theme_color_override("font_color", Color(0.6, 0.6, 0.6, 1))
+	auto_save_hbox.add_child(auto_save_info)
+
+	items_container.add_child(auto_save_hbox)
+
+func _update_save_info_label(label: Label):
+	"""Update the save info label with current save file info"""
+	if not SaveLoadManager or not SaveLoadManager.instance:
+		label.text = "SaveLoadManager not available"
+		return
+
+	if SaveLoadManager.instance.has_save_file():
+		var save_info = SaveLoadManager.instance.get_save_info()
+		label.text = "Save exists: %s\nDragons: %d | Gold: %d" % [
+			save_info.get("save_date", "Unknown"),
+			save_info.get("dragon_count", 0),
+			save_info.get("gold", 0)
+		]
+	else:
+		label.text = "No save file found"
+
+func _on_save_game_pressed():
+	"""Save the current game"""
+	if not SaveLoadManager or not SaveLoadManager.instance:
+		print("[DevMenu] SaveLoadManager not available!")
+		return
+
+	print("[DevMenu] Saving game...")
+	await SaveLoadManager.instance.save_game()
+
+	# Update save info label
+	var label = items_container.get_node_or_null("SaveInfoLabel")
+	if label:
+		_update_save_info_label(label)
+
+func _on_load_game_pressed():
+	"""Load the saved game"""
+	if not SaveLoadManager or not SaveLoadManager.instance:
+		print("[DevMenu] SaveLoadManager not available!")
+		return
+
+	print("[DevMenu] Loading game...")
+	await SaveLoadManager.instance.load_game()
+
+	# Refresh UI
+	_update_inventory_counts()
+	_refresh_dragon_selector()
+
+	# Update save info label
+	var label = items_container.get_node_or_null("SaveInfoLabel")
+	if label:
+		_update_save_info_label(label)
+
+func _on_delete_save_pressed():
+	"""Delete the save file"""
+	if not SaveLoadManager or not SaveLoadManager.instance:
+		print("[DevMenu] SaveLoadManager not available!")
+		return
+
+	if SaveLoadManager.instance.delete_save_file():
+		print("[DevMenu] Save file deleted")
+	else:
+		print("[DevMenu] No save file to delete")
+
+	# Update save info label
+	var label = items_container.get_node_or_null("SaveInfoLabel")
+	if label:
+		_update_save_info_label(label)
+
+func _on_auto_save_toggled(enabled: bool):
+	"""Toggle auto-save on/off"""
+	if not SaveLoadManager or not SaveLoadManager.instance:
+		return
+
+	SaveLoadManager.instance.set_auto_save_enabled(enabled)
+	print("[DevMenu] Auto-save %s" % ("enabled" if enabled else "disabled"))
 
 # === DRAGON DEBUG SECTION ===
 

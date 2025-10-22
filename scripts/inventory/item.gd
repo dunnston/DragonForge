@@ -30,7 +30,8 @@ func _init(data: Dictionary = {}):
 	name = data.get("name", "Unknown Item")
 	type = data.get("type", "")
 	description = data.get("description", "")
-	icon_path = data.get("icon", "")
+	# Support both "icon" (from items.json) and "icon_path" (from save files)
+	icon_path = data.get("icon_path", data.get("icon", ""))
 	stackable = data.get("stackable", true)
 	max_stack = data.get("max_stack", 99)
 	rarity = data.get("rarity", 1)
@@ -94,4 +95,18 @@ func to_dict() -> Dictionary:
 
 static func from_dict(data: Dictionary) -> Item:
 	"""Create item from dictionary (for loading)"""
-	return Item.new(data)
+	var item = Item.new(data)
+
+	# If icon_path is empty after loading, try to get it from ItemDatabase
+	if item.icon_path.is_empty() and not item.id.is_empty():
+		if ItemDatabase and ItemDatabase.instance:
+			var db_data = ItemDatabase.instance.get_item_data(item.id)
+			if db_data.has("icon"):
+				item.icon_path = db_data["icon"]
+				print("[Item] Restored icon_path for '%s' from database: %s" % [item.id, item.icon_path])
+
+	# Debug: warn if still empty
+	if item.icon_path.is_empty():
+		print("[Item] WARNING: Loaded item '%s' has empty icon_path and couldn't restore from database" % item.id)
+
+	return item

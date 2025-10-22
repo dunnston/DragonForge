@@ -103,3 +103,40 @@ func get_collection_progress() -> Dictionary:
 		"total": total_combinations,
 		"percentage": (discovered / float(total_combinations)) * 100
 	}
+
+# === SAVE/LOAD SERIALIZATION ===
+
+func to_dict() -> Dictionary:
+	"""Serialize dragon factory state for saving"""
+	var data = {
+		"dragons": [],
+		"dragon_collection": dragon_collection.duplicate()
+	}
+
+	# Serialize each dragon
+	for dragon in active_dragons:
+		data["dragons"].append(dragon.to_dict())
+
+	return data
+
+func from_dict(data: Dictionary):
+	"""Restore dragon factory state from saved data"""
+	# Clear existing dragons
+	active_dragons.clear()
+
+	# Restore dragon collection
+	if data.has("dragon_collection"):
+		dragon_collection = data["dragon_collection"].duplicate()
+
+	# Restore dragons
+	if data.has("dragons"):
+		for dragon_data in data["dragons"]:
+			var dragon = Dragon.new()
+			dragon.from_dict(dragon_data)
+			active_dragons.append(dragon)
+
+			# Re-register with DragonStateManager
+			if DragonStateManager and DragonStateManager.instance:
+				DragonStateManager.instance.register_dragon(dragon)
+
+			print("[DragonFactory] Restored dragon: %s (Level %d)" % [dragon.dragon_name, dragon.level])

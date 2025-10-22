@@ -309,7 +309,7 @@ func _complete_wave(victory: bool, rewards: Dictionary):
 func to_dict() -> Dictionary:
 	var defending_ids: Array[String] = []
 	for dragon in defending_dragons:
-		defending_ids.append(dragon.id)
+		defending_ids.append(dragon.dragon_id)
 
 	return {
 		"wave_number": wave_number,
@@ -317,11 +317,20 @@ func to_dict() -> Dictionary:
 		"defending_dragon_ids": defending_ids
 	}
 
-func from_dict(data: Dictionary):
+func from_dict(data: Dictionary, dragon_factory = null):
 	wave_number = data.get("wave_number", 1)
 	time_until_next_wave = data.get("time_until_next_wave", BASE_WAVE_INTERVAL)
 
-	# Note: Defending dragons must be restored by SaveManager after dragons are loaded
+	# Restore defending dragons if factory is provided
+	if dragon_factory and data.has("defending_dragon_ids"):
+		defending_dragons.clear()
+		for dragon_id in data["defending_dragon_ids"]:
+			var dragon = dragon_factory.get_dragon_by_id(dragon_id)
+			if dragon and not dragon.is_dead:
+				defending_dragons.append(dragon)
+				print("[DefenseManager] Restored defending dragon: %s" % dragon.dragon_name)
+			else:
+				print("[DefenseManager] WARNING: Could not restore defending dragon %s" % dragon_id)
 
 # === DEBUG ===
 

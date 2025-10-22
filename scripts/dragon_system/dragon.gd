@@ -417,3 +417,87 @@ func get_secondary_elements() -> Array[DragonPart.Element]:
 
 func get_elemental_attack_bonus() -> float:
 	return elemental_attack_bonus
+
+# === SAVE/LOAD SERIALIZATION ===
+
+func to_dict() -> Dictionary:
+	"""Serialize dragon to a dictionary for saving"""
+	var data = {
+		"dragon_id": dragon_id,
+		"dragon_name": dragon_name,
+		"level": level,
+		"experience": experience,
+		"current_health": current_health,
+		"current_state": current_state,
+		"state_start_time": state_start_time,
+		"last_fed_time": last_fed_time,
+		"created_at": created_at,
+		"is_chimera_mutation": is_chimera_mutation,
+		"is_dead": is_dead,
+		"exploration_start_time": exploration_start_time,
+		"exploration_duration": exploration_duration,
+		"equipped_toy_id": equipped_toy_id,
+		"hunger_level": hunger_level,
+		"fatigue_level": fatigue_level,
+		"happiness_level": happiness_level,
+		# Serialize dragon parts
+		"head_part": {
+			"part_type": head_part.part_type,
+			"element": head_part.element
+		} if head_part else null,
+		"body_part": {
+			"part_type": body_part.part_type,
+			"element": body_part.element
+		} if body_part else null,
+		"tail_part": {
+			"part_type": tail_part.part_type,
+			"element": tail_part.element
+		} if tail_part else null
+	}
+
+	return data
+
+func from_dict(data: Dictionary):
+	"""Restore dragon from saved data"""
+	dragon_id = data.get("dragon_id", generate_unique_id())
+	dragon_name = data.get("dragon_name", "Unnamed Dragon")
+	level = data.get("level", 1)
+	experience = data.get("experience", 0)
+	current_health = data.get("current_health", 0)
+	current_state = data.get("current_state", DragonState.IDLE)
+	state_start_time = data.get("state_start_time", 0)
+	last_fed_time = data.get("last_fed_time", Time.get_unix_time_from_system())
+	created_at = data.get("created_at", Time.get_unix_time_from_system())
+	is_chimera_mutation = data.get("is_chimera_mutation", false)
+	is_dead = data.get("is_dead", false)
+	exploration_start_time = data.get("exploration_start_time", 0)
+	exploration_duration = data.get("exploration_duration", 0)
+	equipped_toy_id = data.get("equipped_toy_id", "")
+	hunger_level = data.get("hunger_level", 0.0)
+	fatigue_level = data.get("fatigue_level", 0.0)
+	happiness_level = data.get("happiness_level", 0.5)
+
+	# Restore dragon parts using PartLibrary
+	if data.has("head_part") and data["head_part"] != null:
+		var head_data = data["head_part"]
+		head_part = PartLibrary.instance.get_part_by_element_and_type(
+			head_data["element"],
+			head_data["part_type"]
+		)
+
+	if data.has("body_part") and data["body_part"] != null:
+		var body_data = data["body_part"]
+		body_part = PartLibrary.instance.get_part_by_element_and_type(
+			body_data["element"],
+			body_data["part_type"]
+		)
+
+	if data.has("tail_part") and data["tail_part"] != null:
+		var tail_data = data["tail_part"]
+		tail_part = PartLibrary.instance.get_part_by_element_and_type(
+			tail_data["element"],
+			tail_data["part_type"]
+		)
+
+	# Recalculate stats
+	calculate_stats()

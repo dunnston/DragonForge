@@ -7,14 +7,7 @@ static var instance: TreasureVault
 
 # === RESOURCE STORAGE ===
 var gold: int = 100  # Starting gold
-var dragon_parts: Dictionary = {}  # {DragonPart.Element: count}
 var artifacts: Dictionary = {}  # Special items {artifact_name: count}
-
-# === EXPLORATION ITEMS ===
-var treats: int = 0  # Feed to dragon to level them up (grants XP)
-var health_pots: int = 0  # Use to heal dragon
-var food: int = 0  # Heals hunger
-var toys: int = 0  # Increase dragon happiness
 
 # === VAULT STATE ===
 var total_vault_value: int = 0  # Combined value of all resources
@@ -24,7 +17,6 @@ var milestones_reached: Array[int] = []  # Track which milestones hit
 # === PROTECTED STORAGE ===
 # Resources that can't be stolen (upgraded vault feature)
 var protected_gold: int = 0
-var protected_parts: Dictionary = {}
 
 # === MILESTONE THRESHOLDS ===
 const MILESTONES = {
@@ -41,14 +33,12 @@ const TIER_THRESHOLDS = [0, 500, 1500, 5000, 10000, 25000]
 
 # === SIGNALS ===
 signal gold_changed(new_amount: int, delta: int)
-signal parts_changed(element: DragonPart.Element, new_count: int)
 signal artifact_added(artifact_name: String, count: int)
 signal vault_value_changed(new_value: int)
 signal vault_tier_changed(new_tier: int, old_tier: int)
 signal milestone_reached(value: int, reward_id: String)
 signal resources_stolen(stolen_resources: Dictionary)
 signal resources_protected(protected_resources: Dictionary)
-signal item_changed(item_type: String, new_count: int, delta: int)
 
 func _ready():
 	if instance == null:
@@ -56,10 +46,6 @@ func _ready():
 	else:
 		queue_free()
 		return
-
-	# Initialize starting parts (enough to build multiple dragons)
-	for element in DragonPart.Element.values():
-		dragon_parts[element] = 3
 
 	_update_vault_value()
 
@@ -100,49 +86,6 @@ func spend_gold(amount: int) -> bool:
 func get_total_gold() -> int:
 	return gold + protected_gold
 
-# === PARTS MANAGEMENT ===
-
-func add_part(element: DragonPart.Element, count: int = 1):
-	if not dragon_parts.has(element):
-		dragon_parts[element] = 0
-
-	dragon_parts[element] += count
-	_update_vault_value()
-	parts_changed.emit(element, dragon_parts[element])
-	print("[TreasureVault] +%d %s parts (Total: %d)" % [count, DragonPart.Element.keys()[element], dragon_parts[element]])
-
-func spend_part(element: DragonPart.Element, count: int = 1) -> bool:
-	var available = get_part_count(element) + get_protected_part_count(element)
-	if available < count:
-		print("[TreasureVault] Insufficient %s parts! Need %d, have %d" % [DragonPart.Element.keys()[element], count, available])
-		return false
-
-	# Deduct from unprotected first, then protected
-	if dragon_parts.get(element, 0) >= count:
-		dragon_parts[element] -= count
-	else:
-		var remainder = count - dragon_parts.get(element, 0)
-		dragon_parts[element] = 0
-		if not protected_parts.has(element):
-			protected_parts[element] = 0
-		protected_parts[element] -= remainder
-
-	_update_vault_value()
-	parts_changed.emit(element, dragon_parts[element])
-	print("[TreasureVault] -%d %s parts (Total: %d)" % [count, DragonPart.Element.keys()[element], dragon_parts[element]])
-	return true
-
-func get_part_count(element: DragonPart.Element) -> int:
-	return dragon_parts.get(element, 0)
-
-func get_protected_part_count(element: DragonPart.Element) -> int:
-	return protected_parts.get(element, 0)
-
-func can_build_dragon(head: DragonPart.Element, body: DragonPart.Element, tail: DragonPart.Element) -> bool:
-	return (get_part_count(head) + get_protected_part_count(head)) >= 1 and \
-		   (get_part_count(body) + get_protected_part_count(body)) >= 1 and \
-		   (get_part_count(tail) + get_protected_part_count(tail)) >= 1
-
 # === ARTIFACTS (Special Items) ===
 
 func add_artifact(artifact_name: String, count: int = 1):
@@ -157,99 +100,15 @@ func add_artifact(artifact_name: String, count: int = 1):
 func get_artifact_count(artifact_name: String) -> int:
 	return artifacts.get(artifact_name, 0)
 
-# === EXPLORATION ITEMS MANAGEMENT ===
-
-func add_item(item_type: String, count: int = 1):
-	"""Add exploration items (treats, health_pots, food, toys)"""
-	if count <= 0:
-		return
-
-	match item_type:
-		"treats":
-			treats += count
-			item_changed.emit("treats", treats, count)
-			print("[TreasureVault] +%d treats (Total: %d)" % [count, treats])
-		"health_pots":
-			health_pots += count
-			item_changed.emit("health_pots", health_pots, count)
-			print("[TreasureVault] +%d health pots (Total: %d)" % [count, health_pots])
-		"food":
-			food += count
-			item_changed.emit("food", food, count)
-			print("[TreasureVault] +%d food (Total: %d)" % [count, food])
-		"toys":
-			toys += count
-			item_changed.emit("toys", toys, count)
-			print("[TreasureVault] +%d toys (Total: %d)" % [count, toys])
-
-	_update_vault_value()
-
-func use_item(item_type: String, count: int = 1) -> bool:
-	"""Use/consume exploration items"""
-	if count <= 0:
-		return true
-
-	match item_type:
-		"treats":
-			if treats < count:
-				return false
-			treats -= count
-			item_changed.emit("treats", treats, -count)
-			print("[TreasureVault] -%d treats (Total: %d)" % [count, treats])
-		"health_pots":
-			if health_pots < count:
-				return false
-			health_pots -= count
-			item_changed.emit("health_pots", health_pots, -count)
-			print("[TreasureVault] -%d health pots (Total: %d)" % [count, health_pots])
-		"food":
-			if food < count:
-				return false
-			food -= count
-			item_changed.emit("food", food, -count)
-			print("[TreasureVault] -%d food (Total: %d)" % [count, food])
-		"toys":
-			if toys < count:
-				return false
-			toys -= count
-			item_changed.emit("toys", toys, -count)
-			print("[TreasureVault] -%d toys (Total: %d)" % [count, toys])
-		_:
-			return false
-
-	_update_vault_value()
-	return true
-
-func get_item_count(item_type: String) -> int:
-	"""Get count of specific item type"""
-	match item_type:
-		"treats": return treats
-		"health_pots": return health_pots
-		"food": return food
-		"toys": return toys
-	return 0
-
 # === VAULT VALUE & TIER SYSTEM ===
 
 func _update_vault_value():
 	# Calculate total vault value
 	var new_value = gold + protected_gold
 
-	# Parts worth 20 gold each
-	for element in dragon_parts:
-		new_value += dragon_parts[element] * 20
-	for element in protected_parts:
-		new_value += protected_parts[element] * 20
-
 	# Artifacts worth 100 gold each
 	for artifact in artifacts:
 		new_value += artifacts[artifact] * 100
-
-	# Exploration items worth 10 gold each
-	new_value += treats * 10
-	new_value += health_pots * 10
-	new_value += food * 10
-	new_value += toys * 10
 
 	var old_value = total_vault_value
 	total_vault_value = new_value
@@ -298,8 +157,7 @@ func apply_raid_loss(loss_percentage: float = 0.25) -> Dictionary:
 	loss_percentage = clamp(loss_percentage, 0.0, 1.0)
 
 	var stolen = {
-		"gold": 0,
-		"parts": {}
+		"gold": 0
 	}
 
 	# Lose gold (unprotected only)
@@ -311,28 +169,16 @@ func apply_raid_loss(loss_percentage: float = 0.25) -> Dictionary:
 		gold -= gold_loss
 		stolen["gold"] = gold_loss
 
-	# Lose parts (unprotected only)
-	for element in dragon_parts.keys():
-		if dragon_parts[element] > 0:
-			var part_loss = int(dragon_parts[element] * loss_percentage)
-			part_loss = max(0, part_loss)  # Parts can be 0 loss if very few
-			part_loss = min(dragon_parts[element], part_loss)
-
-			if part_loss > 0:
-				dragon_parts[element] -= part_loss
-				stolen["parts"][element] = part_loss
-
 	_update_vault_value()
 
 	# Emit signals
 	resources_stolen.emit(stolen)
-	print("[TreasureVault] [RAID] LOSS: Lost %d gold and parts!" % stolen["gold"])
+	print("[TreasureVault] [RAID] LOSS: Lost %d gold!" % stolen["gold"])
 
 	# Show what was protected
-	if protected_gold > 0 or protected_parts.size() > 0:
+	if protected_gold > 0:
 		var protected = {
-			"gold": protected_gold,
-			"parts": protected_parts.duplicate()
+			"gold": protected_gold
 		}
 		resources_protected.emit(protected)
 		print("[TreasureVault] [PROTECTED] Resources safe: %d gold" % protected_gold)
@@ -351,18 +197,6 @@ func protect_gold(amount: int) -> bool:
 	print("[TreasureVault] [PROTECTED] Secured %d gold" % amount)
 	return true
 
-func protect_part(element: DragonPart.Element, count: int = 1) -> bool:
-	"""Move parts from vulnerable to protected storage"""
-	if dragon_parts.get(element, 0) < count:
-		return false
-
-	dragon_parts[element] -= count
-	if not protected_parts.has(element):
-		protected_parts[element] = 0
-	protected_parts[element] += count
-	print("[TreasureVault] [PROTECTED] Secured %d %s parts" % [count, DragonPart.Element.keys()[element]])
-	return true
-
 func unprotect_gold(amount: int) -> bool:
 	"""Move gold from protected to vulnerable storage"""
 	if protected_gold < amount:
@@ -370,15 +204,6 @@ func unprotect_gold(amount: int) -> bool:
 
 	protected_gold -= amount
 	gold += amount
-	return true
-
-func unprotect_part(element: DragonPart.Element, count: int = 1) -> bool:
-	"""Move parts from protected to vulnerable storage"""
-	if protected_parts.get(element, 0) < count:
-		return false
-
-	protected_parts[element] -= count
-	dragon_parts[element] += count
 	return true
 
 # === RISK/REWARD CALCULATION ===
@@ -407,14 +232,8 @@ func to_dict() -> Dictionary:
 	return {
 		"gold": gold,
 		"protected_gold": protected_gold,
-		"dragon_parts": dragon_parts.duplicate(),
-		"protected_parts": protected_parts.duplicate(),
 		"artifacts": artifacts.duplicate(),
-		"treats": treats,
-		"health_pots": health_pots,
-		"food": food,
-		"toys": toys,
-		"milestones_reached": milestones_reached.duplicate(),
+		"milestones_reached": Array(milestones_reached),  # Convert typed array to generic array
 		"total_vault_value": total_vault_value,
 		"vault_tier": vault_tier
 	}
@@ -422,14 +241,15 @@ func to_dict() -> Dictionary:
 func from_dict(data: Dictionary):
 	gold = data.get("gold", 100)
 	protected_gold = data.get("protected_gold", 0)
-	dragon_parts = data.get("dragon_parts", {})
-	protected_parts = data.get("protected_parts", {})
 	artifacts = data.get("artifacts", {})
-	treats = data.get("treats", 0)
-	health_pots = data.get("health_pots", 0)
-	food = data.get("food", 0)
-	toys = data.get("toys", 0)
-	milestones_reached = data.get("milestones_reached", [])
+
+	# Convert generic array back to typed array
+	var loaded_milestones = data.get("milestones_reached", [])
+	milestones_reached.clear()
+	for milestone in loaded_milestones:
+		if milestone is int:
+			milestones_reached.append(milestone)
+
 	total_vault_value = data.get("total_vault_value", 0)
 	vault_tier = data.get("vault_tier", 1)
 
@@ -444,12 +264,6 @@ func print_vault_status():
 	print("\n=== TREASURE VAULT STATUS ===")
 	print("Total Value: %d gold (Tier %d)" % [total_vault_value, vault_tier])
 	print("Gold: %d (Protected: %d)" % [gold, protected_gold])
-	print("Dragon Parts:")
-	for element in DragonPart.Element.values():
-		var count = dragon_parts.get(element, 0)
-		var protected = protected_parts.get(element, 0)
-		if count > 0 or protected > 0:
-			print("  - %s: %d (Protected: %d)" % [DragonPart.Element.keys()[element], count, protected])
 	if artifacts.size() > 0:
 		print("Artifacts:")
 		for artifact in artifacts:

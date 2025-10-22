@@ -90,6 +90,9 @@ const ELEMENT_COLORS = {
 }
 
 func _ready():
+	# Add to factory_manager group so SaveLoadManager can find us
+	add_to_group("factory_manager")
+
 	# Create DragonFactory instance
 	factory = DragonFactory.new()
 	add_child(factory)
@@ -716,6 +719,16 @@ func _show_exploration_return_popup(dragon: Dragon, rewards: Dictionary):
 
 func force_update():
 	_update_display()
+	_refresh_scientist_panels()
+
+func _refresh_scientist_panels():
+	"""Refresh all scientist panels (useful after loading game)"""
+	if stitcher_panel and stitcher_panel.has_method("refresh"):
+		stitcher_panel.refresh()
+	if caretaker_panel and caretaker_panel.has_method("refresh"):
+		caretaker_panel.refresh()
+	if trainer_panel and trainer_panel.has_method("refresh"):
+		trainer_panel.refresh()
 
 # === ANIMATION SYSTEM ===
 
