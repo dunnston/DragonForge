@@ -90,6 +90,9 @@ const ELEMENT_COLORS = {
 }
 
 func _ready():
+	# Add to factory_manager group so SaveLoadManager can find us
+	add_to_group("factory_manager")
+
 	# Create DragonFactory instance
 	factory = DragonFactory.new()
 	add_child(factory)

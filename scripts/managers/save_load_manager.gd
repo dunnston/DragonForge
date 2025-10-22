@@ -251,6 +251,9 @@ func load_game() -> bool:
 	else:
 		print("[SaveLoadManager] WARNING: ScientistManager not found or no data, skipping")
 
+	# Refresh UI to show loaded dragons and scientists
+	_refresh_ui()
+
 	print("[SaveLoadManager] ✓ Game loaded successfully")
 	print("[SaveLoadManager] === LOAD COMPLETE ===\n")
 	game_loaded.emit(true, "Game loaded successfully")
@@ -293,6 +296,18 @@ func _find_node_by_type(node: Node, type) -> Node:
 			return result
 
 	return null
+
+func _refresh_ui():
+	"""Refresh UI after loading game"""
+	# Find FactoryManager and tell it to update its display
+	var factory_managers = get_tree().get_nodes_in_group("factory_manager")
+	if factory_managers.size() > 0:
+		var factory_manager = factory_managers[0]
+		if factory_manager.has_method("force_update"):
+			factory_manager.force_update()
+			print("[SaveLoadManager] ✓ UI refreshed")
+	else:
+		print("[SaveLoadManager] WARNING: FactoryManager not found, UI not refreshed")
 
 func has_save_file() -> bool:
 	"""Check if a save file exists"""
