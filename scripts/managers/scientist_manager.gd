@@ -152,6 +152,10 @@ func hire_scientist(type: ScientistType) -> bool:
 	# Start ongoing cost timer (1 minute intervals)
 	_start_ongoing_cost_timer(type)
 
+	# Play hired sound effect
+	if AudioManager and AudioManager.instance:
+		AudioManager.instance.play_scientist_hired()
+
 	scientist_hired.emit(type)
 	print("[ScientistManager] Hired %s for %d gold" % [SCIENTIST_DATA[type]["name"], hire_cost])
 	return true
@@ -265,6 +269,10 @@ func _on_stitcher_work():
 	var dragon = dragon_factory.create_dragon(head, body, tail)
 
 	if dragon:
+		# Play dragon finished sound effect
+		if AudioManager and AudioManager.instance:
+			AudioManager.instance.play_dragon_finished()
+
 		scientist_action_performed.emit(ScientistType.STITCHER, "Created dragon: %s" % dragon.dragon_name)
 		print("[Stitcher] Auto-created dragon: %s" % dragon.dragon_name)
 	else:

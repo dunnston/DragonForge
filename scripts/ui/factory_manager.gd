@@ -76,6 +76,9 @@ var animation_label: Label
 var pending_head_part: DragonPart
 var pending_body_part: DragonPart
 var pending_tail_part: DragonPart
+# Audio and visual effects
+var creation_audio: AudioStreamPlayer
+var lightning_effect: LightningEffect
 
 # === ELEMENT COLORS ===
 const ELEMENT_COLORS = {
@@ -150,6 +153,13 @@ func _ready():
 
 	# Create defense slots UI
 	_setup_defense_slots_ui()
+
+	# Setup audio and visual effects
+	_setup_creation_effects()
+
+	# Start gameplay background music
+	if AudioManager and AudioManager.instance:
+		AudioManager.instance.play_gameplay_music()
 
 	print("[FactoryManager] Factory Manager UI initialized")
 
@@ -255,6 +265,28 @@ func _setup_defense_slots_ui():
 		defense_slots.append(slot_label)
 
 	print("[FactoryManager] Defense slots UI created")
+
+func _setup_creation_effects():
+	"""Setup audio and visual effects for dragon creation"""
+	# Create audio player for creation sound
+	creation_audio = AudioStreamPlayer.new()
+	var audio_stream = load("res://assets/audio/High_voltage_electri_#2-1761092568383.mp3")
+	if audio_stream:
+		creation_audio.stream = audio_stream
+		# Enable looping by setting the loop mode on the stream
+		if audio_stream is AudioStreamMP3:
+			audio_stream.loop = true
+	creation_audio.volume_db = 0.0
+	creation_audio.bus = "Master"
+	add_child(creation_audio)
+
+	# Create lightning effect overlay
+	lightning_effect = LightningEffect.new()
+	lightning_effect.visible = false
+	lightning_effect.z_index = 100  # Render on top of everything
+	add_child(lightning_effect)
+
+	print("[FactoryManager] Creation effects initialized")
 
 func _on_slot_input(event: InputEvent, slot_name: String):
 	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
@@ -432,6 +464,12 @@ func _start_dragon_animation(head_part: DragonPart, body_part: DragonPart, tail_
 		animation_progress_bar.value = 0
 
 	animation_timer.start()
+
+	# Start audio and visual effects
+	if creation_audio:
+		creation_audio.play()
+	if lightning_effect:
+		lightning_effect.start_effect()
 
 	# Disable animate button during animation
 	animate_button.disabled = true
@@ -649,6 +687,10 @@ func _on_exploration_completed(dragon: Dragon, rewards: Dictionary):
 	"""Called when ANY dragon completes exploration - shows popup for all dragons"""
 	print("[FactoryManager] Dragon %s returned from exploration!" % dragon.dragon_name)
 
+	# Play dragon roar sound effect
+	if AudioManager and AudioManager.instance:
+		AudioManager.instance.play_dragon_roar()
+
 	# Update the dragons list to reflect the new state
 	_update_dragons_list()
 
@@ -699,6 +741,12 @@ func _complete_dragon_animation():
 	animation_timer.stop()
 	is_animating = false
 	animation_progress = 0.0
+
+	# Stop audio and visual effects
+	if creation_audio and creation_audio.playing:
+		creation_audio.stop()
+	if lightning_effect:
+		lightning_effect.stop_effect()
 
 	# Hide progress bar
 	var progress_container = $MarginContainer/MainVBox/MainContent/CenterPanel/AnimationProgressContainer

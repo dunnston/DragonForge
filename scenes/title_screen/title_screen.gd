@@ -7,7 +7,9 @@ extends Control
 
 
 func _ready() -> void:
-	pass 
+	# Start menu background music
+	if AudioManager and AudioManager.instance:
+		AudioManager.instance.play_menu_music() 
 
 
 func _on_start_game_button_pressed() -> void:
