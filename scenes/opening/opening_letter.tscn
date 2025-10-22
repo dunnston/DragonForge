@@ -1,0 +1,110 @@
+[gd_scene load_steps=6 format=3 uid="uid://b7h3qr8yxnp4q"]
+
+[ext_resource type="Script" uid="uid://b0ftw1jaaopr" path="res://scripts/opening/opening_letter.gd" id="1_opening_letter"]
+[ext_resource type="AudioStream" uid="uid://bubf1l4ph1hu3" path="res://assets/audio/typewriter-machine-64191.mp3" id="2_ocl61"]
+[ext_resource type="AudioStream" uid="uid://dvmsvcx455jxs" path="res://assets/audio/epic-storm-thunder-rainwindwaves-no-loops-106800.mp3" id="3_7caje"]
+[ext_resource type="AudioStream" uid="uid://dubr66h05mltw" path="res://assets/audio/The Bequest of Professor Geist.mp3" id="4_nvjty"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_parchment"]
+bg_color = Color(0.918, 0.859, 0.722, 1)
+border_width_left = 8
+border_width_top = 8
+border_width_right = 8
+border_width_bottom = 8
+border_color = Color(0.4, 0.3, 0.2, 1)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+shadow_color = Color(0, 0, 0, 0.3)
+shadow_size = 10
+shadow_offset = Vector2(4, 4)
+
+[node name="OpeningLetter" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_opening_letter")
+
+[node name="Background" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.1, 0.08, 0.12, 1)
+
+[node name="Parchment" type="Panel" parent="."]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -400.0
+offset_top = -300.0
+offset_right = 400.0
+offset_bottom = 300.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_parchment")
+
+[node name="MarginContainer" type="MarginContainer" parent="Parchment"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_left = 40
+theme_override_constants/margin_top = 40
+theme_override_constants/margin_right = 40
+theme_override_constants/margin_bottom = 40
+
+[node name="LetterText" type="RichTextLabel" parent="Parchment/MarginContainer"]
+layout_mode = 2
+theme_override_colors/default_color = Color(0.2, 0.15, 0.1, 1)
+theme_override_font_sizes/normal_font_size = 18
+bbcode_enabled = true
+
+[node name="ContinuePrompt" type="Label" parent="."]
+layout_mode = 1
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -150.0
+offset_top = -60.0
+offset_right = 150.0
+offset_bottom = -20.0
+grow_horizontal = 2
+grow_vertical = 0
+text = "[Press any key to continue]"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="FadeOverlay" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0, 0, 0, 1)
+
+[node name="TypingSound" type="AudioStreamPlayer" parent="."]
+stream = ExtResource("2_ocl61")
+
+[node name="ThunderSound" type="AudioStreamPlayer" parent="."]
+stream = ExtResource("3_7caje")
+volume_db = -15.0
+
+[node name="DramaticMusic" type="AudioStreamPlayer" parent="."]
+stream = ExtResource("4_nvjty")
+volume_db = -18.0

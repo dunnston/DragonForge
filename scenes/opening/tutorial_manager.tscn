@@ -1,0 +1,124 @@
+[gd_scene load_steps=5 format=3 uid="uid://cw8r7h3yxnp5r"]
+
+[ext_resource type="Script" uid="uid://bvnxylfukvu81" path="res://scripts/opening/tutorial_manager.gd" id="1_tutorial_manager"]
+[ext_resource type="Texture2D" uid="uid://blhn53ywscqqs" path="res://assets/ui/arrow.png" id="2_32q5h"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_spotlight"]
+bg_color = Color(1, 1, 1, 0.1)
+border_width_left = 3
+border_width_top = 3
+border_width_right = 3
+border_width_bottom = 3
+border_color = Color(1, 0.8, 0.3, 0.8)
+corner_radius_top_left = 5
+corner_radius_top_right = 5
+corner_radius_bottom_right = 5
+corner_radius_bottom_left = 5
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_panel"]
+bg_color = Color(0.15, 0.12, 0.18, 0.95)
+border_width_left = 3
+border_width_top = 3
+border_width_right = 3
+border_width_bottom = 3
+border_color = Color(0.8, 0.6, 0.3, 1)
+corner_radius_top_left = 10
+corner_radius_top_right = 10
+corner_radius_bottom_right = 10
+corner_radius_bottom_left = 10
+shadow_color = Color(0, 0, 0, 0.5)
+shadow_size = 15
+shadow_offset = Vector2(0, 5)
+
+[node name="TutorialManager" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_tutorial_manager")
+
+[node name="TutorialOverlay" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0, 0, 0, 0.6)
+
+[node name="Spotlight" type="Panel" parent="."]
+visible = false
+layout_mode = 0
+offset_right = 200.0
+offset_bottom = 200.0
+mouse_filter = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_spotlight")
+
+[node name="HighlightArrow" type="Sprite2D" parent="."]
+visible = false
+position = Vector2(100, 100)
+scale = Vector2(2, 2)
+texture = ExtResource("2_32q5h")
+
+[node name="TutorialPanel" type="Panel" parent="."]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -350.0
+offset_top = -250.0
+offset_right = 350.0
+offset_bottom = 250.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_panel")
+
+[node name="MarginContainer" type="MarginContainer" parent="TutorialPanel"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_left = 30
+theme_override_constants/margin_top = 20
+theme_override_constants/margin_right = 30
+theme_override_constants/margin_bottom = 20
+
+[node name="VBoxContainer" type="VBoxContainer" parent="TutorialPanel/MarginContainer"]
+layout_mode = 2
+theme_override_constants/separation = 15
+
+[node name="StepTitle" type="Label" parent="TutorialPanel/MarginContainer/VBoxContainer"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.9, 0.6, 1)
+theme_override_font_sizes/font_size = 28
+text = "Tutorial Step"
+horizontal_alignment = 1
+
+[node name="HSeparator" type="HSeparator" parent="TutorialPanel/MarginContainer/VBoxContainer"]
+layout_mode = 2
+
+[node name="StepDescription" type="RichTextLabel" parent="TutorialPanel/MarginContainer/VBoxContainer"]
+custom_minimum_size = Vector2(0, 300)
+layout_mode = 2
+size_flags_vertical = 3
+bbcode_enabled = true
+text = "Tutorial description goes here..."
+fit_content = true
+
+[node name="ContinueButton" type="Button" parent="TutorialPanel/MarginContainer/VBoxContainer"]
+custom_minimum_size = Vector2(150, 40)
+layout_mode = 2
+size_flags_horizontal = 4
+text = "Continue"
+
+[node name="SkipCheckbox" type="CheckBox" parent="TutorialPanel/MarginContainer/VBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 4
+text = "Skip Tutorial"

@@ -1,0 +1,19 @@
+[remap]
+
+importer="mp3"
+type="AudioStreamMP3"
+uid="uid://dubr66h05mltw"
+path="res://.godot/imported/The Bequest of Professor Geist.mp3-d6185e112744615aa6b13c17ae32ffaf.mp3str"
+
+[deps]
+
+source_file="res://assets/audio/The Bequest of Professor Geist.mp3"
+dest_files=["res://.godot/imported/The Bequest of Professor Geist.mp3-d6185e112744615aa6b13c17ae32ffaf.mp3str"]
+
+[params]
+
+loop=false
+loop_offset=0
+bpm=0
+beat_count=0
+bar_beats=4
