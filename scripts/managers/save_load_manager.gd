@@ -1,10 +1,9 @@
 extends Node
-class_name SaveLoadManager
 
 # Save/Load Manager - Handles saving and loading game state to/from localStorage (user:// directory)
 
 # === SINGLETON ===
-static var instance: SaveLoadManager
+static var instance
 
 # === CONSTANTS ===
 const SAVE_FILE_PATH: String = "user://savegame.json"
