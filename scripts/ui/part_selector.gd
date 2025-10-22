@@ -98,6 +98,7 @@ func _create_part_box(item_id: String, item: Item, count: int) -> Control:
 		icon.texture = icon_texture
 	else:
 		# Fallback to colored square if icon not found
+		print("[PartSelector] WARNING: No icon for item %s (icon_path: '%s')" % [item.id, item.icon_path])
 		var fallback = ColorRect.new()
 		fallback.custom_minimum_size = Vector2(80, 80)
 		fallback.color = ELEMENT_COLORS.get(item.element, Color.WHITE)
