@@ -435,3 +435,37 @@ func get_caretaker_work_timer() -> Timer:
 func get_trainer_work_timer() -> Timer:
 	"""Get the trainer work timer for progress tracking"""
 	return trainer_work_timer
+
+# === SAVE/LOAD SERIALIZATION ===
+
+func to_dict() -> Dictionary:
+	"""Serialize scientist manager state for saving"""
+	var data = {
+		"hired_scientists": {}
+	}
+
+	# Save hired status for each scientist type
+	for type in hired_scientists.keys():
+		data["hired_scientists"][type] = hired_scientists[type]
+
+	return data
+
+func from_dict(data: Dictionary):
+	"""Restore scientist manager state from saved data"""
+	if not data.has("hired_scientists"):
+		return
+
+	# Restore hired scientists
+	for type_key in data["hired_scientists"].keys():
+		var type = int(type_key)
+		var is_hired = data["hired_scientists"][type_key]
+
+		if is_hired and not hired_scientists[type]:
+			# Re-hire the scientist (without deducting gold)
+			hired_scientists[type] = true
+			_start_ongoing_cost_timer(type)
+			print("[ScientistManager] Restored hired scientist: %s" % SCIENTIST_DATA[type]["name"])
+		elif not is_hired and hired_scientists[type]:
+			# Fire the scientist if they shouldn't be hired
+			hired_scientists[type] = false
+			_stop_ongoing_cost_timer(type)

@@ -25,6 +25,7 @@ TreasureVault="*res://scripts/managers/treasure_vault.gd"
 DefenseManager="*res://scripts/managers/defense_manager.gd"
 ExplorationManager="*res://scripts/managers/exploration_manager.gd"
 AudioManager="*res://scripts/managers/audio_manager.gd"
+SaveLoadManager="*res://scripts/managers/save_load_manager.gd"
 DevMenu="*res://scenes/dev/dev_menu.tscn"
 
 [file_customization]
