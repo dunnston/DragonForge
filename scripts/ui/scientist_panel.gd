@@ -171,3 +171,9 @@ func _on_scientist_action(type: ScientistManager.ScientistType, action_descripti
 	if type == scientist_type:
 		# Reset progress bar when action completes
 		progress_bar.value = 0.0
+
+# === PUBLIC API ===
+
+func refresh():
+	"""Force refresh the visual state (useful after loading game)"""
+	_update_visual_state()
