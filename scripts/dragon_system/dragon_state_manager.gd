@@ -143,14 +143,9 @@ func _update_fatigue_system(dragon: Dragon, current_time: int):
 			# Automatically stop resting when fully recovered
 			if dragon.fatigue_level <= 0.0 and dragon.current_state == Dragon.DragonState.RESTING:
 				set_dragon_state(dragon, Dragon.DragonState.IDLE)
-		return
-	
-	# Calculate fatigue for active dragons
-	var activity_time = current_time - dragon.state_start_time
-	if activity_time >= FATIGUE_TIME:
-		dragon.fatigue_level = 1.0  # Exhausted
-	else:
-		dragon.fatigue_level = activity_time / float(FATIGUE_TIME)
+
+	# For active states (EXPLORING, TRAINING, DEFENDING), fatigue does NOT change
+	# Fatigue will be added when the activity completes (handled by respective managers)
 
 # === HAPPINESS SYSTEM ===
 

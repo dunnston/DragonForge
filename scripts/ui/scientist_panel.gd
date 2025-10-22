@@ -18,6 +18,7 @@ signal fire_requested(scientist_type: ScientistManager.ScientistType)
 @onready var fire_button: Button = %FireButton
 @onready var name_label: Label = %NameLabel
 @onready var status_label: Label = %StatusLabel
+@onready var progress_container: VBoxContainer = %ProgressContainer
 @onready var progress_bar: ProgressBar = %ProgressBar
 @onready var progress_label: Label = %ProgressLabel
 
@@ -40,7 +41,7 @@ func _ready():
 	_update_visual_state()
 
 func _process(delta: float):
-	if is_hired and progress_bar.visible:
+	if is_hired and progress_container.visible:
 		_update_progress_bar()
 
 func _load_scientist_image():
@@ -86,9 +87,9 @@ func _update_visual_state():
 		status_label.text = "Active (-" + str(ongoing_cost) + " gold/min)"
 		status_label.add_theme_color_override("font_color", Color(0.2, 1, 0.2))
 
-		# Show progress bar
-		progress_bar.visible = true
-		print("[ScientistPanel] Scientist hired! Progress bar visible: %s" % progress_bar.visible)
+		# Show progress container
+		progress_container.visible = true
+		print("[ScientistPanel] Scientist hired! Progress container visible: %s" % progress_container.visible)
 
 		# Set work timer duration based on scientist type
 		match scientist_type:
@@ -113,8 +114,8 @@ func _update_visual_state():
 		status_label.text = "Not hired (Cost: " + str(hire_cost) + " gold)"
 		status_label.add_theme_color_override("font_color", Color(0.7, 0.7, 0.7))
 
-		# Hide progress bar
-		progress_bar.visible = false
+		# Hide progress container
+		progress_container.visible = false
 
 func _update_progress_bar():
 	if not ScientistManager.instance:
