@@ -263,27 +263,18 @@ theme_override_colors/font_color = Color(0.8, 1, 0.8, 1)
 theme_override_font_sizes/font_size = 14
 text = "Ready to explore"
 
-[node name="DurationButtons" type="HBoxContainer" parent="CenterContainer/PanelContainer/MarginContainer/MainVBox/BottomPanel/SectionsContainer/ExplorationSection"]
+[node name="ExplorationControls" type="HBoxContainer" parent="CenterContainer/PanelContainer/MarginContainer/MainVBox/BottomPanel/SectionsContainer/ExplorationSection"]
 layout_mode = 2
 theme_override_constants/separation = 10
 
-[node name="Explore15Button" type="Button" parent="CenterContainer/PanelContainer/MarginContainer/MainVBox/BottomPanel/SectionsContainer/ExplorationSection/DurationButtons"]
-custom_minimum_size = Vector2(80, 40)
+[node name="DestinationDropdown" type="OptionButton" parent="CenterContainer/PanelContainer/MarginContainer/MainVBox/BottomPanel/SectionsContainer/ExplorationSection/ExplorationControls"]
+custom_minimum_size = Vector2(200, 40)
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_font_sizes/font_size = 14
-text = "15 min"
 
-[node name="Explore30Button" type="Button" parent="CenterContainer/PanelContainer/MarginContainer/MainVBox/BottomPanel/SectionsContainer/ExplorationSection/DurationButtons"]
-custom_minimum_size = Vector2(80, 40)
+[node name="SendButton" type="Button" parent="CenterContainer/PanelContainer/MarginContainer/MainVBox/BottomPanel/SectionsContainer/ExplorationSection/ExplorationControls"]
+custom_minimum_size = Vector2(100, 40)
 layout_mode = 2
-size_flags_horizontal = 3
 theme_override_font_sizes/font_size = 14
-text = "30 min"
-
-[node name="Explore60Button" type="Button" parent="CenterContainer/PanelContainer/MarginContainer/MainVBox/BottomPanel/SectionsContainer/ExplorationSection/DurationButtons"]
-custom_minimum_size = Vector2(80, 40)
-layout_mode = 2
-size_flags_horizontal = 3
-theme_override_font_sizes/font_size = 14
-text = "60 min"
+text = "SEND"

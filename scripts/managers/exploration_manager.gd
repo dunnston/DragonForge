@@ -39,8 +39,8 @@ const DAMAGE_RISK = {
 }
 
 # === SIGNALS ===
-signal exploration_started(dragon: Dragon, duration_minutes: int)
-signal exploration_completed(dragon: Dragon, rewards: Dictionary)
+signal exploration_started(dragon: Dragon, destination: String)
+signal exploration_completed(dragon: Dragon, destination: String, rewards: Dictionary)
 signal exploration_failed(dragon: Dragon, reason: String)
 
 func _ready():
@@ -68,13 +68,14 @@ func _ready():
 
 # === EXPLORATION MANAGEMENT ===
 
-func start_exploration(dragon: Dragon, duration_minutes: int) -> bool:
+func start_exploration(dragon: Dragon, duration_minutes: int, destination: String = "unknown") -> bool:
 	"""
 	Send a dragon on an exploration mission.
 
 	Args:
 		dragon: The dragon to send exploring
 		duration_minutes: How long to explore (15, 30, or 60)
+		destination: Which destination to explore (for map visualization)
 
 	Returns:
 		true if exploration started, false if failed
@@ -125,10 +126,11 @@ func start_exploration(dragon: Dragon, duration_minutes: int) -> bool:
 		"start_time": current_time,
 		"duration": duration_seconds,
 		"duration_minutes": duration_minutes,
+		"destination": destination,
 		"dragon": dragon
 	}
 
-	exploration_started.emit(dragon, duration_minutes)
+	exploration_started.emit(dragon, destination)
 	var time_unit = "seconds" if DEV_MODE else "minutes"
 	print("[ExplorationManager] %s started exploring for %d %s" % [dragon.dragon_name, duration_minutes, time_unit])
 	return true
@@ -200,6 +202,7 @@ func _complete_exploration(dragon_id: String):
 		return
 
 	var duration_minutes = exploration["duration_minutes"]
+	var destination = exploration.get("destination", "unknown")
 
 	# Calculate rewards
 	var rewards = _calculate_rewards(dragon, duration_minutes)
@@ -221,7 +224,7 @@ func _complete_exploration(dragon_id: String):
 		dragon.current_state = Dragon.DragonState.IDLE
 
 	# Emit completion signal
-	exploration_completed.emit(dragon, rewards)
+	exploration_completed.emit(dragon, destination, rewards)
 	active_explorations.erase(dragon_id)
 
 	print("[ExplorationManager] %s returned from exploration!" % dragon.dragon_name)
@@ -367,6 +370,20 @@ func get_active_explorations_count() -> int:
 	"""Get number of dragons currently exploring"""
 	return active_explorations.size()
 
+func get_active_explorations() -> Array:
+	"""Get list of all active explorations for map visualization"""
+	var explorations: Array = []
+	for dragon_id in active_explorations.keys():
+		var exploration = active_explorations[dragon_id]
+		explorations.append({
+			"dragon": exploration["dragon"],
+			"destination": exploration.get("destination", "unknown"),
+			"start_time": exploration["start_time"],
+			"duration": exploration["duration"],
+			"duration_minutes": exploration["duration_minutes"]
+		})
+	return explorations
+
 func print_exploration_status():
 	"""Debug: Print all active explorations"""
 	print("\n=== EXPLORATION STATUS ===")
@@ -417,7 +434,8 @@ func to_dict() -> Dictionary:
 			"dragon_id": dragon_id,
 			"start_time": exploration["start_time"],
 			"duration": exploration["duration"],
-			"duration_minutes": exploration["duration_minutes"]
+			"duration_minutes": exploration["duration_minutes"],
+			"destination": exploration.get("destination", "unknown")
 		})
 
 	return data
@@ -442,6 +460,7 @@ func from_dict(data: Dictionary, dragon_factory: DragonFactory):
 			"start_time": exploration_data["start_time"],
 			"duration": exploration_data["duration"],
 			"duration_minutes": exploration_data["duration_minutes"],
+			"destination": exploration_data.get("destination", "unknown"),
 			"dragon": dragon
 		}
 

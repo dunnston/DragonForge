@@ -10,6 +10,7 @@ var scientist_manager: ScientistManager
 @onready var view_inventory_button: Button = $MarginContainer/MainVBox/TopBar/ViewInventoryButton
 @onready var manage_defenses_button: Button = $MarginContainer/MainVBox/TopBar/ManageDefensesButton
 @onready var manage_training_button: Button = $MarginContainer/MainVBox/TopBar/ManageTrainingButton
+@onready var exploration_map_button: Button = $MarginContainer/MainVBox/TopBar/ExplorationMapButton
 
 @onready var fire_parts_count: Label = $MarginContainer/MainVBox/TopBar/PartsDisplay/PartsHBox/FireParts/Count
 @onready var ice_parts_count: Label = $MarginContainer/MainVBox/TopBar/PartsDisplay/PartsHBox/IceParts/Count
@@ -68,6 +69,9 @@ var defense_towers_ui: DefenseTowersUI
 
 # Training Grounds UI (created dynamically)
 var training_yard_ui: TrainingYardUI
+
+# Exploration Map UI (created dynamically)
+var exploration_map_ui: ExplorationMapUI
 
 # === DRAGON CREATION STATE ===
 var selected_head_id: String = ""
@@ -130,6 +134,7 @@ func _ready():
 	view_inventory_button.pressed.connect(_on_view_inventory_pressed)
 	manage_defenses_button.pressed.connect(_on_manage_defenses_pressed)
 	manage_training_button.pressed.connect(_on_manage_training_pressed)
+	exploration_map_button.pressed.connect(_on_exploration_map_pressed)
 	dragon_grounds_button.pressed.connect(_on_dragon_grounds_pressed)
 
 	# Create Defense Towers UI
@@ -137,6 +142,9 @@ func _ready():
 
 	# Create Training Grounds UI
 	_setup_training_yard_ui()
+
+	# Create Exploration Map UI
+	_setup_exploration_map_ui()
 
 	# Connect Dragon Grounds modal
 	if dragon_grounds_modal:
@@ -712,9 +720,9 @@ func _on_insufficient_gold_for_scientist(type: ScientistManager.ScientistType):
 	dialog.confirmed.connect(func(): dialog.queue_free())
 	dialog.popup_centered()
 
-func _on_exploration_completed(dragon: Dragon, rewards: Dictionary):
+func _on_exploration_completed(dragon: Dragon, destination: String, rewards: Dictionary):
 	"""Called when ANY dragon completes exploration - shows popup for all dragons"""
-	print("[FactoryManager] Dragon %s returned from exploration!" % dragon.dragon_name)
+	print("[FactoryManager] Dragon %s returned from exploration at %s!" % [dragon.dragon_name, destination])
 
 	# Play dragon roar sound effect
 	if AudioManager and AudioManager.instance:
@@ -952,6 +960,53 @@ func _on_training_yard_back_pressed():
 	# Show factory UI, hide training yard UI
 	$MarginContainer.visible = true
 	training_yard_ui.visible = false
+
+	# Refresh factory UI to show updated dragons
+	_update_dragons_list()
+
+# === EXPLORATION MAP UI ===
+
+func _setup_exploration_map_ui():
+	"""Create and setup the exploration map UI"""
+	var ExplorationMapUIScene = preload("res://scenes/ui/exploration_map_ui.tscn")
+	exploration_map_ui = ExplorationMapUIScene.instantiate()
+	add_child(exploration_map_ui)
+
+	# Set factory reference
+	exploration_map_ui.set_dragon_factory(factory)
+
+	# Hide by default
+	exploration_map_ui.visible = false
+
+	# Connect back button signal
+	exploration_map_ui.back_to_factory_requested.connect(_on_exploration_map_back_pressed)
+
+	print("[FactoryManager] Exploration Map UI created")
+
+func _on_exploration_map_pressed():
+	"""Called when the Exploration Map button is pressed"""
+	print("[FactoryManager] Exploration Map button pressed")
+
+	# Hide factory UI, show exploration map UI
+	$MarginContainer.visible = false
+	inventory_panel.visible = false
+	part_selector.visible = false
+	dragon_tooltip.visible = false
+	dragon_details_modal.visible = false
+	if defense_towers_ui:
+		defense_towers_ui.visible = false
+	if training_yard_ui:
+		training_yard_ui.visible = false
+
+	exploration_map_ui.visible = true
+
+func _on_exploration_map_back_pressed():
+	"""Called when back button is pressed in exploration map UI"""
+	print("[FactoryManager] Returning from Exploration Map UI")
+
+	# Show factory UI, hide exploration map UI
+	$MarginContainer.visible = true
+	exploration_map_ui.visible = false
 
 	# Refresh factory UI to show updated dragons
 	_update_dragons_list()

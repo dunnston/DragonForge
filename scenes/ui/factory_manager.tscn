@@ -199,6 +199,13 @@ size_flags_vertical = 8
 theme_override_font_sizes/font_size = 14
 text = "TRAINING GROUNDS"
 
+[node name="ExplorationMapButton" type="Button" parent="MarginContainer/MainVBox/TopBar"]
+custom_minimum_size = Vector2(160, 50)
+layout_mode = 2
+size_flags_vertical = 8
+theme_override_font_sizes/font_size = 14
+text = "EXPLORATION MAP"
+
 [node name="MainContent" type="HBoxContainer" parent="MarginContainer/MainVBox"]
 layout_mode = 2
 size_flags_vertical = 3

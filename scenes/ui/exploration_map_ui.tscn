@@ -1,0 +1,338 @@
+[gd_scene load_steps=4 format=3 uid="uid://30ldc4vf1j72"]
+
+[ext_resource type="Script" uid="uid://dgr3mqrym1its" path="res://scripts/ui/exploration_map_ui.gd" id="1_exploration_map"]
+[ext_resource type="Texture2D" uid="uid://bcaar8oeajrko" path="res://assets/ui/map.png" id="2_map_texture"]
+[ext_resource type="PackedScene" path="res://scenes/ui/exploration_dragon_selector.tscn" id="3_dragon_selector"]
+
+[node name="ExplorationMapUI" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_exploration_map")
+
+[node name="Background" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.1, 0.1, 0.1, 1)
+
+[node name="MapImage" type="TextureRect" parent="."]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -640.0
+offset_top = -400.0
+offset_right = 640.0
+offset_bottom = 400.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+texture = ExtResource("2_map_texture")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="LocationButtons" type="Control" parent="MapImage"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="AncientForest" type="Control" parent="MapImage/LocationButtons"]
+layout_mode = 1
+anchors_preset = -1
+anchor_left = 0.1
+anchor_top = 0.3
+anchor_right = 0.25
+anchor_bottom = 0.5
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="ClickArea" type="Button" parent="MapImage/LocationButtons/AncientForest"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+flat = true
+
+[node name="HoverLabel" type="Label" parent="MapImage/LocationButtons/AncientForest"]
+visible = false
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -75.0
+offset_top = -15.0
+offset_right = 75.0
+offset_bottom = 15.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_colors/font_color = Color(0.2, 1, 0.2, 1)
+theme_override_colors/font_shadow_color = Color(0, 0, 0, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/shadow_offset_x = 2
+theme_override_constants/shadow_offset_y = 2
+theme_override_constants/outline_size = 4
+theme_override_font_sizes/font_size = 16
+text = "Ancient Forest
+30 minutes"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="FrozenTundra" type="Control" parent="MapImage/LocationButtons"]
+layout_mode = 1
+anchors_preset = -1
+anchor_left = 0.35
+anchor_top = 0.1
+anchor_right = 0.5
+anchor_bottom = 0.35
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="ClickArea" type="Button" parent="MapImage/LocationButtons/FrozenTundra"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+flat = true
+
+[node name="HoverLabel" type="Label" parent="MapImage/LocationButtons/FrozenTundra"]
+visible = false
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -75.0
+offset_top = -15.0
+offset_right = 75.0
+offset_bottom = 15.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_colors/font_color = Color(0.3, 0.8, 1, 1)
+theme_override_colors/font_shadow_color = Color(0, 0, 0, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/shadow_offset_x = 2
+theme_override_constants/shadow_offset_y = 2
+theme_override_constants/outline_size = 4
+theme_override_font_sizes/font_size = 16
+text = "Frozen Tundra
+45 minutes"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="TunderPeak" type="Control" parent="MapImage/LocationButtons"]
+layout_mode = 1
+anchors_preset = -1
+anchor_left = 0.6
+anchor_top = 0.1
+anchor_right = 0.75
+anchor_bottom = 0.4
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="ClickArea" type="Button" parent="MapImage/LocationButtons/TunderPeak"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+flat = true
+
+[node name="HoverLabel" type="Label" parent="MapImage/LocationButtons/TunderPeak"]
+visible = false
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -75.0
+offset_top = -15.0
+offset_right = 75.0
+offset_bottom = 15.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_colors/font_color = Color(1, 1, 0.2, 1)
+theme_override_colors/font_shadow_color = Color(0, 0, 0, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/shadow_offset_x = 2
+theme_override_constants/shadow_offset_y = 2
+theme_override_constants/outline_size = 4
+theme_override_font_sizes/font_size = 16
+text = "Thunder Peak
+60 minutes"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="VolcanicCaves" type="Control" parent="MapImage/LocationButtons"]
+layout_mode = 1
+anchors_preset = -1
+anchor_left = 0.6
+anchor_top = 0.55
+anchor_right = 0.75
+anchor_bottom = 0.75
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="ClickArea" type="Button" parent="MapImage/LocationButtons/VolcanicCaves"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+flat = true
+
+[node name="HoverLabel" type="Label" parent="MapImage/LocationButtons/VolcanicCaves"]
+visible = false
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -75.0
+offset_top = -15.0
+offset_right = 75.0
+offset_bottom = 15.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_colors/font_color = Color(1, 0.3, 0, 1)
+theme_override_colors/font_shadow_color = Color(0, 0, 0, 1)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/shadow_offset_x = 2
+theme_override_constants/shadow_offset_y = 2
+theme_override_constants/outline_size = 4
+theme_override_font_sizes/font_size = 16
+text = "Volcanic Caves
+15 minutes"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="Markers" type="Node2D" parent="MapImage"]
+
+[node name="ForestStart" type="Sprite2D" parent="MapImage/Markers"]
+position = Vector2(370, 396)
+
+[node name="ForestEnd" type="Sprite2D" parent="MapImage/Markers"]
+position = Vector2(215, 270)
+
+[node name="TundraStart" type="Sprite2D" parent="MapImage/Markers"]
+position = Vector2(530, 434)
+
+[node name="TundraEnd" type="Sprite2D" parent="MapImage/Markers"]
+position = Vector2(590, 272)
+
+[node name="ThuderPeakStart" type="Sprite2D" parent="MapImage/Markers"]
+position = Vector2(579, 527)
+
+[node name="ThuderPeakEnd" type="Sprite2D" parent="MapImage/Markers"]
+position = Vector2(923, 324)
+
+[node name="VolcanicCavesStart" type="Sprite2D" parent="MapImage/Markers"]
+position = Vector2(577, 593)
+
+[node name="VolcanicCavesEnd" type="Sprite2D" parent="MapImage/Markers"]
+position = Vector2(886, 593)
+
+[node name="DragonsLayer" type="Node2D" parent="MapImage"]
+
+[node name="UIOverlay" type="Control" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="TopBar" type="HBoxContainer" parent="UIOverlay"]
+layout_mode = 1
+anchors_preset = 10
+anchor_right = 1.0
+offset_bottom = 60.0
+grow_horizontal = 2
+
+[node name="MarginLeft" type="MarginContainer" parent="UIOverlay/TopBar"]
+layout_mode = 2
+theme_override_constants/margin_left = 20
+theme_override_constants/margin_top = 20
+
+[node name="TitleLabel" type="Label" parent="UIOverlay/TopBar"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0, 1, 0, 1)
+theme_override_colors/font_shadow_color = Color(0, 0, 0, 1)
+theme_override_constants/shadow_offset_x = 2
+theme_override_constants/shadow_offset_y = 2
+theme_override_font_sizes/font_size = 24
+text = "EXPLORATION MAP"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="ActiveExpeditionsLabel" type="Label" parent="UIOverlay/TopBar"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0, 1, 0, 1)
+theme_override_colors/font_shadow_color = Color(0, 0, 0, 1)
+theme_override_constants/shadow_offset_x = 1
+theme_override_constants/shadow_offset_y = 1
+theme_override_font_sizes/font_size = 16
+text = "0 dragons exploring"
+horizontal_alignment = 2
+vertical_alignment = 1
+
+[node name="MarginRight" type="MarginContainer" parent="UIOverlay/TopBar"]
+layout_mode = 2
+theme_override_constants/margin_right = 20
+
+[node name="BottomPanel" type="HBoxContainer" parent="UIOverlay"]
+layout_mode = 1
+anchors_preset = 12
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = -80.0
+grow_horizontal = 2
+grow_vertical = 0
+alignment = 1
+
+[node name="SendExpeditionButton" type="Button" parent="UIOverlay/BottomPanel"]
+custom_minimum_size = Vector2(200, 50)
+layout_mode = 2
+theme_override_font_sizes/font_size = 16
+text = "SEND EXPEDITION"
+
+[node name="Spacer" type="Control" parent="UIOverlay/BottomPanel"]
+custom_minimum_size = Vector2(20, 0)
+layout_mode = 2
+
+[node name="CloseButton" type="Button" parent="UIOverlay/BottomPanel"]
+custom_minimum_size = Vector2(150, 50)
+layout_mode = 2
+theme_override_font_sizes/font_size = 16
+text = "BACK"
+
+[node name="ExplorationDragonSelector" parent="." instance=ExtResource("3_dragon_selector")]
+visible = false
+layout_mode = 1

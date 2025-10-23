@@ -1,0 +1,414 @@
+extends Control
+class_name ExplorationMapUI
+
+# Scene reference
+const TravelingDragonScene = preload("res://scenes/exploration/traveling_dragon.tscn")
+
+# UI components
+@onready var map_image: TextureRect = $MapImage
+@onready var dragons_layer: Node2D = $MapImage/DragonsLayer
+@onready var active_label: Label = $UIOverlay/TopBar/ActiveExpeditionsLabel
+@onready var close_button: Button = $UIOverlay/BottomPanel/CloseButton
+@onready var title_label: Label = $UIOverlay/TopBar/TitleLabel
+@onready var dragon_selector: ExplorationDragonSelector = $ExplorationDragonSelector
+
+# Location button areas
+@onready var ancient_forest_button: Button = $MapImage/LocationButtons/AncientForest/ClickArea
+@onready var ancient_forest_label: Label = $MapImage/LocationButtons/AncientForest/HoverLabel
+@onready var frozen_tundra_button: Button = $MapImage/LocationButtons/FrozenTundra/ClickArea
+@onready var frozen_tundra_label: Label = $MapImage/LocationButtons/FrozenTundra/HoverLabel
+@onready var thunder_peak_button: Button = $MapImage/LocationButtons/TunderPeak/ClickArea
+@onready var thunder_peak_label: Label = $MapImage/LocationButtons/TunderPeak/HoverLabel
+@onready var volcanic_caves_button: Button = $MapImage/LocationButtons/VolcanicCaves/ClickArea
+@onready var volcanic_caves_label: Label = $MapImage/LocationButtons/VolcanicCaves/HoverLabel
+
+# Location markers (start and end points)
+@onready var forest_start: Sprite2D = $MapImage/Markers/ForestStart
+@onready var forest_end: Sprite2D = $MapImage/Markers/ForestEnd
+@onready var tundra_start: Sprite2D = $MapImage/Markers/TundraStart
+@onready var tundra_end: Sprite2D = $MapImage/Markers/TundraEnd
+@onready var thunder_start: Sprite2D = $MapImage/Markers/ThuderPeakStart
+@onready var thunder_end: Sprite2D = $MapImage/Markers/ThuderPeakEnd
+@onready var volcanic_start: Sprite2D = $MapImage/Markers/VolcanicCavesStart
+@onready var volcanic_end: Sprite2D = $MapImage/Markers/VolcanicCavesEnd
+
+# Map constants - will be populated with actual positions in _ready()
+var DESTINATIONS = {}
+
+# Active traveling dragons
+var active_traveling_dragons: Dictionary = {}  # dragon_id -> TravelingDragon node
+
+# Dragon factory reference
+var dragon_factory: DragonFactory
+
+# Pending selection state
+var pending_destination_key: String
+var pending_destination_info: Dictionary
+
+# Signals
+signal back_to_factory_requested
+signal expedition_started(dragon_id: String, destination: String)
+
+func _ready():
+	print("[ExplorationMapUI] Initializing")
+
+	# Initialize destinations with actual marker positions
+	_initialize_destinations()
+
+	# Connect location button signals
+	if ancient_forest_button:
+		ancient_forest_button.pressed.connect(_on_location_clicked.bind("ancient_forest"))
+		ancient_forest_button.mouse_entered.connect(_on_location_hover.bind(ancient_forest_label, true))
+		ancient_forest_button.mouse_exited.connect(_on_location_hover.bind(ancient_forest_label, false))
+	if frozen_tundra_button:
+		frozen_tundra_button.pressed.connect(_on_location_clicked.bind("frozen_tundra"))
+		frozen_tundra_button.mouse_entered.connect(_on_location_hover.bind(frozen_tundra_label, true))
+		frozen_tundra_button.mouse_exited.connect(_on_location_hover.bind(frozen_tundra_label, false))
+	if thunder_peak_button:
+		thunder_peak_button.pressed.connect(_on_location_clicked.bind("thunder_peak"))
+		thunder_peak_button.mouse_entered.connect(_on_location_hover.bind(thunder_peak_label, true))
+		thunder_peak_button.mouse_exited.connect(_on_location_hover.bind(thunder_peak_label, false))
+	if volcanic_caves_button:
+		volcanic_caves_button.pressed.connect(_on_location_clicked.bind("volcanic_caves"))
+		volcanic_caves_button.mouse_entered.connect(_on_location_hover.bind(volcanic_caves_label, true))
+		volcanic_caves_button.mouse_exited.connect(_on_location_hover.bind(volcanic_caves_label, false))
+
+	# Connect close button
+	if close_button:
+		close_button.pressed.connect(_on_close_pressed)
+
+	# Connect dragon selector signals
+	if dragon_selector:
+		dragon_selector.dragon_selected.connect(_on_dragon_selector_confirmed)
+		dragon_selector.cancelled.connect(_on_dragon_selector_cancelled)
+		dragon_selector.visible = false  # Hide by default
+
+	# Connect to ExplorationManager signals
+	if ExplorationManager and ExplorationManager.instance:
+		ExplorationManager.instance.exploration_started.connect(_on_exploration_started)
+		ExplorationManager.instance.exploration_completed.connect(_on_exploration_completed)
+		print("[ExplorationMapUI] Connected to ExplorationManager")
+	else:
+		push_error("[ExplorationMapUI] ExplorationManager not found!")
+
+	# Load any in-progress explorations
+	_load_active_explorations()
+
+	# Update UI
+	_update_active_count()
+
+func _initialize_destinations():
+	"""Initialize destination data with actual marker positions from the scene"""
+	DESTINATIONS = {
+		"ancient_forest": {
+			"start_position": forest_start.position if forest_start else Vector2(299, 316),
+			"end_position": forest_end.position if forest_end else Vector2(192, 251),
+			"name": "Ancient Forest",
+			"element": "Nature",
+			"duration_minutes": 30,
+			"color": Color(0.2, 1.0, 0.2)
+		},
+		"frozen_tundra": {
+			"start_position": tundra_start.position if tundra_start else Vector2(467, 362),
+			"end_position": tundra_end.position if tundra_end else Vector2(523, 205),
+			"name": "Frozen Tundra",
+			"element": "Ice",
+			"duration_minutes": 45,
+			"color": Color(0.3, 0.8, 1.0)
+		},
+		"thunder_peak": {
+			"start_position": thunder_start.position if thunder_start else Vector2(518, 450),
+			"end_position": thunder_end.position if thunder_end else Vector2(842, 262),
+			"name": "Thunder Peak",
+			"element": "Lightning",
+			"duration_minutes": 60,
+			"color": Color(1.0, 1.0, 0.2)
+		},
+		"volcanic_caves": {
+			"start_position": volcanic_start.position if volcanic_start else Vector2(530, 519),
+			"end_position": volcanic_end.position if volcanic_end else Vector2(808, 520),
+			"name": "Volcanic Caves",
+			"element": "Fire",
+			"duration_minutes": 15,
+			"color": Color(1.0, 0.3, 0.0)
+		}
+	}
+	print("[ExplorationMapUI] Destinations initialized with marker positions")
+
+func set_dragon_factory(factory: DragonFactory):
+	"""Set the dragon factory reference"""
+	dragon_factory = factory
+	print("[ExplorationMapUI] Dragon factory set")
+
+func _load_active_explorations():
+	"""Load any dragons currently exploring and spawn them on the map"""
+	if not ExplorationManager or not ExplorationManager.instance:
+		return
+
+	var active_explorations = ExplorationManager.instance.get_active_explorations()
+	print("[ExplorationMapUI] Loading %d active explorations" % active_explorations.size())
+
+	for exploration in active_explorations:
+		var dragon = exploration.get("dragon")
+		var destination = exploration.get("destination")
+
+		if dragon and destination:
+			_spawn_traveling_dragon_from_existing(dragon, destination, exploration)
+
+func _spawn_traveling_dragon_from_existing(dragon: Dragon, destination: String, exploration_data: Dictionary):
+	"""Spawn a dragon that's already exploring (for loading saved state)"""
+	if not DESTINATIONS.has(destination):
+		push_error("[ExplorationMapUI] Unknown destination: %s" % destination)
+		return
+
+	var dest_info = DESTINATIONS[destination]
+	var dragon_dict = {
+		"id": dragon.dragon_id,
+		"name": dragon.dragon_name,
+		"level": dragon.level,
+		"element": DragonPart.Element.keys()[dragon.head_part.element]
+	}
+
+	# Spawn the traveling dragon
+	var traveling_dragon = TravelingDragonScene.instantiate()
+
+	# Get exploration details
+	var start_time = exploration_data.get("start_time", 0)
+	var duration_mins = dest_info["duration_minutes"]
+
+	dragons_layer.add_child(traveling_dragon)
+
+	# Setup with existing progress
+	traveling_dragon.dragon_data = dragon_dict
+	traveling_dragon.destination_key = destination
+	traveling_dragon.start_position = dest_info["start_position"]
+	traveling_dragon.end_position = dest_info["end_position"]
+	traveling_dragon.start_time = start_time
+	traveling_dragon.duration_seconds = duration_mins * 60
+
+	# Calculate current position based on elapsed time (round-trip logic)
+	var current_time = Time.get_unix_time_from_system()
+	var elapsed = current_time - start_time
+	var progress = float(elapsed) / float(traveling_dragon.duration_seconds)
+	progress = clamp(progress, 0.0, 1.0)
+
+	# Determine if outbound or returning (halfway point at 0.5)
+	var current_pos: Vector2
+	if progress < 0.5:
+		# Outbound: start -> end
+		var outbound_progress = progress * 2.0  # 0.0 to 1.0
+		current_pos = dest_info["start_position"].lerp(dest_info["end_position"], outbound_progress)
+		traveling_dragon.is_outbound = true
+	else:
+		# Return: end -> start
+		var return_progress = (progress - 0.5) * 2.0  # 0.0 to 1.0
+		current_pos = dest_info["end_position"].lerp(dest_info["start_position"], return_progress)
+		traveling_dragon.is_outbound = false
+
+	traveling_dragon.position = current_pos
+
+	# Update appearance
+	if traveling_dragon.dragon_sprite:
+		traveling_dragon._setup_sprite_appearance()
+	if traveling_dragon.name_label:
+		traveling_dragon.name_label.text = dragon_dict["name"]
+	if traveling_dragon.trail_particles:
+		traveling_dragon._setup_particles()
+
+	# Connect signals
+	traveling_dragon.exploration_complete.connect(_on_traveling_dragon_complete)
+
+	# Store reference
+	active_traveling_dragons[dragon.dragon_id] = traveling_dragon
+
+	print("[ExplorationMapUI] Loaded traveling dragon: %s to %s (%.1f%% complete)" % [
+		dragon.dragon_name,
+		destination,
+		progress * 100
+	])
+
+func spawn_traveling_dragon(dragon: Dictionary, destination_key: String):
+	"""
+	Creates a traveling dragon on the map
+	Args:
+		dragon: Dictionary with {id, name, level, element}
+		destination_key: One of the DESTINATIONS keys
+	"""
+	if not DESTINATIONS.has(destination_key):
+		push_error("[ExplorationMapUI] Unknown destination: %s" % destination_key)
+		return
+
+	var dest_info = DESTINATIONS[destination_key]
+
+	var traveling_dragon = TravelingDragonScene.instantiate()
+	dragons_layer.add_child(traveling_dragon)
+
+	# Setup the dragon with start and end positions for round-trip journey
+	traveling_dragon.setup(
+		dragon,
+		destination_key,
+		dest_info["start_position"],
+		dest_info["end_position"],
+		dest_info["duration_minutes"]
+	)
+
+	# Connect signal
+	traveling_dragon.exploration_complete.connect(_on_traveling_dragon_complete)
+
+	# Store reference
+	active_traveling_dragons[dragon.id] = traveling_dragon
+
+	_update_active_count()
+
+	print("[ExplorationMapUI] Spawned traveling dragon: %s -> %s (round trip)" % [dragon.name, destination_key])
+
+func remove_traveling_dragon(dragon_id: String):
+	"""Remove a traveling dragon from the map"""
+	if active_traveling_dragons.has(dragon_id):
+		var dragon_node = active_traveling_dragons[dragon_id]
+		dragon_node.queue_free()
+		active_traveling_dragons.erase(dragon_id)
+		_update_active_count()
+		print("[ExplorationMapUI] Removed traveling dragon: %s" % dragon_id)
+
+func _on_exploration_started(dragon: Dragon, destination: String):
+	"""Called when ExplorationManager starts a new exploration"""
+	print("[ExplorationMapUI] Exploration started: %s -> %s" % [dragon.dragon_name, destination])
+
+	var dragon_dict = {
+		"id": dragon.dragon_id,
+		"name": dragon.dragon_name,
+		"level": dragon.level,
+		"element": DragonPart.Element.keys()[dragon.head_part.element]
+	}
+
+	spawn_traveling_dragon(dragon_dict, destination)
+
+func _on_exploration_completed(dragon: Dragon, destination: String, rewards: Dictionary):
+	"""Called when ExplorationManager completes an exploration"""
+	print("[ExplorationMapUI] Exploration completed: %s from %s" % [dragon.dragon_name, destination])
+
+	# The traveling dragon will emit its own signal when the return animation completes
+	# We don't remove it here - let the animation finish first
+
+func _on_traveling_dragon_complete(dragon_data: Dictionary):
+	"""Called when a traveling dragon completes its return animation"""
+	print("[ExplorationMapUI] Traveling dragon returned: %s" % dragon_data.get("name", "Unknown"))
+
+	# Remove from active list
+	var dragon_id = dragon_data.get("id", "")
+	if dragon_id and active_traveling_dragons.has(dragon_id):
+		active_traveling_dragons.erase(dragon_id)
+		_update_active_count()
+
+func _update_active_count():
+	"""Update the active expeditions label"""
+	var count = active_traveling_dragons.size()
+	if active_label:
+		active_label.text = "%d dragon%s exploring" % [count, "s" if count != 1 else ""]
+
+func get_destination_info(dest_key: String) -> Dictionary:
+	"""Get information about a destination"""
+	return DESTINATIONS.get(dest_key, {})
+
+func get_all_destinations() -> Dictionary:
+	"""Get all available destinations"""
+	return DESTINATIONS
+
+func _on_close_pressed():
+	"""Handle close button press"""
+	print("[ExplorationMapUI] Close button pressed")
+	back_to_factory_requested.emit()
+
+func _on_location_hover(label: Label, show: bool):
+	"""Handle hovering over a location - show/hide tooltip"""
+	if label:
+		label.visible = show
+
+func _on_location_clicked(destination_key: String):
+	"""Handle location button press - show dragon selection dialog"""
+	print("[ExplorationMapUI] Location clicked: %s" % destination_key)
+
+	var destination_info = DESTINATIONS.get(destination_key)
+	if not destination_info:
+		push_error("[ExplorationMapUI] Unknown destination: %s" % destination_key)
+		return
+
+	# Get available dragons
+	var available_dragons = _get_available_dragons()
+
+	if available_dragons.is_empty():
+		_show_error_dialog("No Available Dragons", "All dragons are either exploring, dead, or too fatigued (>50%).\n\nWait for dragons to return or rest them before sending on expeditions.")
+		return
+
+	# Show dragon selection dialog
+	_show_dragon_selection_dialog(destination_key, destination_info, available_dragons)
+
+func _show_dragon_selection_dialog(destination_key: String, destination_info: Dictionary, available_dragons: Array):
+	"""Show the visual dragon selector modal"""
+	if not dragon_selector:
+		push_error("[ExplorationMapUI] Dragon selector not found!")
+		return
+
+	# Store for callback
+	pending_destination_key = destination_key
+	pending_destination_info = destination_info
+
+	# Show the visual selector
+	dragon_selector.show_for_destination(destination_key, destination_info, available_dragons)
+
+func _on_dragon_selector_confirmed(selected_dragon: Dragon):
+	"""Called when a dragon is selected from the visual selector"""
+	print("[ExplorationMapUI] Dragon selector confirmed: %s" % selected_dragon.dragon_name)
+	_start_exploration_for_dragon(selected_dragon, pending_destination_key, pending_destination_info)
+
+func _on_dragon_selector_cancelled():
+	"""Called when dragon selector is cancelled"""
+	print("[ExplorationMapUI] Dragon selector cancelled")
+
+func _start_exploration_for_dragon(dragon: Dragon, destination_key: String, destination_info: Dictionary):
+	"""Start an exploration for the selected dragon"""
+	if not ExplorationManager or not ExplorationManager.instance:
+		_show_error_dialog("Error", "ExplorationManager not found!")
+		return
+
+	# Start the exploration through the manager
+	var duration_minutes = destination_info["duration_minutes"]
+	if ExplorationManager.instance.start_exploration(dragon, duration_minutes, destination_key):
+		print("[ExplorationMapUI] Started exploration for %s to %s (%d min)" % [
+			dragon.dragon_name,
+			destination_info["name"],
+			duration_minutes
+		])
+	else:
+		_show_error_dialog("Cannot Explore", "Dragon cannot explore right now.\nCheck fatigue level and current state.")
+
+func _get_available_dragons() -> Array:
+	"""Get list of dragons that can be sent exploring"""
+	var available: Array = []
+
+	if not dragon_factory:
+		return available
+
+	var all_dragons = dragon_factory.get_all_dragons()
+	for dragon in all_dragons:
+		# Check if dragon can explore
+		if dragon.is_dead:
+			continue
+		if dragon.current_state == Dragon.DragonState.EXPLORING:
+			continue
+		if dragon.fatigue_level > 0.5:  # Too tired
+			continue
+
+		available.append(dragon)
+
+	return available
+
+func _show_error_dialog(title: String, message: String):
+	"""Show a simple error dialog"""
+	var dialog = AcceptDialog.new()
+	add_child(dialog)
+	dialog.title = title
+	dialog.dialog_text = message
+	dialog.confirmed.connect(func(): dialog.queue_free())
+	dialog.popup_centered()

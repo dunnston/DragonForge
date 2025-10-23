@@ -44,9 +44,8 @@ var equip_toy_button: Button
 
 # Exploration
 @onready var exploration_status_label: Label = $CenterContainer/PanelContainer/MarginContainer/MainVBox/BottomPanel/SectionsContainer/ExplorationSection/StatusLabel
-@onready var explore_15_button: Button = $CenterContainer/PanelContainer/MarginContainer/MainVBox/BottomPanel/SectionsContainer/ExplorationSection/DurationButtons/Explore15Button
-@onready var explore_30_button: Button = $CenterContainer/PanelContainer/MarginContainer/MainVBox/BottomPanel/SectionsContainer/ExplorationSection/DurationButtons/Explore30Button
-@onready var explore_60_button: Button = $CenterContainer/PanelContainer/MarginContainer/MainVBox/BottomPanel/SectionsContainer/ExplorationSection/DurationButtons/Explore60Button
+@onready var destination_dropdown: OptionButton = $CenterContainer/PanelContainer/MarginContainer/MainVBox/BottomPanel/SectionsContainer/ExplorationSection/ExplorationControls/DestinationDropdown
+@onready var send_exploration_button: Button = $CenterContainer/PanelContainer/MarginContainer/MainVBox/BottomPanel/SectionsContainer/ExplorationSection/ExplorationControls/SendButton
 
 var current_dragon: Dragon = null
 var update_timer: Timer
@@ -58,10 +57,9 @@ func _ready():
 	rest_button.pressed.connect(_on_rest_pressed)
 	defend_button.pressed.connect(_on_defend_pressed)
 
-	# Exploration buttons
-	explore_15_button.pressed.connect(_on_explore_pressed.bind(15))
-	explore_30_button.pressed.connect(_on_explore_pressed.bind(30))
-	explore_60_button.pressed.connect(_on_explore_pressed.bind(60))
+	# Exploration dropdown
+	_populate_destination_dropdown()
+	send_exploration_button.pressed.connect(_on_send_exploration_pressed)
 
 	# Create update timer for exploration countdown
 	update_timer = Timer.new()
@@ -80,6 +78,30 @@ func _ready():
 	_create_advanced_stats_ui()
 
 	hide()
+
+func _populate_destination_dropdown():
+	"""Populate the exploration destination dropdown with available areas"""
+	if not destination_dropdown:
+		return
+
+	# Clear existing items
+	destination_dropdown.clear()
+
+	# Add destinations with name and duration
+	destination_dropdown.add_item("Volcanic Caves (15 min)", 0)
+	destination_dropdown.set_item_metadata(0, {"key": "volcanic_caves", "duration": 15})
+
+	destination_dropdown.add_item("Ancient Forest (30 min)", 1)
+	destination_dropdown.set_item_metadata(1, {"key": "ancient_forest", "duration": 30})
+
+	destination_dropdown.add_item("Frozen Tundra (45 min)", 2)
+	destination_dropdown.set_item_metadata(2, {"key": "frozen_tundra", "duration": 45})
+
+	destination_dropdown.add_item("Thunder Peak (60 min)", 3)
+	destination_dropdown.set_item_metadata(3, {"key": "thunder_peak", "duration": 60})
+
+	# Select first item by default
+	destination_dropdown.selected = 0
 
 func _create_happiness_ui():
 	"""Add happiness label to status section"""
@@ -431,9 +453,8 @@ func _update_button_states():
 
 	# Exploration: can only explore if not currently exploring and not too fatigued (needs 50% rest)
 	var can_explore = current_state != Dragon.DragonState.EXPLORING and current_dragon.fatigue_level <= 0.5
-	explore_15_button.disabled = not can_explore
-	explore_30_button.disabled = not can_explore
-	explore_60_button.disabled = not can_explore
+	destination_dropdown.disabled = not can_explore
+	send_exploration_button.disabled = not can_explore
 
 	# Update exploration status
 	if is_exploring and ExplorationManager and ExplorationManager.instance:
@@ -548,15 +569,30 @@ func _on_defend_pressed():
 	_update_display()
 	dragon_updated.emit()
 
-func _on_explore_pressed(duration_minutes: int):
+func _on_send_exploration_pressed():
+	"""Send dragon on exploration to selected destination"""
 	if not current_dragon or not ExplorationManager or not ExplorationManager.instance:
 		return
 
-	if ExplorationManager.instance.start_exploration(current_dragon, duration_minutes):
+	if not destination_dropdown:
+		return
+
+	# Get selected destination metadata
+	var selected_index = destination_dropdown.selected
+	var metadata = destination_dropdown.get_item_metadata(selected_index)
+
+	if not metadata:
+		return
+
+	var destination_key = metadata.get("key", "volcanic_caves")
+	var duration_minutes = metadata.get("duration", 15)
+
+	# Start exploration
+	if ExplorationManager.instance.start_exploration(current_dragon, duration_minutes, destination_key):
 		_update_display()
 		update_timer.start()
 		dragon_updated.emit()
-		print("Started %d minute exploration" % duration_minutes)
+		print("[DragonDetailsModal] Started %d minute exploration to %s" % [duration_minutes, destination_key])
 
 func _on_update_timer_timeout():
 	"""Update exploration countdown every second"""
@@ -565,7 +601,7 @@ func _on_update_timer_timeout():
 	else:
 		update_timer.stop()
 
-func _on_exploration_completed(dragon: Dragon, rewards: Dictionary):
+func _on_exploration_completed(dragon: Dragon, destination: String, rewards: Dictionary):
 	"""Called when any dragon completes exploration"""
 	# Only update display if this is the current dragon being viewed
 	# (Popup is now handled by factory manager for all dragons)
@@ -579,10 +615,19 @@ func _update_exploration_button_labels():
 	if not ExplorationManager or not ExplorationManager.instance:
 		return
 
-	var time_unit = "sec" if ExplorationManager.DEV_MODE else "min"
-	explore_15_button.text = "15 %s" % time_unit
-	explore_30_button.text = "30 %s" % time_unit
-	explore_60_button.text = "60 %s" % time_unit
+	# Update dropdown text based on DEV_MODE
+	if ExplorationManager and ExplorationManager.instance and ExplorationManager.instance.DEV_MODE:
+		# In dev mode, show seconds instead of minutes
+		destination_dropdown.set_item_text(0, "Volcanic Caves (15 sec)")
+		destination_dropdown.set_item_text(1, "Ancient Forest (30 sec)")
+		destination_dropdown.set_item_text(2, "Frozen Tundra (45 sec)")
+		destination_dropdown.set_item_text(3, "Thunder Peak (60 sec)")
+	else:
+		# Normal mode - show minutes
+		destination_dropdown.set_item_text(0, "Volcanic Caves (15 min)")
+		destination_dropdown.set_item_text(1, "Ancient Forest (30 min)")
+		destination_dropdown.set_item_text(2, "Frozen Tundra (45 min)")
+		destination_dropdown.set_item_text(3, "Thunder Peak (60 min)")
 
 func _on_treat_pressed():
 	"""Use a treat on the current dragon"""
