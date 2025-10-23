@@ -72,8 +72,13 @@ func assign_dragon_to_defense(dragon: Dragon) -> bool:
 		print("[DefenseManager] Dragon already defending!")
 		return false
 
-	if defending_dragons.size() >= 3:
-		print("[DefenseManager] Maximum 3 defenders!")
+	# Check tower capacity instead of hardcoded limit
+	var max_defenders = 3  # Default fallback
+	if DefenseTowerManager and DefenseTowerManager.instance:
+		max_defenders = DefenseTowerManager.instance.get_defense_capacity()
+
+	if defending_dragons.size() >= max_defenders:
+		print("[DefenseManager] Maximum %d defenders (based on tower capacity)!" % max_defenders)
 		defense_slots_full.emit()
 		return false
 
@@ -93,7 +98,7 @@ func assign_dragon_to_defense(dragon: Dragon) -> bool:
 	else:
 		dragon.current_state = Dragon.DragonState.DEFENDING
 	dragon_assigned_to_defense.emit(dragon)
-	print("[DefenseManager] %s assigned to defense (Total: %d)" % [dragon.dragon_name, defending_dragons.size()])
+	print("[DefenseManager] %s assigned to defense (Total: %d/%d)" % [dragon.dragon_name, defending_dragons.size(), max_defenders])
 	return true
 
 func remove_dragon_from_defense(dragon: Dragon) -> bool:
@@ -112,6 +117,12 @@ func remove_dragon_from_defense(dragon: Dragon) -> bool:
 
 func get_defending_dragons() -> Array[Dragon]:
 	return defending_dragons.duplicate()
+
+func get_max_defenders() -> int:
+	"""Returns the maximum number of dragons that can defend (based on tower capacity)"""
+	if DefenseTowerManager and DefenseTowerManager.instance:
+		return DefenseTowerManager.instance.get_defense_capacity()
+	return 3  # Default fallback
 
 # === WAVE GENERATION & COMBAT ===
 
@@ -301,6 +312,11 @@ func _apply_auto_loss():
 
 func _complete_wave(victory: bool, rewards: Dictionary):
 	is_in_combat = false
+
+	# Apply damage to towers
+	if DefenseTowerManager and DefenseTowerManager.instance:
+		DefenseTowerManager.instance.apply_wave_damage(victory)
+
 	reset_wave_timer()
 	wave_completed.emit(victory, rewards)
 

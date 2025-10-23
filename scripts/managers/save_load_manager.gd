@@ -95,6 +95,15 @@ func save_game() -> bool:
 		game_saved.emit(false, "DefenseManager not found")
 		return false
 
+	# Serialize DefenseTowerManager
+	if DefenseTowerManager and DefenseTowerManager.instance:
+		save_data["defense_tower_manager"] = DefenseTowerManager.instance.to_dict()
+		print("[SaveLoadManager] ✓ Saved DefenseTowerManager (Towers: %d)" % DefenseTowerManager.instance.get_total_towers())
+	else:
+		push_error("[SaveLoadManager] ERROR: DefenseTowerManager not found!")
+		game_saved.emit(false, "DefenseTowerManager not found")
+		return false
+
 	# Get DragonFactory reference (it's not an autoload, so we need to find it)
 	var dragon_factory = _find_dragon_factory()
 	if not dragon_factory:
@@ -225,7 +234,16 @@ func load_game() -> bool:
 		game_loaded.emit(false, "Failed to load DragonFactory")
 		return false
 
-	# Load DefenseManager (depends on DragonFactory)
+	# Load DefenseTowerManager (must load before DefenseManager for capacity checks)
+	if save_data.has("defense_tower_manager") and DefenseTowerManager and DefenseTowerManager.instance:
+		DefenseTowerManager.instance.from_dict(save_data["defense_tower_manager"])
+		print("[SaveLoadManager] ✓ Loaded DefenseTowerManager (Towers: %d)" % DefenseTowerManager.instance.get_total_towers())
+	else:
+		push_error("[SaveLoadManager] ERROR: Failed to load DefenseTowerManager!")
+		game_loaded.emit(false, "Failed to load DefenseTowerManager")
+		return false
+
+	# Load DefenseManager (depends on DragonFactory and DefenseTowerManager)
 	if save_data.has("defense_manager") and DefenseManager and DefenseManager.instance:
 		DefenseManager.instance.from_dict(save_data["defense_manager"], dragon_factory)
 		print("[SaveLoadManager] ✓ Loaded DefenseManager (Wave: %d)" % DefenseManager.instance.wave_number)

@@ -1,0 +1,101 @@
+[gd_scene load_steps=3 format=3 uid="uid://ctm4w8yn6r8xg"]
+
+[ext_resource type="Script" path="res://scripts/ui/tower_card.gd" id="1_tower_card"]
+[ext_resource type="PackedScene" uid="uid://57erx6jtexcf" path="res://assets/Icons/dragons/dragon-base.tscn" id="2_dragon_visual"]
+
+[node name="TowerCard" type="PanelContainer"]
+custom_minimum_size = Vector2(180, 320)
+script = ExtResource("1_tower_card")
+
+[node name="VBox" type="VBoxContainer" parent="."]
+layout_mode = 2
+
+[node name="TowerIcon" type="TextureRect" parent="VBox"]
+layout_mode = 2
+custom_minimum_size = Vector2(0, 60)
+expand_mode = 1
+stretch_mode = 5
+
+[node name="DragonVisualContainer" type="CenterContainer" parent="VBox"]
+custom_minimum_size = Vector2(0, 80)
+layout_mode = 2
+
+[node name="DragonVisual" parent="VBox/DragonVisualContainer" instance=ExtResource("2_dragon_visual")]
+scale = Vector2(0.08, 0.08)
+position = Vector2(90, 40)
+
+[node name="DragonInfo" type="VBoxContainer" parent="VBox"]
+layout_mode = 2
+theme_override_constants/separation = 3
+
+[node name="HeaderContainer" type="HBoxContainer" parent="VBox/DragonInfo"]
+layout_mode = 2
+
+[node name="Spacer" type="Control" parent="VBox/DragonInfo/HeaderContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="NameLabel" type="Label" parent="VBox/DragonInfo/HeaderContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 12
+text = "Dragon Name"
+horizontal_alignment = 1
+
+[node name="RemoveButton" type="Button" parent="VBox/DragonInfo/HeaderContainer"]
+custom_minimum_size = Vector2(24, 24)
+layout_mode = 2
+theme_override_font_sizes/font_size = 14
+text = "X"
+
+[node name="StatsLabel" type="Label" parent="VBox/DragonInfo"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 10
+text = "HP: 100%  Fatigue: 0%
+ATK: 50  DEF: 25"
+horizontal_alignment = 1
+
+[node name="NoDragonLabel" type="Label" parent="VBox"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 11
+text = "Click to Assign Dragon"
+horizontal_alignment = 1
+
+[node name="Spacer" type="Control" parent="VBox"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="HealthContainer" type="VBoxContainer" parent="VBox"]
+layout_mode = 2
+
+[node name="HealthBar" type="ProgressBar" parent="VBox/HealthContainer"]
+layout_mode = 2
+max_value = 100.0
+value = 100.0
+show_percentage = false
+
+[node name="HealthLabel" type="Label" parent="VBox/HealthContainer"]
+layout_mode = 2
+text = "100%"
+horizontal_alignment = 1
+
+[node name="RepairButton" type="Button" parent="VBox"]
+layout_mode = 2
+text = "REPAIR"
+
+[node name="CostLabel" type="Label" parent="VBox/RepairButton"]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -20.0
+offset_top = -11.5
+offset_right = 20.0
+offset_bottom = 11.5
+grow_horizontal = 2
+grow_vertical = 2
+text = "50g"
+horizontal_alignment = 1
+vertical_alignment = 1

@@ -1,0 +1,83 @@
+[gd_scene load_steps=2 format=3 uid="uid://bfyhckw3t5xy4"]
+
+[ext_resource type="Script" path="res://scripts/ui/defense_towers_ui.gd" id="1_defense_ui"]
+
+[node name="DefenseTowersUI" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_defense_ui")
+
+[node name="MarginContainer" type="MarginContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_left = 20
+theme_override_constants/margin_top = 20
+theme_override_constants/margin_right = 20
+theme_override_constants/margin_bottom = 20
+
+[node name="VBox" type="VBoxContainer" parent="MarginContainer"]
+layout_mode = 2
+
+[node name="HeaderPanel" type="PanelContainer" parent="MarginContainer/VBox"]
+layout_mode = 2
+
+[node name="HeaderHBox" type="HBoxContainer" parent="MarginContainer/VBox/HeaderPanel"]
+layout_mode = 2
+
+[node name="BackButton" type="Button" parent="MarginContainer/VBox/HeaderPanel/HeaderHBox"]
+custom_minimum_size = Vector2(120, 50)
+layout_mode = 2
+text = "← BACK"
+
+[node name="Spacer" type="Control" parent="MarginContainer/VBox/HeaderPanel/HeaderHBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="HeaderLabel" type="Label" parent="MarginContainer/VBox/HeaderPanel/HeaderHBox"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 32
+text = "DEFENSE PERIMETER"
+horizontal_alignment = 1
+
+[node name="Spacer2" type="Control" parent="MarginContainer/VBox/HeaderPanel/HeaderHBox"]
+custom_minimum_size = Vector2(120, 0)
+layout_mode = 2
+
+[node name="ScrollContainer" type="ScrollContainer" parent="MarginContainer/VBox"]
+layout_mode = 2
+size_flags_vertical = 3
+horizontal_scroll_bar_visibility = 2
+
+[node name="TowerContainer" type="HBoxContainer" parent="MarginContainer/VBox/ScrollContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 15
+
+[node name="FooterPanel" type="PanelContainer" parent="MarginContainer/VBox"]
+layout_mode = 2
+
+[node name="HBox" type="HBoxContainer" parent="MarginContainer/VBox/FooterPanel"]
+layout_mode = 2
+theme_override_constants/separation = 20
+
+[node name="RepairAllButton" type="Button" parent="MarginContainer/VBox/FooterPanel/HBox"]
+layout_mode = 2
+text = "Repair All: 0g"
+
+[node name="Spacer" type="Control" parent="MarginContainer/VBox/FooterPanel/HBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="StatsLabel" type="Label" parent="MarginContainer/VBox/FooterPanel/HBox"]
+layout_mode = 2
+text = "Slots: 0/3"
+horizontal_alignment = 2
+vertical_alignment = 1

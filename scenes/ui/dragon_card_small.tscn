@@ -1,0 +1,40 @@
+[gd_scene load_steps=3 format=3 uid="uid://bjf8k7n3m5qr2"]
+
+[ext_resource type="Script" path="res://scripts/ui/dragon_card_small.gd" id="1_dragon_card_small"]
+[ext_resource type="PackedScene" uid="uid://57erx6jtexcf" path="res://assets/Icons/dragons/dragon-base.tscn" id="2_dragon_visual"]
+
+[node name="DragonCardSmall" type="PanelContainer"]
+custom_minimum_size = Vector2(140, 180)
+script = ExtResource("1_dragon_card_small")
+
+[node name="VBox" type="VBoxContainer" parent="."]
+layout_mode = 2
+theme_override_constants/separation = 5
+
+[node name="NameLabel" type="Label" parent="VBox"]
+layout_mode = 2
+text = "Dragon Name"
+horizontal_alignment = 1
+vertical_alignment = 1
+clip_text = true
+text_overrun_behavior = 3
+
+[node name="DragonVisualContainer" type="CenterContainer" parent="VBox"]
+custom_minimum_size = Vector2(0, 100)
+layout_mode = 2
+
+[node name="DragonVisual" parent="VBox/DragonVisualContainer" instance=ExtResource("2_dragon_visual")]
+scale = Vector2(0.1, 0.1)
+position = Vector2(70, 50)
+
+[node name="LevelLabel" type="Label" parent="VBox"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 12
+text = "Lv.1"
+horizontal_alignment = 1
+
+[node name="StateIndicator" type="Label" parent="VBox"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 10
+text = "Idle"
+horizontal_alignment = 1

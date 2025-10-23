@@ -92,6 +92,10 @@ func get_dragon_by_id(dragon_id: String) -> Dragon:
 			return dragon
 	return null
 
+func get_all_dragons() -> Array[Dragon]:
+	"""Returns a copy of all active dragons"""
+	return active_dragons.duplicate()
+
 func remove_dragon(dragon: Dragon):
 	active_dragons.erase(dragon)
 

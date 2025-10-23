@@ -1,0 +1,113 @@
+[gd_scene load_steps=2 format=3 uid="uid://d4f6lan2p8r1q"]
+
+[ext_resource type="Script" path="res://scripts/ui/dragon_grounds_modal.gd" id="1_dragon_grounds"]
+
+[node name="DragonGroundsModal" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_dragon_grounds")
+
+[node name="DarkBackground" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0, 0, 0, 0.7)
+
+[node name="Panel" type="PanelContainer" parent="."]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -400.0
+offset_top = -300.0
+offset_right = 400.0
+offset_bottom = 300.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="MarginContainer" type="MarginContainer" parent="Panel"]
+layout_mode = 2
+theme_override_constants/margin_left = 20
+theme_override_constants/margin_top = 20
+theme_override_constants/margin_right = 20
+theme_override_constants/margin_bottom = 20
+
+[node name="VBox" type="VBoxContainer" parent="Panel/MarginContainer"]
+layout_mode = 2
+theme_override_constants/separation = 15
+
+[node name="Header" type="HBoxContainer" parent="Panel/MarginContainer/VBox"]
+layout_mode = 2
+
+[node name="TitleLabel" type="Label" parent="Panel/MarginContainer/VBox/Header"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 28
+text = "DRAGON GROUNDS"
+horizontal_alignment = 1
+
+[node name="CountLabel" type="Label" parent="Panel/MarginContainer/VBox/Header"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 16
+text = "Dragons: 0"
+vertical_alignment = 1
+
+[node name="CloseButton" type="Button" parent="Panel/MarginContainer/VBox/Header"]
+custom_minimum_size = Vector2(80, 40)
+layout_mode = 2
+text = "CLOSE"
+
+[node name="ScrollContainer" type="ScrollContainer" parent="Panel/MarginContainer/VBox"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="DragonGrid" type="GridContainer" parent="Panel/MarginContainer/VBox/ScrollContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/h_separation = 15
+theme_override_constants/v_separation = 15
+columns = 5
+
+[node name="TooltipPanel" type="PanelContainer" parent="."]
+layout_mode = 0
+offset_right = 200.0
+offset_bottom = 120.0
+
+[node name="TooltipVBox" type="VBoxContainer" parent="TooltipPanel"]
+layout_mode = 2
+theme_override_constants/separation = 5
+
+[node name="NameLabel" type="Label" parent="TooltipPanel/TooltipVBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 1, 0.5, 1)
+theme_override_font_sizes/font_size = 14
+text = "Dragon Name"
+
+[node name="StatsLabel" type="Label" parent="TooltipPanel/TooltipVBox"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 12
+text = "ATK: 0 | HP: 0 | SPD: 0"
+
+[node name="HealthLabel" type="Label" parent="TooltipPanel/TooltipVBox"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 11
+text = "Health: 100%"
+
+[node name="HungerLabel" type="Label" parent="TooltipPanel/TooltipVBox"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 11
+text = "Hunger: 0%"
+
+[node name="FatigueLabel" type="Label" parent="TooltipPanel/TooltipVBox"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 11
+text = "Fatigue: 0%"

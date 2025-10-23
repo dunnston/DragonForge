@@ -8,6 +8,7 @@ var scientist_manager: ScientistManager
 # === UI ELEMENTS - Top Bar ===
 @onready var gold_label: Label = $MarginContainer/MainVBox/TopBar/GoldDisplay/HBox/GoldLabel
 @onready var view_inventory_button: Button = $MarginContainer/MainVBox/TopBar/ViewInventoryButton
+@onready var manage_defenses_button: Button = $MarginContainer/MainVBox/TopBar/ManageDefensesButton
 
 @onready var fire_parts_count: Label = $MarginContainer/MainVBox/TopBar/PartsDisplay/PartsHBox/FireParts/Count
 @onready var ice_parts_count: Label = $MarginContainer/MainVBox/TopBar/PartsDisplay/PartsHBox/IceParts/Count
@@ -41,6 +42,7 @@ var scientist_manager: ScientistManager
 
 # === UI ELEMENTS - Dragons List ===
 @onready var dragons_list: VBoxContainer = $MarginContainer/MainVBox/MainContent/RightPanel/DragonsVBox/ScrollContainer/DragonsList
+@onready var dragon_grounds_button: Button = $MarginContainer/MainVBox/MainContent/RightPanel/DragonsVBox/DragonGroundsButton
 
 # === UI ELEMENTS - Bottom Bar ===
 @onready var wave_label: Label = $MarginContainer/MainVBox/BottomBar/DefensePanel/VBox/HBox/WaveLabel
@@ -58,6 +60,10 @@ var defense_slots: Array[Label] = []
 @onready var part_selector: Control = $PartSelector
 @onready var dragon_tooltip: Control = $DragonTooltip
 @onready var dragon_details_modal: Control = $DragonDetailsModal
+@onready var dragon_grounds_modal: DragonGroundsModal = $DragonGroundsModal
+
+# Defense Towers UI (created dynamically)
+var defense_towers_ui: DefenseTowersUI
 
 # === DRAGON CREATION STATE ===
 var selected_head_id: String = ""
@@ -115,6 +121,15 @@ func _ready():
 	# Connect button signals
 	animate_button.pressed.connect(_on_animate_button_pressed)
 	view_inventory_button.pressed.connect(_on_view_inventory_pressed)
+	manage_defenses_button.pressed.connect(_on_manage_defenses_pressed)
+	dragon_grounds_button.pressed.connect(_on_dragon_grounds_pressed)
+
+	# Create Defense Towers UI
+	_setup_defense_towers_ui()
+
+	# Connect Dragon Grounds modal
+	if dragon_grounds_modal:
+		dragon_grounds_modal.closed.connect(_on_dragon_grounds_closed)
 
 	# Connect part selector signal
 	if part_selector:
@@ -827,13 +842,74 @@ func _on_dragon_removed_from_defense(dragon: Dragon):
 	_update_dragons_list()
 
 func _on_defense_slots_full():
-	"""Called when trying to assign a dragon but all 3 slots are full"""
+	"""Called when trying to assign a dragon but all defense slots are full"""
 	print("[FactoryManager] Defense slots are full!")
+
+	# Get current tower capacity
+	var max_capacity = 3  # Default fallback
+	if DefenseTowerManager and DefenseTowerManager.instance:
+		max_capacity = DefenseTowerManager.instance.get_defense_capacity()
 
 	# Show error dialog
 	var dialog = AcceptDialog.new()
 	add_child(dialog)
 	dialog.title = "Defense Slots Full"
-	dialog.dialog_text = "Maximum 3 dragons can defend at once!\nRemove a defender first."
+	dialog.dialog_text = "All %d of your defense towers are occupied!\n\nBuild more towers to increase defense capacity." % max_capacity
 	dialog.confirmed.connect(func(): dialog.queue_free())
 	dialog.popup_centered()
+
+# === DEFENSE TOWERS UI ===
+
+func _setup_defense_towers_ui():
+	"""Create and setup the defense towers UI"""
+	var DefenseTowersUIScene = preload("res://scenes/ui/towers/defense_towers_ui.tscn")
+	defense_towers_ui = DefenseTowersUIScene.instantiate()
+	add_child(defense_towers_ui)
+
+	# Set factory reference
+	defense_towers_ui.set_dragon_factory(factory)
+
+	# Hide by default
+	defense_towers_ui.visible = false
+
+	# Connect back button signal
+	defense_towers_ui.back_to_factory_requested.connect(_on_defense_towers_back_pressed)
+
+	print("[FactoryManager] Defense Towers UI created")
+
+func _on_manage_defenses_pressed():
+	"""Called when the Manage Defenses button is pressed"""
+	print("[FactoryManager] Manage Defenses button pressed")
+
+	# Hide factory UI, show defense towers UI
+	$MarginContainer.visible = false
+	inventory_panel.visible = false
+	part_selector.visible = false
+	dragon_tooltip.visible = false
+	dragon_details_modal.visible = false
+
+	defense_towers_ui.visible = true
+
+func _on_defense_towers_back_pressed():
+	"""Called when back button is pressed in defense towers UI"""
+	print("[FactoryManager] Returning from Defense Towers UI")
+
+	# Show factory UI, hide defense towers UI
+	$MarginContainer.visible = true
+	defense_towers_ui.visible = false
+
+# === DRAGON GROUNDS MODAL ===
+
+func _on_dragon_grounds_pressed():
+	"""Called when the Dragon Grounds button is pressed"""
+	print("[FactoryManager] Opening Dragon Grounds modal")
+
+	if dragon_grounds_modal:
+		dragon_grounds_modal.open(factory)
+
+func _on_dragon_grounds_closed():
+	"""Called when the Dragon Grounds modal is closed"""
+	print("[FactoryManager] Dragon Grounds modal closed")
+
+	# Refresh dragons list in case any state changed
+	_update_dragons_list()
