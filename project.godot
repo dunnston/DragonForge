@@ -27,6 +27,8 @@ DefenseTowerManager="*res://scripts/managers/defense_tower_manager.gd"
 ExplorationManager="*res://scripts/managers/exploration_manager.gd"
 AudioManager="*res://scripts/managers/audio_manager.gd"
 SaveLoadManager="*res://scripts/managers/save_load_manager.gd"
+ScientistManager="*res://scripts/managers/scientist_manager.gd"
+TrainingManager="*res://scripts/managers/training_manager.gd"
 NewPlayerInit="*res://scripts/opening/new_player_init.gd"
 DevMenu="*res://scenes/dev/dev_menu.tscn"
 

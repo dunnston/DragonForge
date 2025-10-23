@@ -1,0 +1,28 @@
+[gd_scene load_steps=2 format=3 uid="uid://dkh7v3m2jw8xp"]
+
+[ext_resource type="Script" path="res://scripts/ui/training_expansion_card.gd" id="1_expansion"]
+
+[node name="TrainingExpansionCard" type="PanelContainer"]
+custom_minimum_size = Vector2(320, 200)
+script = ExtResource("1_expansion")
+
+[node name="VBox" type="VBoxContainer" parent="."]
+layout_mode = 2
+alignment = 1
+
+[node name="IconLabel" type="Label" parent="VBox"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 64
+text = "+"
+horizontal_alignment = 1
+
+[node name="CostLabel" type="Label" parent="VBox"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 14
+text = "Cost: 500g"
+horizontal_alignment = 1
+
+[node name="ExpandButton" type="Button" parent="VBox"]
+custom_minimum_size = Vector2(0, 40)
+layout_mode = 2
+text = "EXPAND SLOT"

@@ -124,7 +124,7 @@ func save_game() -> bool:
 		game_saved.emit(false, "ExplorationManager not found")
 		return false
 
-	# Get ScientistManager reference (it's not an autoload, so we need to find it)
+	# Get ScientistManager reference (autoload singleton)
 	var scientist_manager = _find_scientist_manager()
 	if scientist_manager:
 		save_data["scientist_manager"] = scientist_manager.to_dict()
@@ -132,6 +132,14 @@ func save_game() -> bool:
 	else:
 		print("[SaveLoadManager] WARNING: ScientistManager not found, skipping")
 		save_data["scientist_manager"] = {}
+
+	# Get TrainingManager reference (autoload singleton)
+	if TrainingManager and TrainingManager.instance:
+		save_data["training_manager"] = TrainingManager.instance.to_dict()
+		print("[SaveLoadManager] ✓ Saved TrainingManager (%d/%d slots)" % [TrainingManager.instance.get_occupied_count(), TrainingManager.instance.get_capacity()])
+	else:
+		print("[SaveLoadManager] WARNING: TrainingManager not found, skipping")
+		save_data["training_manager"] = {}
 
 	# Convert to JSON
 	var json_string = JSON.stringify(save_data, "\t")
@@ -269,6 +277,13 @@ func load_game() -> bool:
 	else:
 		print("[SaveLoadManager] WARNING: ScientistManager not found or no data, skipping")
 
+	# Load TrainingManager
+	if save_data.has("training_manager") and TrainingManager and TrainingManager.instance:
+		TrainingManager.instance.from_dict(save_data["training_manager"])
+		print("[SaveLoadManager] ✓ Loaded TrainingManager")
+	else:
+		print("[SaveLoadManager] WARNING: TrainingManager not found or no data, skipping")
+
 	# Refresh UI to show loaded dragons and scientists
 	_refresh_ui()
 
@@ -291,17 +306,14 @@ func _find_dragon_factory() -> DragonFactory:
 	# Fallback: search entire tree
 	return _find_node_by_type(get_tree().root, DragonFactory)
 
-func _find_scientist_manager() -> ScientistManager:
-	"""Find the ScientistManager instance in the scene tree"""
-	# ScientistManager is added as a child of FactoryManager
-	var factory_managers = get_tree().get_nodes_in_group("factory_manager")
-	if factory_managers.size() > 0:
-		for child in factory_managers[0].get_children():
-			if child is ScientistManager:
-				return child
+func _find_scientist_manager():
+	"""Get the ScientistManager autoload singleton"""
+	# ScientistManager is now an autoload singleton, access it directly
+	if ScientistManager and ScientistManager.instance:
+		return ScientistManager.instance
 
-	# Fallback: search entire tree
-	return _find_node_by_type(get_tree().root, ScientistManager)
+	push_error("[SaveLoadManager] ScientistManager autoload not found!")
+	return null
 
 func _find_node_by_type(node: Node, type) -> Node:
 	"""Recursively search for a node of a specific type"""

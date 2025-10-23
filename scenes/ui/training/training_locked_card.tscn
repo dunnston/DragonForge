@@ -1,0 +1,23 @@
+[gd_scene load_steps=2 format=3 uid="uid://c3k8m5n6p9qrs"]
+
+[ext_resource type="Script" path="res://scripts/ui/training_locked_card.gd" id="1_locked"]
+
+[node name="TrainingLockedCard" type="PanelContainer"]
+custom_minimum_size = Vector2(320, 200)
+script = ExtResource("1_locked")
+
+[node name="VBox" type="VBoxContainer" parent="."]
+layout_mode = 2
+alignment = 1
+
+[node name="LockIcon" type="Label" parent="VBox"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 64
+text = "🔒"
+horizontal_alignment = 1
+
+[node name="LockedLabel" type="Label" parent="VBox"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 14
+text = "LOCKED"
+horizontal_alignment = 1

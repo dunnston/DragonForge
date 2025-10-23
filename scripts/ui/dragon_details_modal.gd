@@ -478,18 +478,47 @@ func _on_feed_pressed():
 		# If use_food_on_dragon returns false, it already prints a message
 
 func _on_train_pressed():
-	if not current_dragon or not DragonStateManager:
+	if not current_dragon:
 		return
 
-	# Toggle: if already training, stop and go to IDLE
+	# Check if TrainingManager is available
+	if not TrainingManager or not TrainingManager.instance:
+		print("[DragonDetailsModal] ERROR: TrainingManager not found!")
+		return
+
+	# Toggle: if already training, remove from training slot
 	if current_dragon.current_state == Dragon.DragonState.TRAINING:
-		DragonStateManager.set_dragon_state(current_dragon, Dragon.DragonState.IDLE)
+		# Find which slot this dragon is in and remove them
+		for slot in TrainingManager.instance.get_unlocked_slots():
+			if slot.assigned_dragon == current_dragon:
+				TrainingManager.instance.remove_dragon_from_slot(slot.slot_id)
+				break
 	else:
-		# Switch: start training (from any other state)
-		DragonStateManager.start_training(current_dragon)
+		# Try to assign dragon to first available training slot
+		var assigned = false
+		for slot in TrainingManager.instance.get_unlocked_slots():
+			if not slot.is_occupied():
+				if TrainingManager.instance.assign_dragon_to_slot(slot.slot_id, current_dragon):
+					assigned = true
+					print("[DragonDetailsModal] Assigned %s to training slot %d" % [current_dragon.dragon_name, slot.slot_id])
+					break
+
+		if not assigned:
+			# No available slots - show error message
+			_show_training_slots_full_error()
+			return
 
 	_update_display()
 	dragon_updated.emit()
+
+func _show_training_slots_full_error():
+	"""Show error dialog when all training slots are full"""
+	var dialog = AcceptDialog.new()
+	add_child(dialog)
+	dialog.title = "Training Grounds Full"
+	dialog.dialog_text = "You don't have enough room!\n\nExpand your Training Grounds to train more dragons."
+	dialog.confirmed.connect(func(): dialog.queue_free())
+	dialog.popup_centered()
 
 func _on_rest_pressed():
 	if not current_dragon or not DragonStateManager:

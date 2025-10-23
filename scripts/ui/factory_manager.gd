@@ -9,6 +9,7 @@ var scientist_manager: ScientistManager
 @onready var gold_label: Label = $MarginContainer/MainVBox/TopBar/GoldDisplay/HBox/GoldLabel
 @onready var view_inventory_button: Button = $MarginContainer/MainVBox/TopBar/ViewInventoryButton
 @onready var manage_defenses_button: Button = $MarginContainer/MainVBox/TopBar/ManageDefensesButton
+@onready var manage_training_button: Button = $MarginContainer/MainVBox/TopBar/ManageTrainingButton
 
 @onready var fire_parts_count: Label = $MarginContainer/MainVBox/TopBar/PartsDisplay/PartsHBox/FireParts/Count
 @onready var ice_parts_count: Label = $MarginContainer/MainVBox/TopBar/PartsDisplay/PartsHBox/IceParts/Count
@@ -65,6 +66,9 @@ var defense_slots: Array[Label] = []
 # Defense Towers UI (created dynamically)
 var defense_towers_ui: DefenseTowersUI
 
+# Training Grounds UI (created dynamically)
+var training_yard_ui: TrainingYardUI
+
 # === DRAGON CREATION STATE ===
 var selected_head_id: String = ""
 var selected_body_id: String = ""
@@ -103,29 +107,36 @@ func _ready():
 	factory = DragonFactory.new()
 	add_child(factory)
 
-	# Create ScientistManager instance
-	scientist_manager = ScientistManager.new()
-	add_child(scientist_manager)
-	scientist_manager.set_dragon_factory(factory)
+	# Get ScientistManager singleton reference (it's an autoload)
+	scientist_manager = ScientistManager.instance
+	if scientist_manager:
+		scientist_manager.set_dragon_factory(factory)
+	else:
+		push_error("[FactoryManager] ScientistManager singleton not found!")
 
 	# Connect factory signals
 	factory.dragon_created.connect(_on_dragon_created)
 	factory.dragon_name_generated.connect(_on_dragon_named)
 
 	# Connect scientist manager signals
-	scientist_manager.scientist_hired.connect(_on_scientist_hired)
-	scientist_manager.scientist_fired.connect(_on_scientist_fired)
-	scientist_manager.scientist_action_performed.connect(_on_scientist_action)
-	scientist_manager.insufficient_gold_for_scientist.connect(_on_insufficient_gold_for_scientist)
+	if scientist_manager:
+		scientist_manager.scientist_hired.connect(_on_scientist_hired)
+		scientist_manager.scientist_fired.connect(_on_scientist_fired)
+		scientist_manager.scientist_action_performed.connect(_on_scientist_action)
+		scientist_manager.insufficient_gold_for_scientist.connect(_on_insufficient_gold_for_scientist)
 
 	# Connect button signals
 	animate_button.pressed.connect(_on_animate_button_pressed)
 	view_inventory_button.pressed.connect(_on_view_inventory_pressed)
 	manage_defenses_button.pressed.connect(_on_manage_defenses_pressed)
+	manage_training_button.pressed.connect(_on_manage_training_pressed)
 	dragon_grounds_button.pressed.connect(_on_dragon_grounds_pressed)
 
 	# Create Defense Towers UI
 	_setup_defense_towers_ui()
+
+	# Create Training Grounds UI
+	_setup_training_yard_ui()
 
 	# Connect Dragon Grounds modal
 	if dragon_grounds_modal:
@@ -897,6 +908,53 @@ func _on_defense_towers_back_pressed():
 	# Show factory UI, hide defense towers UI
 	$MarginContainer.visible = true
 	defense_towers_ui.visible = false
+
+# === TRAINING GROUNDS UI ===
+
+func _setup_training_yard_ui():
+	"""Create and setup the training grounds UI"""
+	var TrainingYardUIScene = preload("res://scenes/ui/training/training_yard_ui.tscn")
+	training_yard_ui = TrainingYardUIScene.instantiate()
+	add_child(training_yard_ui)
+
+	# Set factory reference
+	training_yard_ui.set_dragon_factory(factory)
+
+	# Set TrainingManager's dragon factory reference
+	if TrainingManager and TrainingManager.instance:
+		TrainingManager.instance.set_dragon_factory(factory)
+
+	# Hide by default
+	training_yard_ui.visible = false
+
+	# Connect back button signal
+	training_yard_ui.back_to_factory_requested.connect(_on_training_yard_back_pressed)
+
+	print("[FactoryManager] Training Grounds UI created")
+
+func _on_manage_training_pressed():
+	"""Called when the Manage Training button is pressed"""
+	print("[FactoryManager] Manage Training button pressed")
+
+	# Hide factory UI, show training yard UI
+	$MarginContainer.visible = false
+	inventory_panel.visible = false
+	part_selector.visible = false
+	dragon_tooltip.visible = false
+	dragon_details_modal.visible = false
+
+	training_yard_ui.visible = true
+
+func _on_training_yard_back_pressed():
+	"""Called when back button is pressed in training yard UI"""
+	print("[FactoryManager] Returning from Training Grounds UI")
+
+	# Show factory UI, hide training yard UI
+	$MarginContainer.visible = true
+	training_yard_ui.visible = false
+
+	# Refresh factory UI to show updated dragons
+	_update_dragons_list()
 
 # === DRAGON GROUNDS MODAL ===
 
