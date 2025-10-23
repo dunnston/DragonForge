@@ -1,0 +1,48 @@
+[gd_scene load_steps=2 format=3 uid="uid://cw8h4vg2qx7vu"]
+
+[ext_resource type="Script" path="res://scripts/ui/freezer_slot.gd" id="1"]
+
+[node name="FreezerSlot" type="PanelContainer"]
+custom_minimum_size = Vector2(120, 140)
+script = ExtResource("1")
+
+[node name="MarginContainer" type="MarginContainer" parent="."]
+layout_mode = 2
+theme_override_constants/margin_left = 10
+theme_override_constants/margin_top = 10
+theme_override_constants/margin_right = 10
+theme_override_constants/margin_bottom = 10
+
+[node name="VBox" type="VBoxContainer" parent="MarginContainer"]
+layout_mode = 2
+theme_override_constants/separation = 5
+
+[node name="Icon" type="TextureRect" parent="MarginContainer/VBox"]
+custom_minimum_size = Vector2(80, 80)
+layout_mode = 2
+expand_mode = 1
+stretch_mode = 5
+
+[node name="NameLabel" type="Label" parent="MarginContainer/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.8, 1, 1, 1)
+theme_override_font_sizes/font_size = 11
+text = "Fire Head"
+horizontal_alignment = 1
+autowrap_mode = 2
+
+[node name="PreservedLabel" type="Label" parent="MarginContainer/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.5, 0.9, 1, 1)
+theme_override_font_sizes/font_size = 10
+text = "❄️ Preserved"
+horizontal_alignment = 1
+
+[node name="UnfreezeButton" type="Button" parent="MarginContainer/VBox"]
+layout_mode = 2
+text = "Unfreeze"
+
+[node name="EmptyButton" type="Button" parent="MarginContainer/VBox"]
+visible = false
+layout_mode = 2
+text = "[+]"

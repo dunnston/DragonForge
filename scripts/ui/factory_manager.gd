@@ -176,6 +176,14 @@ func _ready():
 		DefenseManager.instance.dragon_removed_from_defense.connect(_on_dragon_removed_from_defense)
 		DefenseManager.instance.defense_slots_full.connect(_on_defense_slots_full)
 
+	# Connect to DragonStateManager death signal
+	if DragonStateManager and DragonStateManager.instance:
+		DragonStateManager.instance.dragon_death.connect(_on_dragon_died)
+
+	# Connect to DragonDeathManager signals
+	if DragonDeathManager and DragonDeathManager.instance:
+		DragonDeathManager.instance.dragon_died.connect(_on_dragon_death_processed)
+
 	# Initial update
 	_update_display()
 
@@ -565,9 +573,13 @@ func _update_dragons_list():
 	if not factory:
 		return
 
-	# Add dragon entries
+	# Add dragon entries (exclude dead dragons)
 	var dragons = factory.active_dragons
 	for dragon in dragons:
+		# Skip dead dragons
+		if dragon.is_dead:
+			continue
+
 		var dragon_entry = _create_dragon_entry(dragon)
 		dragons_list.add_child(dragon_entry)
 
@@ -876,6 +888,19 @@ func _on_defense_slots_full():
 	dialog.dialog_text = "All %d of your defense towers are occupied!\n\nBuild more towers to increase defense capacity." % max_capacity
 	dialog.confirmed.connect(func(): dialog.queue_free())
 	dialog.popup_centered()
+
+func _on_dragon_died(dragon: Dragon):
+	"""Called when a dragon dies (from DragonStateManager)"""
+	print("[FactoryManager] Dragon died: %s" % dragon.dragon_name)
+	# Refresh the dragons list to remove dead dragon
+	_update_dragons_list()
+
+func _on_dragon_death_processed(dragon_name: String, cause: String, recovered_parts: Array):
+	"""Called when DragonDeathManager processes a death"""
+	print("[FactoryManager] Dragon death processed: %s (cause: %s, parts: %d)" % [dragon_name, cause, recovered_parts.size()])
+	# The death popup should have appeared
+	# Refresh UI to ensure dead dragon is removed
+	_update_dragons_list()
 
 # === DEFENSE TOWERS UI ===
 

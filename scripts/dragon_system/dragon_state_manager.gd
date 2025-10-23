@@ -195,6 +195,10 @@ func _check_death_conditions(dragon: Dragon):
 		dragon_death.emit(dragon)
 		print("[DEAD] %s has died from starvation!" % dragon.dragon_name)
 
+		# Trigger part recovery system
+		if DragonDeathManager and DragonDeathManager.instance:
+			DragonDeathManager.instance.handle_dragon_death(dragon, "starvation")
+
 # === EXPERIENCE & LEVELING SYSTEM ===
 
 func gain_experience(dragon: Dragon, exp_amount: int):

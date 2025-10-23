@@ -352,6 +352,15 @@ func _apply_exploration_costs(dragon: Dragon, duration_minutes: int):
 		dragon.current_health = max(0, dragon.current_health - damage)
 		print("[ExplorationManager] %s took %d damage during exploration!" % [dragon.dragon_name, damage])
 
+		# Check if dragon died from exploration accident
+		if dragon.current_health <= 0 and not dragon.is_dead:
+			dragon.is_dead = true
+			print("[ExplorationManager] FATAL: %s died during exploration!" % dragon.dragon_name)
+
+			# Trigger part recovery system
+			if DragonDeathManager and DragonDeathManager.instance:
+				DragonDeathManager.instance.handle_dragon_death(dragon, "exploration_accident")
+
 	# Recalculate stats with new hunger/fatigue
 	dragon.calculate_stats()
 
