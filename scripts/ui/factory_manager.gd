@@ -52,6 +52,7 @@ var scientist_manager: ScientistManager
 @onready var defenders_label: Label = $MarginContainer/MainVBox/BottomBar/DefensePanel/VBox/DefendersLabel
 @onready var active_missions_label: Label = $MarginContainer/MainVBox/BottomBar/ExplorationPanel/VBox/ActiveLabel
 @onready var collection_progress: Label = $MarginContainer/MainVBox/BottomBar/CollectionPanel/VBox/ProgressLabel
+@onready var view_collection_button: Button = $MarginContainer/MainVBox/BottomBar/CollectionPanel/VBox/ViewButton
 
 # === DEFENSE SLOTS (created dynamically) ===
 var defense_slot_container: HBoxContainer
@@ -143,6 +144,21 @@ func _ready():
 		scientist_manager.scientist_action_performed.connect(_on_scientist_action)
 		scientist_manager.insufficient_gold_for_scientist.connect(_on_insufficient_gold_for_scientist)
 
+	# Connect exploration manager signals
+	if ExplorationManager and ExplorationManager.instance:
+		ExplorationManager.instance.exploration_started.connect(_on_exploration_started)
+		ExplorationManager.instance.exploration_completed.connect(_on_exploration_completed)
+
+	# Connect defense manager signals
+	if DefenseManager and DefenseManager.instance:
+		DefenseManager.instance.dragon_assigned_to_defense.connect(_on_dragon_assigned_to_defense)
+		DefenseManager.instance.dragon_removed_from_defense.connect(_on_dragon_removed_from_defense)
+
+	# Connect defense tower manager signals
+	if DefenseTowerManager and DefenseTowerManager.instance:
+		DefenseTowerManager.instance.tower_built.connect(_on_tower_built)
+		DefenseTowerManager.instance.tower_capacity_changed.connect(_on_tower_capacity_changed)
+
 	# Connect button signals
 	animate_button.pressed.connect(_on_animate_button_pressed)
 	view_inventory_button.pressed.connect(_on_view_inventory_pressed)
@@ -150,6 +166,7 @@ func _ready():
 	manage_training_button.pressed.connect(_on_manage_training_pressed)
 	exploration_map_button.pressed.connect(_on_exploration_map_pressed)
 	dragon_grounds_button.pressed.connect(_on_dragon_grounds_pressed)
+	view_collection_button.pressed.connect(_on_view_collection_pressed)
 
 	# Create Defense Towers UI
 	_setup_defense_towers_ui()
@@ -724,14 +741,18 @@ func _update_defense_display():
 
 	# Update defenders count
 	var defending_dragons = DefenseManager.instance.get_defending_dragons()
-	defenders_label.text = "Defenders: %d/3" % defending_dragons.size()
+	var max_capacity = DefenseTowerManager.instance.get_defense_capacity() if DefenseTowerManager and DefenseTowerManager.instance else 3
+	defenders_label.text = "Defenders: %d/%d" % [defending_dragons.size(), max_capacity]
 
 	# Update defense slots
 	_update_defense_slots(defending_dragons)
 
 func _update_exploration_display():
-	# TODO: Connect to ExplorationManager when implemented
-	active_missions_label.text = "Active: 0"
+	if ExplorationManager and ExplorationManager.instance:
+		var count = ExplorationManager.instance.get_active_explorations_count()
+		active_missions_label.text = "Active: %d" % count
+	else:
+		active_missions_label.text = "Active: 0"
 
 func _update_collection_display():
 	if factory:
@@ -862,6 +883,9 @@ func _on_exploration_completed(dragon: Dragon, destination: String, rewards: Dic
 	# Play dragon roar sound effect
 	if AudioManager and AudioManager.instance:
 		AudioManager.instance.play_dragon_roar()
+
+	# Update the exploration display counter
+	_update_exploration_display()
 
 	# Update the dragons list to reflect the new state
 	_update_dragons_list()
@@ -1307,3 +1331,45 @@ func _open_pet_interaction_ui(pet: Dragon):
 		push_error("[FactoryManager] Pet interaction UI missing setup() method!")
 
 	print("[FactoryManager] Pet interaction UI opened")
+
+func _on_view_collection_pressed():
+	"""Called when the View Collection button is pressed"""
+	print("[FactoryManager] View Collection button pressed")
+
+	# Load and show collection modal
+	var collection_modal_script = load("res://scripts/ui/collection_modal.gd")
+	if not collection_modal_script:
+		push_error("[FactoryManager] Failed to load collection modal script!")
+		return
+
+	var collection_modal = Control.new()
+	collection_modal.set_script(collection_modal_script)
+
+	# Add to scene tree
+	add_child(collection_modal)
+
+	# Wait a frame for _ready to be called
+	await get_tree().process_frame
+
+	# Setup with factory
+	if collection_modal.has_method("setup"):
+		collection_modal.setup(factory)
+	else:
+		push_error("[FactoryManager] Collection modal missing setup() method!")
+		collection_modal.queue_free()
+
+func _on_exploration_started(dragon: Dragon, destination: String):
+	"""Called when an exploration starts"""
+	print("[FactoryManager] Exploration started: %s -> %s" % [dragon.dragon_name, destination])
+	_update_exploration_display()
+	_update_dragons_list()  # Update dragon list to show exploration status
+
+func _on_tower_built(tower):
+	"""Called when a defense tower is built"""
+	print("[FactoryManager] Defense tower built: %s" % tower.tower_id)
+	_update_defense_display()  # Update to show increased capacity
+
+func _on_tower_capacity_changed(new_capacity: int):
+	"""Called when defense tower capacity changes"""
+	print("[FactoryManager] Defense capacity changed to: %d" % new_capacity)
+	_update_defense_display()  # Update to show new capacity

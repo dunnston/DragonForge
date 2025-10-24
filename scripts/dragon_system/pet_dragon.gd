@@ -286,12 +286,12 @@ func get_gift_cost() -> int:
 	"""Get the gold cost to give a gift, based on affection tier"""
 	var tier = get_affection_tier()
 	match tier:
-		"Acquaintance": return 50
-		"Friend": return 100
-		"Companion": return 150
-		"Best Friend": return 200
-		"Soulbound": return 250
-	return 50
+		"Acquaintance": return 200
+		"Friend": return 400
+		"Companion": return 600
+		"Best Friend": return 800
+		"Soulbound": return 1000
+	return 200
 
 # === EXPLORATION UNLOCKS ===
 

@@ -53,9 +53,19 @@ func create_dragon(head: DragonPart, body: DragonPart, tail: DragonPart) -> Drag
 	return dragon
 
 func _generate_dragon_name(dragon: Dragon):
-	# Placeholder for Orca AI integration
-	# Your teammate will implement the actual Orca call
-	dragon.dragon_name = await _request_ai_name(dragon)
+	# Check if this is a pet dragon - pets get AI/fallback names
+	if dragon is PetDragon:
+		# Placeholder for Orca AI integration
+		# Your teammate will implement the actual Orca call
+		dragon.dragon_name = await _request_ai_name(dragon)
+	else:
+		# Non-pet dragons get names from the curated list
+		if DragonNameManager and DragonNameManager.instance:
+			dragon.dragon_name = DragonNameManager.instance.get_random_name()
+		else:
+			# Fallback if name manager isn't available
+			dragon.dragon_name = await _request_ai_name(dragon)
+
 	dragon_name_generated.emit(dragon, dragon.dragon_name)
 
 func _request_ai_name(dragon: Dragon) -> String:

@@ -162,6 +162,14 @@ func save_game() -> bool:
 		print("[SaveLoadManager] WARNING: PetDragonManager not found, skipping")
 		save_data["pet_dragon_manager"] = {}
 
+	# Serialize DragonNameManager
+	if DragonNameManager and DragonNameManager.instance:
+		save_data["dragon_name_manager"] = DragonNameManager.instance.to_dict()
+		print("[SaveLoadManager] ✓ Saved DragonNameManager (%d available, %d used)" % [DragonNameManager.instance.get_available_count(), DragonNameManager.instance.get_used_count()])
+	else:
+		print("[SaveLoadManager] WARNING: DragonNameManager not found, skipping")
+		save_data["dragon_name_manager"] = {}
+
 	# Convert to JSON
 	var json_string = JSON.stringify(save_data, "\t")
 
@@ -322,6 +330,13 @@ func load_game() -> bool:
 			print("[SaveLoadManager] ✓ Loaded PetDragonManager (No pet yet)")
 	else:
 		print("[SaveLoadManager] WARNING: PetDragonManager not found or no data, skipping")
+
+	# Load DragonNameManager
+	if save_data.has("dragon_name_manager") and DragonNameManager and DragonNameManager.instance:
+		DragonNameManager.instance.from_dict(save_data["dragon_name_manager"])
+		print("[SaveLoadManager] ✓ Loaded DragonNameManager (%d available, %d used)" % [DragonNameManager.instance.get_available_count(), DragonNameManager.instance.get_used_count()])
+	else:
+		print("[SaveLoadManager] WARNING: DragonNameManager not found or no data, skipping")
 
 	# Refresh UI to show loaded dragons and scientists
 	_refresh_ui()
