@@ -19,9 +19,9 @@ var scientist_manager: ScientistManager
 @onready var shadow_parts_count: Label = $MarginContainer/MainVBox/TopBar/PartsDisplay/PartsHBox/ShadowParts/Count
 
 # === UI ELEMENTS - Scientists ===
-@onready var stitcher_panel = $MarginContainer/MainVBox/MainContent/LeftPanel/ScientistsVBox/StitcherPanel
-@onready var caretaker_panel = $MarginContainer/MainVBox/MainContent/LeftPanel/ScientistsVBox/CaretakerPanel
-@onready var trainer_panel = $MarginContainer/MainVBox/MainContent/LeftPanel/ScientistsVBox/TrainerPanel
+@onready var stitcher_panel = $MarginContainer/MainVBox/MainContent/LeftPanel/ScientistsVBox/ScrollContainer/ScientistsList/StitcherPanel
+@onready var caretaker_panel = $MarginContainer/MainVBox/MainContent/LeftPanel/ScientistsVBox/ScrollContainer/ScientistsList/CaretakerPanel
+@onready var trainer_panel = $MarginContainer/MainVBox/MainContent/LeftPanel/ScientistsVBox/ScrollContainer/ScientistsList/TrainerPanel
 @onready var hire_modal = $ScientistHireModal
 
 # === UI ELEMENTS - Dragon Creation ===

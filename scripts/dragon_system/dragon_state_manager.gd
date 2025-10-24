@@ -306,15 +306,10 @@ func use_treat_on_dragon(dragon: Dragon) -> bool:
 
 	var consumed = false
 
-	# Try InventoryManager first (new system)
+	# Try InventoryManager (items are stored here)
 	if InventoryManager and InventoryManager.instance:
 		var removed = InventoryManager.instance.remove_item_by_id("treat", 1)
 		if removed > 0:
-			consumed = true
-
-	# Fallback to TreasureVault (old system)
-	if not consumed and TreasureVault and TreasureVault.instance:
-		if TreasureVault.instance.use_item("treats", 1):
 			consumed = true
 
 	if not consumed:
@@ -340,15 +335,10 @@ func use_health_pot_on_dragon(dragon: Dragon) -> bool:
 
 	var consumed = false
 
-	# Try InventoryManager first (new system)
+	# Try InventoryManager (items are stored here)
 	if InventoryManager and InventoryManager.instance:
 		var removed = InventoryManager.instance.remove_item_by_id("health_potion", 1)
 		if removed > 0:
-			consumed = true
-
-	# Fallback to TreasureVault (old system)
-	if not consumed and TreasureVault and TreasureVault.instance:
-		if TreasureVault.instance.use_item("health_pots", 1):
 			consumed = true
 
 	if not consumed:
@@ -370,7 +360,7 @@ func use_food_on_dragon(dragon: Dragon) -> bool:
 		print("[DragonStateManager] %s is not hungry!" % dragon.dragon_name)
 		return false
 
-	# Try InventoryManager first (new system)
+	# Try InventoryManager (items are stored here)
 	if InventoryManager and InventoryManager.instance:
 		var removed = InventoryManager.instance.remove_item_by_id("food", 1)
 		if removed > 0:
@@ -388,30 +378,8 @@ func use_food_on_dragon(dragon: Dragon) -> bool:
 			dragon_hunger_changed.emit(dragon, dragon.hunger_level)
 			print("[DragonStateManager] %s ate food! Hunger reduced from %.0f%% to %.0f%%" % [dragon.dragon_name, old_hunger * 100, dragon.hunger_level * 100])
 			return true
-		else:
-			print("[DragonStateManager] No food available!")
-			return false
 
-	# Fallback to TreasureVault (old system)
-	if TreasureVault and TreasureVault.instance:
-		if TreasureVault.instance.use_item("food", 1):
-			# Reduce hunger by 25%
-			var old_hunger = dragon.hunger_level
-			dragon.hunger_level = max(0.0, dragon.hunger_level - FOOD_HUNGER_HEAL)
-
-			# Update last_fed_time to reflect the new hunger level
-			var current_time = Time.get_unix_time_from_system()
-			var new_time_since_fed = dragon.hunger_level / HUNGER_RATE
-			dragon.last_fed_time = int(current_time - new_time_since_fed)
-
-			dragon_hunger_changed.emit(dragon, dragon.hunger_level)
-			print("[DragonStateManager] %s ate food! Hunger reduced from %.0f%% to %.0f%%" % [dragon.dragon_name, old_hunger * 100, dragon.hunger_level * 100])
-			return true
-		else:
-			print("[DragonStateManager] No food available!")
-			return false
-
-	print("[DragonStateManager] No inventory system available!")
+	print("[DragonStateManager] No food available!")
 	return false
 
 func use_knight_meat_on_dragon(dragon: Dragon) -> bool:
