@@ -30,6 +30,8 @@ SaveLoadManager="*res://scripts/managers/save_load_manager.gd"
 ScientistManager="*res://scripts/managers/scientist_manager.gd"
 TrainingManager="*res://scripts/managers/training_manager.gd"
 DragonDeathManager="*res://scripts/managers/dragon_death_manager.gd"
+PetDragonManager="*res://scripts/managers/pet_dragon_manager.gd"
+OfflineProgressChecker="*res://scripts/managers/offline_progress_checker.gd"
 NewPlayerInit="*res://scripts/opening/new_player_init.gd"
 DevMenu="*res://scenes/dev/dev_menu.tscn"
 

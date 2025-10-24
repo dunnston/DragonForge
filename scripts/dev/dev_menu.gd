@@ -83,6 +83,11 @@ func _populate_items():
 
 	_add_separator()
 
+	# Add section: Pet Debug Controls
+	_add_pet_debug_section()
+
+	_add_separator()
+
 	# Add section: Dragon Parts
 	_add_section_label("DRAGON PARTS")
 
@@ -597,3 +602,61 @@ func _kill_dragon():
 
 	# Refresh dragon list (dead dragons should be hidden)
 	_refresh_dragon_selector()
+
+# === PET DEBUG SECTION ===
+
+func _add_pet_debug_section():
+	"""Add pet debugging controls"""
+	_add_section_label("PET DEBUG")
+
+	# Force Gift button
+	var force_gift_btn = Button.new()
+	force_gift_btn.text = "🎁 Force Pet Gift"
+	force_gift_btn.pressed.connect(_force_pet_gift)
+	force_gift_btn.add_theme_color_override("font_color", Color(1, 0.8, 0.3, 1))
+	items_container.add_child(force_gift_btn)
+
+	# Pet affection controls
+	var affection_label = Label.new()
+	affection_label.text = "Pet Affection:"
+	affection_label.add_theme_font_size_override("font_size", 12)
+	items_container.add_child(affection_label)
+
+	var affection_hbox = HBoxContainer.new()
+	_add_button_to_hbox(affection_hbox, "+10", func(): _add_pet_affection(10))
+	_add_button_to_hbox(affection_hbox, "+25", func(): _add_pet_affection(25))
+	_add_button_to_hbox(affection_hbox, "Max (100)", func(): _set_pet_affection(100))
+	items_container.add_child(affection_hbox)
+
+func _force_pet_gift():
+	"""Force a pet gift to appear"""
+	if PetDragonManager and PetDragonManager.instance:
+		print("[DevMenu] 🎁 Force Gift button pressed - triggering gift...")
+		PetDragonManager.instance.trigger_gift(true)  # Force = true bypasses all checks
+		print("[DevMenu] ✓ Gift triggered!")
+	else:
+		print("[DevMenu] ❌ PetDragonManager not found!")
+
+func _add_pet_affection(amount: int):
+	"""Add affection to pet"""
+	if PetDragonManager and PetDragonManager.instance:
+		var pet = PetDragonManager.instance.get_pet_dragon()
+		if pet:
+			pet.affection = min(100, pet.affection + amount)
+			print("[DevMenu] Added %d affection to pet (now %d)" % [amount, pet.affection])
+		else:
+			print("[DevMenu] No pet dragon found!")
+	else:
+		print("[DevMenu] PetDragonManager not found!")
+
+func _set_pet_affection(value: int):
+	"""Set pet affection to specific value"""
+	if PetDragonManager and PetDragonManager.instance:
+		var pet = PetDragonManager.instance.get_pet_dragon()
+		if pet:
+			pet.affection = value
+			print("[DevMenu] Set pet affection to %d" % value)
+		else:
+			print("[DevMenu] No pet dragon found!")
+	else:
+		print("[DevMenu] PetDragonManager not found!")

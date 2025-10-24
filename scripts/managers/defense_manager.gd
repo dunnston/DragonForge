@@ -72,6 +72,11 @@ func assign_dragon_to_defense(dragon: Dragon) -> bool:
 		print("[DefenseManager] Dragon already defending!")
 		return false
 
+	# Check if dragon is a pet (pets cannot be assigned to defense)
+	if dragon is PetDragon:
+		print("[DefenseManager] %s is a pet and cannot be assigned to defense!" % dragon.dragon_name)
+		return false
+
 	# Check tower capacity instead of hardcoded limit
 	var max_defenders = 3  # Default fallback
 	if DefenseTowerManager and DefenseTowerManager.instance:

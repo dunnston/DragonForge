@@ -50,10 +50,10 @@ func _populate_dragons():
 
 	var all_dragons = dragon_factory.get_all_dragons()
 
-	# Filter to show only idle and non-dead dragons
+	# Filter to show only idle, non-dead, and non-pet dragons
 	var available_dragons: Array[Dragon] = []
 	for dragon in all_dragons:
-		if not dragon.is_dead and dragon.current_state == Dragon.DragonState.IDLE:
+		if not dragon.is_dead and dragon.current_state == Dragon.DragonState.IDLE and not (dragon is PetDragon):
 			available_dragons.append(dragon)
 
 	if available_dragons.is_empty():
@@ -75,6 +75,12 @@ func _populate_dragons():
 func _on_dragon_card_clicked(dragon: Dragon):
 	"""Handle dragon selection"""
 	if not dragon:
+		return
+
+	# Check if dragon is a pet (pets cannot defend)
+	if dragon is PetDragon:
+		print("[DragonPicker] %s is a pet and cannot defend" % dragon.dragon_name)
+		_show_error("Pet dragons cannot be assigned to defense!")
 		return
 
 	# Check if dragon can defend (not too fatigued)

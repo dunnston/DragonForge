@@ -447,14 +447,27 @@ func _update_button_states():
 	rest_button.text = "Stop Resting" if current_state == Dragon.DragonState.RESTING else "Rest"
 
 	# Defend: can toggle on/off, or switch from other states
-	# Disable if too fatigued (needs 50% rest) and not currently defending
-	defend_button.disabled = current_dragon.fatigue_level > 0.5 and current_state != Dragon.DragonState.DEFENDING
-	defend_button.text = "Stop Defending" if current_state == Dragon.DragonState.DEFENDING else "Defend"
+	# Disable if: pet dragon, too fatigued (needs 50% rest and not currently defending)
+	var is_pet = current_dragon is PetDragon
+	if is_pet:
+		defend_button.disabled = true
+		defend_button.text = "Pets Can't Defend"
+	else:
+		defend_button.disabled = current_dragon.fatigue_level > 0.5 and current_state != Dragon.DragonState.DEFENDING
+		defend_button.text = "Stop Defending" if current_state == Dragon.DragonState.DEFENDING else "Defend"
 
 	# Exploration: can only explore if not currently exploring and not too fatigued (needs 50% rest)
 	var can_explore = current_state != Dragon.DragonState.EXPLORING and current_dragon.fatigue_level <= 0.5
 	destination_dropdown.disabled = not can_explore
 	send_exploration_button.disabled = not can_explore
+
+	# Update button text to show why it's disabled
+	if current_state == Dragon.DragonState.EXPLORING:
+		send_exploration_button.text = "Exploring..."
+	elif current_dragon.fatigue_level > 0.5:
+		send_exploration_button.text = "Too Fatigued"
+	else:
+		send_exploration_button.text = "Send"
 
 	# Update exploration status
 	if is_exploring and ExplorationManager and ExplorationManager.instance:
@@ -541,6 +554,26 @@ func _show_training_slots_full_error():
 	dialog.confirmed.connect(func(): dialog.queue_free())
 	dialog.popup_centered()
 
+func _show_exploration_error():
+	"""Show error dialog when exploration fails"""
+	var error_msg = "Cannot send dragon on exploration!\n\n"
+
+	if not current_dragon:
+		error_msg += "No dragon selected."
+	elif current_dragon.fatigue_level > 0.5:
+		error_msg += "Dragon is too fatigued.\n(Needs to be below 50% fatigue)"
+	elif current_dragon.current_state == Dragon.DragonState.EXPLORING:
+		error_msg += "Dragon is already exploring."
+	else:
+		error_msg += "Unknown error occurred.\nCheck console logs."
+
+	var dialog = AcceptDialog.new()
+	add_child(dialog)
+	dialog.title = "Exploration Failed"
+	dialog.dialog_text = error_msg
+	dialog.confirmed.connect(func(): dialog.queue_free())
+	dialog.popup_centered()
+
 func _on_rest_pressed():
 	if not current_dragon or not DragonStateManager:
 		return
@@ -571,10 +604,18 @@ func _on_defend_pressed():
 
 func _on_send_exploration_pressed():
 	"""Send dragon on exploration to selected destination"""
-	if not current_dragon or not ExplorationManager or not ExplorationManager.instance:
+	print("[DragonDetailsModal] Send exploration button clicked!")
+
+	if not current_dragon:
+		print("[DragonDetailsModal] ERROR: No current dragon")
+		return
+
+	if not ExplorationManager or not ExplorationManager.instance:
+		print("[DragonDetailsModal] ERROR: ExplorationManager not available")
 		return
 
 	if not destination_dropdown:
+		print("[DragonDetailsModal] ERROR: destination_dropdown not available")
 		return
 
 	# Get selected destination metadata
@@ -582,17 +623,25 @@ func _on_send_exploration_pressed():
 	var metadata = destination_dropdown.get_item_metadata(selected_index)
 
 	if not metadata:
+		print("[DragonDetailsModal] ERROR: No metadata for selected destination")
 		return
 
 	var destination_key = metadata.get("key", "volcanic_caves")
 	var duration_minutes = metadata.get("duration", 15)
+
+	print("[DragonDetailsModal] Attempting to send %s on %d minute exploration to %s" % [current_dragon.dragon_name, duration_minutes, destination_key])
+	print("[DragonDetailsModal] Dragon state: %s, Fatigue: %.2f" % [current_dragon.current_state, current_dragon.fatigue_level])
 
 	# Start exploration
 	if ExplorationManager.instance.start_exploration(current_dragon, duration_minutes, destination_key):
 		_update_display()
 		update_timer.start()
 		dragon_updated.emit()
-		print("[DragonDetailsModal] Started %d minute exploration to %s" % [duration_minutes, destination_key])
+		print("[DragonDetailsModal] ✅ Successfully started %d minute exploration to %s" % [duration_minutes, destination_key])
+	else:
+		print("[DragonDetailsModal] ❌ Failed to start exploration (check ExplorationManager logs)")
+		# Show error dialog
+		_show_exploration_error()
 
 func _on_update_timer_timeout():
 	"""Update exploration countdown every second"""

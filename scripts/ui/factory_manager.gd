@@ -73,6 +73,10 @@ var training_yard_ui: TrainingYardUI
 # Exploration Map UI (created dynamically)
 var exploration_map_ui: ExplorationMapUI
 
+# === PET SYSTEM STATE ===
+var pet_ui_setup_complete: bool = false  # Track if pet UI is already set up
+var walking_pet_character: Node = null  # Reference to the walking pet character
+
 # === DRAGON CREATION STATE ===
 var selected_head_id: String = ""
 var selected_body_id: String = ""
@@ -121,6 +125,15 @@ func _ready():
 	# Connect factory signals
 	factory.dragon_created.connect(_on_dragon_created)
 	factory.dragon_name_generated.connect(_on_dragon_named)
+	factory.pet_introduction_completed.connect(_on_pet_introduction_completed)
+
+	# Connect to PetDragonManager signals
+	if PetDragonManager and PetDragonManager.instance:
+		PetDragonManager.instance.pet_created.connect(_on_pet_created)
+
+	# Connect to SaveLoadManager signals
+	if SaveLoadManager and SaveLoadManager.instance:
+		SaveLoadManager.instance.game_loaded.connect(_on_game_loaded)
 
 	# Connect scientist manager signals
 	if scientist_manager:
@@ -157,6 +170,28 @@ func _ready():
 	# Connect dragon details modal signal
 	if dragon_details_modal:
 		dragon_details_modal.dragon_updated.connect(_on_dragon_updated_from_modal)
+
+	# Set z-index for all modals to ensure they appear above the pet dragon
+	if inventory_panel:
+		inventory_panel.z_index = 100
+		inventory_panel.z_as_relative = false
+	if part_selector:
+		part_selector.z_index = 100
+		part_selector.z_as_relative = false
+	if dragon_details_modal:
+		dragon_details_modal.z_index = 100
+		dragon_details_modal.z_as_relative = false
+	if dragon_grounds_modal:
+		dragon_grounds_modal.z_index = 100
+		dragon_grounds_modal.z_as_relative = false
+	if hire_modal:
+		# Check if it's a Window-based dialog (AcceptDialog, ConfirmationDialog, etc.)
+		if hire_modal is Window:
+			hire_modal.always_on_top = true
+		else:
+			# It's a Control-based modal
+			hire_modal.z_index = 100
+			hire_modal.z_as_relative = false
 
 	# Connect to TreasureVault signals for gold
 	if TreasureVault:
@@ -205,6 +240,16 @@ func _ready():
 	# Start gameplay background music
 	if AudioManager and AudioManager.instance:
 		AudioManager.instance.play_gameplay_music()
+
+	# Check if we should load from save (set by Continue button)
+	if SaveLoadManager and SaveLoadManager.instance and SaveLoadManager.instance.should_load_on_start:
+		print("[FactoryManager] Loading game from save...")
+		SaveLoadManager.instance.should_load_on_start = false  # Reset flag
+		await SaveLoadManager.instance.load_game()
+		# Pet system will be set up by _on_game_loaded callback
+	else:
+		# Setup pet dragon system for new game
+		_setup_pet_system()
 
 	print("[FactoryManager] Factory Manager UI initialized")
 
@@ -577,11 +622,15 @@ func _update_dragons_list():
 	if not factory:
 		return
 
-	# Add dragon entries (exclude dead dragons)
+	# Add dragon entries (exclude dead dragons and pet dragon)
 	var dragons = factory.active_dragons
 	for dragon in dragons:
 		# Skip dead dragons
 		if dragon.is_dead:
+			continue
+
+		# Skip pet dragon (first dragon is the pet)
+		if dragon is PetDragon:
 			continue
 
 		var dragon_entry = _create_dragon_entry(dragon)
@@ -671,9 +720,42 @@ func _on_dragon_created(dragon: Dragon):
 	_update_dragons_list()
 	_update_collection_display()
 
+	# Don't spawn pet yet - wait for naming to complete
+
+func _on_pet_created(pet: PetDragon):
+	"""Called when a pet dragon is created"""
+	# Don't spawn pet yet - wait for introduction popup to close
+	print("[FactoryManager] Pet dragon created! Waiting for introduction popup...")
+
 func _on_dragon_named(dragon: Dragon, name: String):
 	print("[FactoryManager] Dragon named: %s" % name)
 	_update_dragons_list()
+	# Pet spawning is now handled by _on_pet_introduction_completed
+
+func _on_pet_introduction_completed(pet: PetDragon):
+	"""Called when the pet introduction popup closes"""
+	print("[FactoryManager] _on_pet_introduction_completed called!")
+	print("[FactoryManager] pet_ui_setup_complete = %s" % pet_ui_setup_complete)
+
+	if pet_ui_setup_complete:
+		print("[FactoryManager] Pet UI already set up, skipping")
+		return  # Already set up
+
+	print("[FactoryManager] Pet introduction completed! Now spawning walking pet character...")
+	pet_ui_setup_complete = true
+	_add_walking_pet_character(pet)
+
+func _on_game_loaded(success: bool, message: String):
+	"""Called when save game is loaded - refresh pet system"""
+	print("[FactoryManager] Game loaded: %s - %s" % [success, message])
+
+	if success:
+		# Refresh dragons list
+		_update_dragons_list()
+
+		# Re-setup pet system now that data is loaded
+		print("[FactoryManager] Re-setting up pet system after load...")
+		_setup_pet_system()
 
 func _on_view_inventory_pressed():
 	if inventory_panel:
@@ -695,6 +777,7 @@ func _on_scientist_fire_requested(scientist_type: ScientistManager.ScientistType
 	var scientist_name = ScientistManager.instance.get_scientist_name(scientist_type)
 
 	var dialog = ConfirmationDialog.new()
+	dialog.always_on_top = true
 	add_child(dialog)
 	dialog.title = "Fire " + scientist_name + "?"
 	dialog.dialog_text = "Are you sure you want to fire " + scientist_name + "?\n\nNo refund will be given.\nOngoing costs will stop."
@@ -730,6 +813,7 @@ func _on_insufficient_gold_for_scientist(type: ScientistManager.ScientistType):
 
 	# Show warning dialog
 	var dialog = AcceptDialog.new()
+	dialog.always_on_top = true
 	add_child(dialog)
 	dialog.title = "Insufficient Gold"
 	dialog.dialog_text = "Not enough gold to pay %s!\nScientist has been auto-fired." % info["name"]
@@ -759,6 +843,14 @@ func _show_exploration_return_popup(dragon: Dragon, rewards: Dictionary):
 		return
 
 	var popup = popup_scene.instantiate()
+
+	# Set z-index to appear above pet dragon
+	if popup is Window:
+		popup.always_on_top = true
+	else:
+		popup.z_index = 100
+		popup.z_as_relative = false
+
 	get_tree().root.add_child(popup)
 	popup.confirmed.connect(func():
 		popup.queue_free()
@@ -887,6 +979,7 @@ func _on_defense_slots_full():
 
 	# Show error dialog
 	var dialog = AcceptDialog.new()
+	dialog.always_on_top = true
 	add_child(dialog)
 	dialog.title = "Defense Slots Full"
 	dialog.dialog_text = "All %d of your defense towers are occupied!\n\nBuild more towers to increase defense capacity." % max_capacity
@@ -936,6 +1029,10 @@ func _on_manage_defenses_pressed():
 	dragon_tooltip.visible = false
 	dragon_details_modal.visible = false
 
+	# Hide walking pet dragon
+	if walking_pet_character:
+		walking_pet_character.visible = false
+
 	defense_towers_ui.visible = true
 
 func _on_defense_towers_back_pressed():
@@ -945,6 +1042,10 @@ func _on_defense_towers_back_pressed():
 	# Show factory UI, hide defense towers UI
 	$MarginContainer.visible = true
 	defense_towers_ui.visible = false
+
+	# Show walking pet dragon
+	if walking_pet_character:
+		walking_pet_character.visible = true
 
 # === TRAINING GROUNDS UI ===
 
@@ -980,6 +1081,10 @@ func _on_manage_training_pressed():
 	dragon_tooltip.visible = false
 	dragon_details_modal.visible = false
 
+	# Hide walking pet dragon
+	if walking_pet_character:
+		walking_pet_character.visible = false
+
 	training_yard_ui.visible = true
 
 func _on_training_yard_back_pressed():
@@ -989,6 +1094,10 @@ func _on_training_yard_back_pressed():
 	# Show factory UI, hide training yard UI
 	$MarginContainer.visible = true
 	training_yard_ui.visible = false
+
+	# Show walking pet dragon
+	if walking_pet_character:
+		walking_pet_character.visible = true
 
 	# Refresh factory UI to show updated dragons
 	_update_dragons_list()
@@ -1027,6 +1136,10 @@ func _on_exploration_map_pressed():
 	if training_yard_ui:
 		training_yard_ui.visible = false
 
+	# Hide walking pet dragon
+	if walking_pet_character:
+		walking_pet_character.visible = false
+
 	exploration_map_ui.visible = true
 
 func _on_exploration_map_back_pressed():
@@ -1036,6 +1149,10 @@ func _on_exploration_map_back_pressed():
 	# Show factory UI, hide exploration map UI
 	$MarginContainer.visible = true
 	exploration_map_ui.visible = false
+
+	# Show walking pet dragon
+	if walking_pet_character:
+		walking_pet_character.visible = true
 
 	# Refresh factory UI to show updated dragons
 	_update_dragons_list()
@@ -1055,3 +1172,103 @@ func _on_dragon_grounds_closed():
 
 	# Refresh dragons list in case any state changed
 	_update_dragons_list()
+
+# === PET DRAGON SYSTEM ===
+
+func _setup_pet_system():
+	"""Setup pet dragon walking character"""
+	# Check if walking character already exists in the scene
+	var existing_character = get_node_or_null("PetWalkingCharacter")
+	if existing_character:
+		print("[FactoryManager] Walking character already exists, skipping setup")
+		return
+
+	if not PetDragonManager or not PetDragonManager.instance:
+		print("[FactoryManager] PetDragonManager not available, skipping pet setup")
+		return
+
+	# Check if pet exists
+	if not PetDragonManager.instance.has_pet():
+		print("[FactoryManager] No pet dragon yet, pet UI will be shown after first dragon creation")
+		return
+
+	var pet = PetDragonManager.instance.get_pet_dragon()
+	print("[FactoryManager] Setting up pet system for: %s" % pet.dragon_name)
+
+	pet_ui_setup_complete = true
+
+	# Add walking pet character only (no persistent status widget)
+	_add_walking_pet_character(pet)
+
+func _add_walking_pet_character(pet: Dragon):
+	"""Add the walking pet character to the scene"""
+	var walking_pet_scene = load("res://scenes/pet/pet_walking_character.tscn")
+	if not walking_pet_scene:
+		push_error("[FactoryManager] Failed to load pet walking character scene!")
+		return
+
+	var walking_pet = walking_pet_scene.instantiate()
+	walking_pet.name = "PetWalkingCharacter"
+	walking_pet.add_to_group("pet_walking_character")  # Add to group for easy finding
+
+	# Set z-index to appear above UI but below modals
+	walking_pet.z_index = 50
+	walking_pet.z_as_relative = false  # Use absolute z-index
+
+	# Add to the main scene (in front of UI)
+	add_child(walking_pet)
+
+	# Store reference for later show/hide
+	walking_pet_character = walking_pet
+
+	# Setup with pet dragon
+	if walking_pet.has_method("setup"):
+		walking_pet.setup(pet)
+
+	# Connect click signal to open interaction UI
+	if walking_pet.has_signal("pet_clicked"):
+		walking_pet.pet_clicked.connect(_on_pet_clicked)
+
+	print("[FactoryManager] Pet walking character added to scene")
+
+func _on_pet_clicked(pet: Dragon):
+	"""Called when the walking pet is clicked"""
+	print("[FactoryManager] _on_pet_clicked received! Pet: %s" % pet.dragon_name)
+	_open_pet_interaction_ui(pet)
+
+func _open_pet_interaction_ui(pet: Dragon):
+	"""Open the pet interaction UI"""
+	print("[FactoryManager] Opening pet interaction UI...")
+
+	var interaction_scene = load("res://scenes/ui/pet/pet_interaction_ui.tscn")
+	if not interaction_scene:
+		push_error("[FactoryManager] Failed to load pet interaction UI scene!")
+		return
+
+	var interaction_ui = interaction_scene.instantiate()
+	interaction_ui.name = "PetInteractionUI"
+
+	# Set z-index to appear above pet dragon
+	if interaction_ui is Window:
+		interaction_ui.always_on_top = true
+	else:
+		interaction_ui.z_index = 100
+		interaction_ui.z_as_relative = false
+
+	print("[FactoryManager] Pet interaction UI instantiated")
+
+	# Add to scene tree
+	add_child(interaction_ui)
+
+	print("[FactoryManager] Pet interaction UI added to scene tree")
+
+	# Setup with pet dragon
+	if interaction_ui.has_method("setup"):
+		print("[FactoryManager] Calling setup on pet interaction UI...")
+		interaction_ui.setup(pet)
+		interaction_ui.visible = true
+		print("[FactoryManager] Pet interaction UI setup complete and visible")
+	else:
+		push_error("[FactoryManager] Pet interaction UI missing setup() method!")
+
+	print("[FactoryManager] Pet interaction UI opened")

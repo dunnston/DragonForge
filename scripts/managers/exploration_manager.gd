@@ -23,6 +23,18 @@ const BASE_GOLD_PER_MINUTE: int = 2
 const BASE_XP_PER_MINUTE: int = 3
 const PARTS_DROP_CHANCE: float = 0.3  # 30% chance per exploration
 
+# Gold reward randomness
+const GOLD_VARIANCE: float = 0.25  # ±25% random variance
+
+# Destination difficulty multipliers (affects gold, XP, and risk)
+const DESTINATION_MULTIPLIERS = {
+	"volcanic_caves": 1.0,      # Easy - starter area
+	"ancient_forest": 1.5,      # Medium - Friend tier required
+	"frozen_tundra": 2.0,       # Hard - Companion tier required
+	"thunder_peak": 2.5,        # Very Hard - Best Friend tier required
+	"unknown": 1.0              # Default fallback
+}
+
 # Item drop rates
 const ITEM_DROP_CHANCES = {
 	"treats": 0.25,      # 25% chance
@@ -111,6 +123,13 @@ func start_exploration(dragon: Dragon, duration_minutes: int, destination: Strin
 		duration_seconds = duration_minutes  # Use seconds for fast testing
 		print("[ExplorationManager] [DEV MODE] Using %d SECONDS instead of minutes" % duration_minutes)
 
+	# Apply speed bonus for PetDragons with high affection
+	if dragon is PetDragon:
+		var speed_bonus = dragon.get_exploration_speed_bonus()
+		duration_seconds = int(duration_seconds * speed_bonus)
+		if speed_bonus < 1.0:
+			print("[ExplorationManager] Pet affection speed bonus: %d%% faster!" % int((1.0 - speed_bonus) * 100))
+
 	var current_time = Time.get_unix_time_from_system()
 
 	# Set dragon state (use proper state setter to update state_start_time)
@@ -171,6 +190,22 @@ func get_time_remaining(dragon: Dragon) -> int:
 	var remaining = max(0, exploration["duration"] - elapsed)
 	return int(remaining)
 
+func get_exploration_destination(dragon: Dragon) -> String:
+	"""Get the destination name for a dragon's current exploration"""
+	if not dragon or not active_explorations.has(dragon.dragon_id):
+		return "unknown"
+
+	var exploration = active_explorations[dragon.dragon_id]
+	return exploration.get("destination", "unknown")
+
+func get_exploration_duration_minutes(dragon: Dragon) -> int:
+	"""Get the original duration in minutes for a dragon's exploration"""
+	if not dragon or not active_explorations.has(dragon.dragon_id):
+		return 0
+
+	var exploration = active_explorations[dragon.dragon_id]
+	return exploration.get("duration_minutes", 0)
+
 # === EXPLORATION UPDATES ===
 
 func _check_explorations():
@@ -204,8 +239,30 @@ func _complete_exploration(dragon_id: String):
 	var duration_minutes = exploration["duration_minutes"]
 	var destination = exploration.get("destination", "unknown")
 
-	# Calculate rewards
-	var rewards = _calculate_rewards(dragon, duration_minutes)
+	# Calculate rewards (pass destination for difficulty scaling)
+	var rewards = _calculate_rewards(dragon, duration_minutes, destination)
+
+	# Apply pet bonuses if this is a pet dragon
+	if dragon is PetDragon and PetDragonManager and PetDragonManager.instance:
+		# Apply personality bonuses
+		var gold_bonus = dragon.get_personality_bonus("gold")
+		rewards["gold"] = int(rewards["gold"] * gold_bonus)
+
+		var parts_bonus = dragon.get_personality_bonus("parts")
+		if parts_bonus > 1.0 and randf() < (parts_bonus - 1.0):
+			# Curious dragons have chance for extra part
+			if not rewards["parts"].is_empty():
+				rewards["parts"].append(rewards["parts"].pick_random())
+
+		# Apply affection bonuses (scales all rewards)
+		var affection_bonus = dragon.get_affection_bonus()
+		rewards["gold"] = int(rewards["gold"] * affection_bonus)
+		rewards["xp"] = int(rewards["xp"] * affection_bonus)
+
+		# Notify PetDragonManager about expedition completion
+		PetDragonManager.instance.on_pet_expedition_complete(destination, rewards)
+
+		print("[ExplorationManager] Pet bonuses applied: Gold x%.2f, Affection x%.2f" % [gold_bonus, affection_bonus])
 
 	# Apply rewards to vault and inventory
 	_apply_rewards(rewards)
@@ -231,9 +288,9 @@ func _complete_exploration(dragon_id: String):
 
 # === REWARD CALCULATION ===
 
-func _calculate_rewards(dragon: Dragon, duration_minutes: int) -> Dictionary:
+func _calculate_rewards(dragon: Dragon, duration_minutes: int, destination: String = "unknown") -> Dictionary:
 	"""
-	Calculate exploration rewards based on duration and dragon level.
+	Calculate exploration rewards based on duration, dragon level, and destination difficulty.
 
 	Returns a Dictionary with:
 	- gold: int
@@ -255,8 +312,17 @@ func _calculate_rewards(dragon: Dragon, duration_minutes: int) -> Dictionary:
 	# Scale with dragon level (higher level = better rewards)
 	var level_multiplier = 1.0 + (dragon.level - 1) * 0.15  # +15% per level above 1
 
-	rewards["gold"] = int(base_gold * level_multiplier)
-	rewards["xp"] = int(base_xp * level_multiplier)
+	# Scale with destination difficulty
+	var difficulty_multiplier = DESTINATION_MULTIPLIERS.get(destination, 1.0)
+
+	# Apply multipliers to base rewards
+	var scaled_gold = base_gold * level_multiplier * difficulty_multiplier
+	var scaled_xp = base_xp * level_multiplier * difficulty_multiplier
+
+	# Add random variance to gold (±25%)
+	var variance = randf_range(1.0 - GOLD_VARIANCE, 1.0 + GOLD_VARIANCE)
+	rewards["gold"] = int(scaled_gold * variance)
+	rewards["xp"] = int(scaled_xp)  # XP stays consistent
 
 	# Dragon parts drop chance (now returns specific item IDs)
 	var parts_count = 0
@@ -329,11 +395,26 @@ func _apply_rewards(rewards: Dictionary):
 func _apply_exploration_costs(dragon: Dragon, duration_minutes: int):
 	"""Apply fatigue, hunger, and potential damage from exploration"""
 
-	# Apply fatigue (from Dragon.EXPLORATION_FATIGUE constants)
+	# Calculate base fatigue gain
+	var base_fatigue = 0.0
 	match duration_minutes:
-		15: dragon.fatigue_level = min(1.0, dragon.fatigue_level + 0.15)
-		30: dragon.fatigue_level = min(1.0, dragon.fatigue_level + 0.25)
-		60: dragon.fatigue_level = min(1.0, dragon.fatigue_level + 0.40)
+		15: base_fatigue = 0.15
+		30: base_fatigue = 0.25
+		60: base_fatigue = 0.40
+
+	# Apply fatigue resistance if this is a pet dragon
+	var fatigue_multiplier = 1.0
+	if dragon is PetDragon:
+		fatigue_multiplier = dragon.get_fatigue_resistance()
+		print("[ExplorationManager] Pet %s has %.0f%% fatigue resistance (Level %d)" % [
+			dragon.dragon_name,
+			(1.0 - fatigue_multiplier) * 100,
+			dragon.level
+		])
+
+	# Apply fatigue with resistance
+	var final_fatigue = base_fatigue * fatigue_multiplier
+	dragon.fatigue_level = min(1.0, dragon.fatigue_level + final_fatigue)
 
 	# Apply hunger (longer exploration = more hunger)
 	var hunger_increase = duration_minutes / 30.0  # 15min=0.5, 30min=1.0, 60min=2.0

@@ -1,0 +1,521 @@
+[gd_scene load_steps=2 format=3 uid="uid://buktqqslxw4ms"]
+
+[ext_resource type="Script" uid="uid://cfarky8vr7wr1" path="res://scripts/ui/pet/pet_interaction_ui.gd" id="1"]
+
+[node name="PetInteractionUI" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1")
+
+[node name="DimBackground" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0, 0, 0, 0.7)
+
+[node name="CenterContainer" type="CenterContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="PanelContainer" type="PanelContainer" parent="CenterContainer"]
+custom_minimum_size = Vector2(700, 650)
+layout_mode = 2
+
+[node name="MarginContainer" type="MarginContainer" parent="CenterContainer/PanelContainer"]
+layout_mode = 2
+theme_override_constants/margin_left = 20
+theme_override_constants/margin_top = 20
+theme_override_constants/margin_right = 20
+theme_override_constants/margin_bottom = 20
+
+[node name="ScrollContainer" type="ScrollContainer" parent="CenterContainer/PanelContainer/MarginContainer"]
+layout_mode = 2
+follow_focus = true
+horizontal_scroll_mode = 0
+
+[node name="MainVBox" type="VBoxContainer" parent="CenterContainer/PanelContainer/MarginContainer/ScrollContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme_override_constants/separation = 10
+
+[node name="HeaderSection" type="VBoxContainer" parent="CenterContainer/PanelContainer/MarginContainer/ScrollContainer/MainVBox"]
+layout_mode = 2
+theme_override_constants/separation = 5
+
+[node name="NameLabel" type="Label" parent="CenterContainer/PanelContainer/MarginContainer/ScrollContainer/MainVBox/HeaderSection"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.8, 0.9, 1)
+theme_override_font_sizes/font_size = 24
+text = "💝 SPARKLES - YOUR COMPANION 💝"
+horizontal_alignment = 1
+
+[node name="LevelLabel" type="Label" parent="CenterContainer/PanelContainer/MarginContainer/ScrollContainer/MainVBox/HeaderSection"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 1, 0.5, 1)
+theme_override_font_sizes/font_size = 14
+text = "Level 8 Pet Dragon"
+horizontal_alignment = 1
+
+[node name="SubtitleLabel" type="Label" parent="CenterContainer/PanelContainer/MarginContainer/ScrollContainer/MainVBox/HeaderSection"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 1, 0.8, 1)
+theme_override_font_sizes/font_size = 12
+text = "⭐ CURIOUS EXPLORER • 23 DAYS TOGETHER ⭐"
+horizontal_alignment = 1
+
+[node name="HSeparator1" type="HSeparator" parent="CenterContainer/PanelContainer/MarginContainer/ScrollContainer/MainVBox"]
+layout_mode = 2
+
+[node name="TopSection" type="HBoxContainer" parent="CenterContainer/PanelContainer/MarginContainer/ScrollContainer/MainVBox"]
+layout_mode = 2
+theme_override_constants/separation = 15
+
+[node name="DragonPanel" type="PanelContainer" parent="CenterContainer/PanelContainer/MarginContainer/ScrollContainer/MainVBox/TopSection"]
+custom_minimum_size = Vector2(250, 200)
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="VBox" type="VBoxContainer" parent="CenterContainer/PanelContainer/MarginContainer/ScrollContainer/MainVBox/TopSection/DragonPanel"]
+layout_mode = 2
+theme_override_constants/separation = 5
+
+[node name="DragonVisualContainer" type="CenterContainer" parent="CenterContainer/PanelContainer/MarginContainer/ScrollContainer/MainVBox/TopSection/DragonPanel/VBox"]
+custom_minimum_size = Vector2(0, 150)
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="AnimatedSprite" type="AnimatedSprite2D" parent="CenterContainer/PanelContainer/MarginContainer/ScrollContainer/MainVBox/TopSection/DragonPanel/VBox/DragonVisualContainer"]
+unique_name_in_owner = true
+position = Vector2(125, 75)
+scale = Vector2(0.8, 0.8)
+
+[node name="DialogueLabel" type="Label" parent="CenterContainer/PanelContainer/MarginContainer/ScrollContainer/MainVBox/TopSection/DragonPanel/VBox"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 40)
+layout_mode = 2
+theme_override_colors/font_color = Color(0.9, 0.9, 0.9, 1)
+theme_override_font_sizes/font_size = 11
+text = "\"I wonder what treasures await!\""
+horizontal_alignment = 1
+vertical_alignment = 1
+autowrap_mode = 2
+
+[node name="MoodLabel" type="Label" parent="CenterContainer/PanelContainer/MarginContainer/ScrollContainer/MainVBox/TopSection/DragonPanel/VBox"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.5, 1, 0.5, 1)
+theme_override_font_sizes/font_size = 12
+text = "Mood: 😊 Content"
+horizontal_alignment = 1
+
+[node name="BondPanel" type="PanelContainer" parent="CenterContainer/PanelContainer/MarginContainer/ScrollContainer/MainVBox/TopSection"]
+custom_minimum_size = Vector2(350, 200)
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="VBox" type="VBoxContainer" parent="CenterContainer/PanelContainer/MarginContainer/ScrollContainer/MainVBox/TopSection/BondPanel"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="Title" type="Label" parent="CenterContainer/PanelContainer/MarginContainer/ScrollContainer/MainVBox/TopSection/BondPanel/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.5, 1, 0.5, 1)
+theme_override_font_sizes/font_size = 14
+text = "BOND & PERSONALITY"
+
+[node name="AffectionLabel" type="Label" parent="CenterContainer/PanelContainer/MarginContainer/ScrollContainer/MainVBox/TopSection/BondPanel/VBox"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.4, 0.5, 1)
+theme_override_font_sizes/font_size = 14
+text = "Affection: ❤️❤️❤️❤️🤍"
+
+[node name="TierLabel" type="Label" parent="CenterContainer/PanelContainer/MarginContainer/ScrollContainer/MainVBox/TopSection/BondPanel/VBox"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.9, 0.9, 0.9, 1)
+theme_override_font_sizes/font_size = 12
+text = "Tier: Best Friend (75/100)"
+
+[node name="HSeparator" type="HSeparator" parent="CenterContainer/PanelContainer/MarginContainer/ScrollContainer/MainVBox/TopSection/BondPanel/VBox"]
+layout_mode = 2
+
+[node name="PersonalityTitle" type="Label" parent="CenterContainer/PanelContainer/MarginContainer/ScrollContainer/MainVBox/TopSection/BondPanel/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 1, 0.5, 1)
+theme_override_font_sizes/font_size = 12
+text = "Personality Trait:"
+
+[node name="PersonalityLabel" type="Label" parent="CenterContainer/PanelContainer/MarginContainer/ScrollContainer/MainVBox/TopSection/BondPanel/VBox"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.8, 0.5, 1)
+theme_override_font_sizes/font_size = 14
+text = "🔍 Curious Explorer"
+
+[node name="PersonalityDesc" type="Label" parent="CenterContainer/PanelContainer/MarginContainer/ScrollContainer/MainVBox/TopSection/BondPanel/VBox"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.8, 0.8, 0.8, 1)
+theme_override_font_sizes/font_size = 11
+text = "• +10% rare item finds
+• Loves discovering secrets"
+autowrap_mode = 2
+
+[node name="HSeparator2" type="HSeparator" parent="CenterContainer/PanelContainer/MarginContainer/ScrollContainer/MainVBox"]
+layout_mode = 2
+
+[node name="ExplorationSection" type="PanelContainer" parent="CenterContainer/PanelContainer/MarginContainer/ScrollContainer/MainVBox"]
+layout_mode = 2
+
+[node name="VBox" type="VBoxContainer" parent="CenterContainer/PanelContainer/MarginContainer/ScrollContainer/MainVBox/ExplorationSection"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="Title" type="Label" parent="CenterContainer/PanelContainer/MarginContainer/ScrollContainer/MainVBox/ExplorationSection/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.5, 1, 0.5, 1)
+theme_override_font_sizes/font_size = 14
+text = "CURRENT STATUS:"
+
+[node name="ExplorationStatusLabel" type="Label" parent="CenterContainer/PanelContainer/MarginContainer/ScrollContainer/MainVBox/ExplorationSection/VBox"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.5, 0.8, 1, 1)
+theme_override_font_sizes/font_size = 13
+text = "🗺️ EXPLORING: Ancient Forest"
+
+[node name="ExplorationProgress" type="ProgressBar" parent="CenterContainer/PanelContainer/MarginContainer/ScrollContainer/MainVBox/ExplorationSection/VBox"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 20)
+layout_mode = 2
+value = 65.0
+
+[node name="TimeLabel" type="Label" parent="CenterContainer/PanelContainer/MarginContainer/ScrollContainer/MainVBox/ExplorationSection/VBox"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.9, 0.9, 0.9, 1)
+theme_override_font_sizes/font_size = 12
+text = "⏰ Returns in: 12m 34s"
+
+[node name="RewardsLabel" type="Label" parent="CenterContainer/PanelContainer/MarginContainer/ScrollContainer/MainVBox/ExplorationSection/VBox"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 1, 0.5, 1)
+theme_override_font_sizes/font_size = 11
+text = "💰 Expected rewards: 300-500g + possible parts"
+
+[node name="RecallButton" type="Button" parent="CenterContainer/PanelContainer/MarginContainer/ScrollContainer/MainVBox/ExplorationSection/VBox"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 35)
+layout_mode = 2
+theme_override_font_sizes/font_size = 12
+text = "🔙 RECALL EARLY (Forfeit 50% of rewards)"
+
+[node name="ExplorationButtons" type="GridContainer" parent="CenterContainer/PanelContainer/MarginContainer/ScrollContainer/MainVBox/ExplorationSection/VBox"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+theme_override_constants/h_separation = 5
+theme_override_constants/v_separation = 5
+columns = 2
+
+[node name="ForestButton" type="Button" parent="CenterContainer/PanelContainer/MarginContainer/ScrollContainer/MainVBox/ExplorationSection/VBox/ExplorationButtons"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 35)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 11
+text = "🌲 Ancient Forest"
+
+[node name="TundraButton" type="Button" parent="CenterContainer/PanelContainer/MarginContainer/ScrollContainer/MainVBox/ExplorationSection/VBox/ExplorationButtons"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 35)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 11
+text = "❄️ Frozen Tundra"
+
+[node name="PeakButton" type="Button" parent="CenterContainer/PanelContainer/MarginContainer/ScrollContainer/MainVBox/ExplorationSection/VBox/ExplorationButtons"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 35)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 11
+text = "⚡ Thunder Peak"
+
+[node name="CavesButton" type="Button" parent="CenterContainer/PanelContainer/MarginContainer/ScrollContainer/MainVBox/ExplorationSection/VBox/ExplorationButtons"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 35)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 11
+text = "🔥 Volcanic Caves"
+
+[node name="HSeparator3" type="HSeparator" parent="CenterContainer/PanelContainer/MarginContainer/ScrollContainer/MainVBox"]
+layout_mode = 2
+
+[node name="VitalsSection" type="VBoxContainer" parent="CenterContainer/PanelContainer/MarginContainer/ScrollContainer/MainVBox"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="Title" type="Label" parent="CenterContainer/PanelContainer/MarginContainer/ScrollContainer/MainVBox/VitalsSection"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.5, 1, 0.5, 1)
+theme_override_font_sizes/font_size = 14
+text = "VITALS:"
+
+[node name="HPContainer" type="HBoxContainer" parent="CenterContainer/PanelContainer/MarginContainer/ScrollContainer/MainVBox/VitalsSection"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="HPBar" type="ProgressBar" parent="CenterContainer/PanelContainer/MarginContainer/ScrollContainer/MainVBox/VitalsSection/HPContainer"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(400, 20)
+layout_mode = 2
+size_flags_horizontal = 3
+value = 80.0
+show_percentage = false
+
+[node name="HPLabel" type="Label" parent="CenterContainer/PanelContainer/MarginContainer/ScrollContainer/MainVBox/VitalsSection/HPContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.4, 1, 0.4, 1)
+theme_override_font_sizes/font_size = 12
+text = "HP: 80/100"
+
+[node name="HealButton" type="Button" parent="CenterContainer/PanelContainer/MarginContainer/ScrollContainer/MainVBox/VitalsSection/HPContainer"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(100, 0)
+layout_mode = 2
+theme_override_font_sizes/font_size = 11
+text = "[+] Heal (100g)"
+
+[node name="HungerContainer" type="HBoxContainer" parent="CenterContainer/PanelContainer/MarginContainer/ScrollContainer/MainVBox/VitalsSection"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="HungerBar" type="ProgressBar" parent="CenterContainer/PanelContainer/MarginContainer/ScrollContainer/MainVBox/VitalsSection/HungerContainer"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(400, 20)
+layout_mode = 2
+size_flags_horizontal = 3
+value = 60.0
+show_percentage = false
+
+[node name="HungerLabel" type="Label" parent="CenterContainer/PanelContainer/MarginContainer/ScrollContainer/MainVBox/VitalsSection/HungerContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.8, 0.4, 1)
+theme_override_font_sizes/font_size = 12
+text = "Hunger: 60/100"
+
+[node name="FeedButton" type="Button" parent="CenterContainer/PanelContainer/MarginContainer/ScrollContainer/MainVBox/VitalsSection/HungerContainer"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(100, 0)
+layout_mode = 2
+theme_override_font_sizes/font_size = 11
+text = "[+] Feed (50g)"
+
+[node name="EnergyContainer" type="HBoxContainer" parent="CenterContainer/PanelContainer/MarginContainer/ScrollContainer/MainVBox/VitalsSection"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="EnergyBar" type="ProgressBar" parent="CenterContainer/PanelContainer/MarginContainer/ScrollContainer/MainVBox/VitalsSection/EnergyContainer"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(400, 20)
+layout_mode = 2
+size_flags_horizontal = 3
+value = 70.0
+show_percentage = false
+
+[node name="EnergyLabel" type="Label" parent="CenterContainer/PanelContainer/MarginContainer/ScrollContainer/MainVBox/VitalsSection/EnergyContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.5, 0.8, 1, 1)
+theme_override_font_sizes/font_size = 12
+text = "Energy: 70/100"
+
+[node name="RestButton" type="Button" parent="CenterContainer/PanelContainer/MarginContainer/ScrollContainer/MainVBox/VitalsSection/EnergyContainer"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(100, 0)
+layout_mode = 2
+theme_override_font_sizes/font_size = 11
+text = "[💤] Rest"
+
+[node name="XPContainer" type="HBoxContainer" parent="CenterContainer/PanelContainer/MarginContainer/ScrollContainer/MainVBox/VitalsSection"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="XPBar" type="ProgressBar" parent="CenterContainer/PanelContainer/MarginContainer/ScrollContainer/MainVBox/VitalsSection/XPContainer"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(500, 20)
+layout_mode = 2
+size_flags_horizontal = 3
+max_value = 1000.0
+value = 650.0
+show_percentage = false
+
+[node name="XPLabel" type="Label" parent="CenterContainer/PanelContainer/MarginContainer/ScrollContainer/MainVBox/VitalsSection/XPContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.8, 0.6, 1, 1)
+theme_override_font_sizes/font_size = 12
+text = "XP: 650/1000 to Level 9"
+
+[node name="HSeparator4" type="HSeparator" parent="CenterContainer/PanelContainer/MarginContainer/ScrollContainer/MainVBox"]
+layout_mode = 2
+
+[node name="AchievementsSection" type="VBoxContainer" parent="CenterContainer/PanelContainer/MarginContainer/ScrollContainer/MainVBox"]
+layout_mode = 2
+theme_override_constants/separation = 5
+
+[node name="Title" type="Label" parent="CenterContainer/PanelContainer/MarginContainer/ScrollContainer/MainVBox/AchievementsSection"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.5, 1, 0.5, 1)
+theme_override_font_sizes/font_size = 14
+text = "LIFETIME ACHIEVEMENTS:"
+
+[node name="AchievementsLabel" type="Label" parent="CenterContainer/PanelContainer/MarginContainer/ScrollContainer/MainVBox/AchievementsSection"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.9, 0.9, 0.9, 1)
+theme_override_font_sizes/font_size = 11
+text = "🎖️ Expeditions Completed: 87
+💰 Total Gold Brought Back: 12,450g
+🔧 Total Parts Recovered: 28 parts
+🎁 Gifts Given to You: 8 special treasures
+💝 Times You've Pet Them: 156 times
+🍖 Times You've Fed Them: 89 times"
+autowrap_mode = 2
+
+[node name="HSeparator5" type="HSeparator" parent="CenterContainer/PanelContainer/MarginContainer/ScrollContainer/MainVBox"]
+layout_mode = 2
+
+[node name="ActionsSection" type="VBoxContainer" parent="CenterContainer/PanelContainer/MarginContainer/ScrollContainer/MainVBox"]
+layout_mode = 2
+theme_override_constants/separation = 5
+
+[node name="Title" type="Label" parent="CenterContainer/PanelContainer/MarginContainer/ScrollContainer/MainVBox/ActionsSection"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.5, 1, 0.5, 1)
+theme_override_font_sizes/font_size = 14
+text = "INTERACTION ACTIONS:"
+
+[node name="ActionsGrid" type="GridContainer" parent="CenterContainer/PanelContainer/MarginContainer/ScrollContainer/MainVBox/ActionsSection"]
+layout_mode = 2
+theme_override_constants/h_separation = 5
+theme_override_constants/v_separation = 5
+columns = 2
+
+[node name="PetButton" type="Button" parent="CenterContainer/PanelContainer/MarginContainer/ScrollContainer/MainVBox/ActionsSection/ActionsGrid"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 35)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 11
+text = "🖐️ PET (Ready! +1 Affection)"
+
+[node name="TreatButton" type="Button" parent="CenterContainer/PanelContainer/MarginContainer/ScrollContainer/MainVBox/ActionsSection/ActionsGrid"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 35)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 11
+text = "🍖 FEED TREAT (50g, +2 Affection)"
+
+[node name="GiftButton" type="Button" parent="CenterContainer/PanelContainer/MarginContainer/ScrollContainer/MainVBox/ActionsSection/ActionsGrid"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 35)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 11
+text = "🎁 GIVE GIFT"
+
+[node name="TalkButton" type="Button" parent="CenterContainer/PanelContainer/MarginContainer/ScrollContainer/MainVBox/ActionsSection/ActionsGrid"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 35)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 11
+text = "💬 TALK"
+
+[node name="JournalButton" type="Button" parent="CenterContainer/PanelContainer/MarginContainer/ScrollContainer/MainVBox/ActionsSection/ActionsGrid"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 35)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 11
+text = "📖 OPEN JOURNAL"
+
+[node name="StatsButton" type="Button" parent="CenterContainer/PanelContainer/MarginContainer/ScrollContainer/MainVBox/ActionsSection/ActionsGrid"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 35)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 11
+text = "📊 VIEW STATS"
+
+[node name="HSeparator6" type="HSeparator" parent="CenterContainer/PanelContainer/MarginContainer/ScrollContainer/MainVBox"]
+layout_mode = 2
+
+[node name="TipSection" type="PanelContainer" parent="CenterContainer/PanelContainer/MarginContainer/ScrollContainer/MainVBox"]
+layout_mode = 2
+
+[node name="MarginContainer" type="MarginContainer" parent="CenterContainer/PanelContainer/MarginContainer/ScrollContainer/MainVBox/TipSection"]
+layout_mode = 2
+theme_override_constants/margin_left = 10
+theme_override_constants/margin_top = 10
+theme_override_constants/margin_right = 10
+theme_override_constants/margin_bottom = 10
+
+[node name="TipLabel" type="Label" parent="CenterContainer/PanelContainer/MarginContainer/ScrollContainer/MainVBox/TipSection/MarginContainer"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.5, 1, 0.5, 1)
+theme_override_font_sizes/font_size = 11
+text = "💡 TIP: Your pet dragon is immortal! They can never die and will always be there to help you, even if you lose everything else. They're your safety net! 💝"
+horizontal_alignment = 1
+autowrap_mode = 2
+
+[node name="CloseButton" type="Button" parent="CenterContainer/PanelContainer/MarginContainer/ScrollContainer/MainVBox"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 40)
+layout_mode = 2
+theme_override_font_sizes/font_size = 14
+text = "CLOSE"
+
+[node name="CloseButtonOverlay" type="Control" parent="CenterContainer"]
+layout_mode = 2
+mouse_filter = 2
+
+[node name="CloseButtonX" type="Button" parent="CenterContainer/CloseButtonOverlay"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(40, 40)
+layout_mode = 1
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = 292.0
+offset_top = -329.0
+offset_right = 332.0
+offset_bottom = -287.0
+grow_horizontal = 0
+theme_override_colors/font_color = Color(1, 0.3, 0.3, 1)
+theme_override_font_sizes/font_size = 24
+text = "✕"

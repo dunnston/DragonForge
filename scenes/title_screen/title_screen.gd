@@ -24,10 +24,10 @@ func _on_new_game_button_pressed() -> void:
 
 
 func _on_continue_button_pressed() -> void:
-	# Load existing save
-	if SaveLoadManager:
-		SaveLoadManager.load_game()
-	# Go to main game scene
+	# Set flag to load game when factory scene is ready
+	if SaveLoadManager and SaveLoadManager.instance:
+		SaveLoadManager.instance.should_load_on_start = true
+	# Go to main game scene (will load save in _ready())
 	get_tree().change_scene_to_packed(dragon_factory_scene)
 
 

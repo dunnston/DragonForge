@@ -2,8 +2,9 @@ extends Node
 class_name DragonFactory
 
 signal dragon_created(dragon: Dragon)
-signal dragon_name_generated(dragon: Dragon, name: String) 
+signal dragon_name_generated(dragon: Dragon, name: String)
 signal mutation_discovered(dragon: Dragon)  # Holy Shit Moment!
+signal pet_introduction_completed(pet: PetDragon)  # Emitted when pet intro popup closes
 
 var active_dragons: Array[Dragon] = []
 var dragon_collection: Dictionary = {}  # combination_key -> bool (discovered)
@@ -13,7 +14,22 @@ func create_dragon(head: DragonPart, body: DragonPart, tail: DragonPart) -> Drag
 		push_error("Cannot create dragon with missing parts")
 		return null
 
-	var dragon = Dragon.new(head, body, tail)
+	# Check if this should be the first pet dragon
+	var is_first_dragon = active_dragons.is_empty()
+	var needs_pet = PetDragonManager and PetDragonManager.instance and not PetDragonManager.instance.has_pet()
+
+	var dragon: Dragon
+
+	if is_first_dragon and needs_pet:
+		# Create pet dragon instead of regular dragon
+		dragon = PetDragonManager.instance.create_pet_dragon(head, body, tail)
+		print("[DragonFactory] Created first dragon as PET DRAGON")
+
+		# Show pet introduction popup after name is generated
+		_show_pet_introduction_popup(dragon)
+	else:
+		# Create regular dragon
+		dragon = Dragon.new(head, body, tail)
 
 	# Check for Chimera Mutation (Holy Shit Moment!)
 	if DragonStateManager.instance:
@@ -135,12 +151,73 @@ func from_dict(data: Dictionary):
 	# Restore dragons
 	if data.has("dragons"):
 		for dragon_data in data["dragons"]:
-			var dragon = Dragon.new()
-			dragon.from_dict(dragon_data)
+			var dragon: Dragon
+
+			# Check if this is a pet dragon
+			if dragon_data.get("is_pet", false):
+				# Create PetDragon and register with PetDragonManager
+				dragon = PetDragon.new()
+				dragon.from_dict(dragon_data)
+
+				# Register as the pet dragon
+				if PetDragonManager and PetDragonManager.instance:
+					PetDragonManager.instance.pet_dragon = dragon
+					print("[DragonFactory] Restored PET dragon: %s (Level %d, Affection %d)" % [
+						dragon.dragon_name,
+						dragon.level,
+						dragon.affection if dragon is PetDragon else 0
+					])
+			else:
+				# Create regular dragon
+				dragon = Dragon.new()
+				dragon.from_dict(dragon_data)
+				print("[DragonFactory] Restored dragon: %s (Level %d)" % [dragon.dragon_name, dragon.level])
+
 			active_dragons.append(dragon)
 
 			# Re-register with DragonStateManager
 			if DragonStateManager and DragonStateManager.instance:
 				DragonStateManager.instance.register_dragon(dragon)
 
-			print("[DragonFactory] Restored dragon: %s (Level %d)" % [dragon.dragon_name, dragon.level])
+# === PET DRAGON INTEGRATION ===
+
+func _show_pet_introduction_popup(pet: Dragon):
+	"""Show the pet introduction popup after the pet dragon's name is generated"""
+	# Wait for name to be generated
+	if pet.dragon_name == "":
+		await dragon_name_generated
+
+	# Wait one frame to ensure UI is ready
+	await Engine.get_main_loop().process_frame
+
+	# Load and show pet introduction popup
+	var popup_scene = load("res://scenes/ui/pet/pet_introduction_popup.tscn")
+	if not popup_scene:
+		push_error("[DragonFactory] Failed to load pet introduction popup scene!")
+		pet_introduction_completed.emit(pet)  # Still emit so game continues
+		return
+
+	var popup = popup_scene.instantiate()
+
+	# Add to scene tree
+	var root = Engine.get_main_loop().root
+	root.add_child(popup)
+
+	# Setup popup with pet dragon
+	if popup.has_method("setup"):
+		popup.setup(pet)
+		popup.visible = true
+		print("[DragonFactory] Showing pet introduction popup for %s" % pet.dragon_name)
+	else:
+		push_error("[DragonFactory] Pet introduction popup missing setup() method!")
+		pet_introduction_completed.emit(pet)
+		return
+
+	# Connect to popup signals
+	if popup.has_signal("name_confirmed"):
+		popup.name_confirmed.connect(func(_name):
+			print("[DragonFactory] Pet introduction popup closed")
+			# Wait a frame for popup to actually close
+			await Engine.get_main_loop().process_frame
+			pet_introduction_completed.emit(pet)
+		)

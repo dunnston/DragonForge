@@ -13,6 +13,7 @@ const AUTO_SAVE_INTERVAL: float = 120.0  # Auto-save every 2 minutes
 # === STATE ===
 var auto_save_enabled: bool = true
 var auto_save_timer: Timer
+var should_load_on_start: bool = false  # Flag set by title screen to trigger load
 
 # === SIGNALS ===
 signal game_saved(success: bool, message: String)
@@ -148,6 +149,18 @@ func save_game() -> bool:
 	else:
 		print("[SaveLoadManager] WARNING: DragonDeathManager not found, skipping")
 		save_data["dragon_death_manager"] = {}
+
+	# Serialize PetDragonManager
+	if PetDragonManager and PetDragonManager.instance:
+		save_data["pet_dragon_manager"] = PetDragonManager.instance.to_dict()
+		if PetDragonManager.instance.has_pet():
+			var pet = PetDragonManager.instance.get_pet_dragon()
+			print("[SaveLoadManager] ✓ Saved PetDragonManager (Pet: %s, Lvl %d, Affection: %d)" % [pet.dragon_name, pet.level, pet.affection])
+		else:
+			print("[SaveLoadManager] ✓ Saved PetDragonManager (No pet yet)")
+	else:
+		print("[SaveLoadManager] WARNING: PetDragonManager not found, skipping")
+		save_data["pet_dragon_manager"] = {}
 
 	# Convert to JSON
 	var json_string = JSON.stringify(save_data, "\t")
@@ -298,6 +311,17 @@ func load_game() -> bool:
 		print("[SaveLoadManager] ✓ Loaded DragonDeathManager")
 	else:
 		print("[SaveLoadManager] WARNING: DragonDeathManager not found or no data, skipping")
+
+	# Load PetDragonManager (must load after DragonFactory since pet references dragon parts)
+	if save_data.has("pet_dragon_manager") and PetDragonManager and PetDragonManager.instance:
+		PetDragonManager.instance.from_dict(save_data["pet_dragon_manager"])
+		if PetDragonManager.instance.has_pet():
+			var pet = PetDragonManager.instance.get_pet_dragon()
+			print("[SaveLoadManager] ✓ Loaded PetDragonManager (Pet: %s, Lvl %d, Affection: %d)" % [pet.dragon_name, pet.level, pet.affection])
+		else:
+			print("[SaveLoadManager] ✓ Loaded PetDragonManager (No pet yet)")
+	else:
+		print("[SaveLoadManager] WARNING: PetDragonManager not found or no data, skipping")
 
 	# Refresh UI to show loaded dragons and scientists
 	_refresh_ui()

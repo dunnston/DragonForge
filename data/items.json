@@ -317,6 +317,17 @@
 				"happiness": 10,
 				"xp": 25
 			}
+		},
+		"pet_gift": {
+			"id": "pet_gift",
+			"name": "Pet Gift",
+			"type": "consumable",
+			"category": "gift",
+			"description": "A heartfelt gift from your beloved pet dragon. Each one is a treasure.",
+			"icon": "res://assets/Icons/gift.png",
+			"stackable": true,
+			"max_stack": 999,
+			"rarity": 2
 		}
 	}
 }
