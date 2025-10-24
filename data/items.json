@@ -318,6 +318,21 @@
 				"xp": 25
 			}
 		},
+		"knight_meat": {
+			"id": "knight_meat",
+			"name": "Knight Meat",
+			"type": "consumable",
+			"category": "food",
+			"description": "Hearty meat from defeated knights. Very filling but exhausting to digest.",
+			"icon": "res://assets/ui/knight-meat.png",
+			"stackable": true,
+			"max_stack": 99,
+			"rarity": 2,
+			"effect": {
+				"type": "feed_with_fatigue",
+				"hunger_reduction": 0.30,
+				"fatigue_increase": 0.15
+			}
 		"pet_gift": {
 			"id": "pet_gift",
 			"name": "Pet Gift",

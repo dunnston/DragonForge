@@ -1,6 +1,6 @@
 [gd_scene load_steps=2 format=3 uid="uid://bfyhckw3t5xy4"]
 
-[ext_resource type="Script" path="res://scripts/ui/defense_towers_ui.gd" id="1_defense_ui"]
+[ext_resource type="Script" uid="uid://dao10elpctaug" path="res://scripts/ui/defense_towers_ui.gd" id="1_defense_ui"]
 
 [node name="DefenseTowersUI" type="Control"]
 layout_mode = 3
@@ -54,7 +54,6 @@ layout_mode = 2
 [node name="ScrollContainer" type="ScrollContainer" parent="MarginContainer/VBox"]
 layout_mode = 2
 size_flags_vertical = 3
-horizontal_scroll_bar_visibility = 2
 
 [node name="TowerContainer" type="HBoxContainer" parent="MarginContainer/VBox/ScrollContainer"]
 layout_mode = 2

@@ -15,6 +15,8 @@ class_name TowerCard
 @onready var health_label = $VBox/HealthContainer/HealthLabel
 @onready var repair_button = $VBox/RepairButton
 @onready var repair_cost_label = $VBox/RepairButton/CostLabel
+@onready var rebuild_button = $VBox/RebuildButton
+@onready var rebuild_cost_label = $VBox/RebuildButton/CostLabel
 
 var tower: DefenseTower
 var tower_index: int = -1
@@ -22,6 +24,7 @@ var is_ready: bool = false
 var assigned_dragon: Dragon = null
 
 signal repair_clicked(tower_index: int)
+signal rebuild_clicked(tower_index: int)
 signal card_clicked(tower_index: int)
 signal assign_dragon_requested(tower_index: int)
 
@@ -29,6 +32,9 @@ func _ready():
 	is_ready = true
 
 	repair_button.pressed.connect(_on_repair_pressed)
+	
+	if rebuild_button:
+		rebuild_button.pressed.connect(_on_rebuild_pressed)
 
 	if remove_dragon_button:
 		remove_dragon_button.pressed.connect(_on_remove_dragon_pressed)
@@ -83,7 +89,7 @@ func _update_display():
 	# Update dragon assignment display
 	_update_dragon_display()
 
-	# Show/hide repair button
+	# Show/hide repair button (only for damaged but not destroyed towers)
 	if tower.needs_repair() and not tower.is_destroyed():
 		repair_button.visible = true
 		var repair_cost = DefenseTowerManager.instance.get_tower_repair_cost(tower)
@@ -98,13 +104,29 @@ func _update_display():
 			repair_button.modulate = Color(1, 1, 1)
 	else:
 		repair_button.visible = false
+	
+	# Show/hide rebuild button (only for destroyed towers)
+	if rebuild_button:
+		if tower.is_destroyed():
+			rebuild_button.visible = true
+			rebuild_cost_label.text = "%dg" % DefenseTowerManager.REBUILD_COST
+			
+			# Check if player can afford
+			if TreasureVault.instance.get_total_gold() < DefenseTowerManager.REBUILD_COST:
+				rebuild_button.disabled = true
+				rebuild_button.modulate = Color(0.5, 0.5, 0.5)
+			else:
+				rebuild_button.disabled = false
+				rebuild_button.modulate = Color(1, 1, 1)
+		else:
+			rebuild_button.visible = false
 
 func _update_dragon_display():
 	"""Update the display based on assigned dragon"""
 	# Get the dragon assigned to this specific tower slot
 	assigned_dragon = _get_assigned_dragon()
 
-	if assigned_dragon and not assigned_dragon.is_dead:
+	if assigned_dragon and not assigned_dragon.is_dead and assigned_dragon.current_health > 0:
 		# Show dragon info and visual
 		dragon_visual_container.visible = true
 		dragon_info_panel.visible = true
@@ -138,21 +160,18 @@ func _update_dragon_display():
 		no_dragon_label.visible = true
 
 func _get_assigned_dragon() -> Dragon:
-	"""Get the dragon assigned to this specific tower slot"""
+	"""Get the dragon assigned to this specific tower"""
 	if not DefenseManager or not DefenseManager.instance:
 		return null
-
-	var defending_dragons = DefenseManager.instance.get_defending_dragons()
-
-	# Each tower represents one defense slot
-	# Tower index corresponds to dragon index in the defending array
-	if tower_index >= 0 and tower_index < defending_dragons.size():
-		return defending_dragons[tower_index]
-
-	return null
+	
+	# Use the new tower-specific assignment system
+	return DefenseManager.instance.get_dragon_for_tower(tower_index)
 
 func _on_repair_pressed():
 	repair_clicked.emit(tower_index)
+
+func _on_rebuild_pressed():
+	rebuild_clicked.emit(tower_index)
 
 func _on_remove_dragon_pressed():
 	"""Called when X button is clicked to remove dragon"""
@@ -191,15 +210,16 @@ func _on_mouse_exited():
 	tween.tween_property(self, "scale", Vector2(1.0, 1.0), 0.2)
 
 func _unassign_dragon():
-	"""Unassign the dragon from defense"""
+	"""Unassign the dragon from this tower"""
 	if not assigned_dragon:
 		return
 
 	if DefenseManager and DefenseManager.instance:
 		# Store dragon name before removing (assigned_dragon will become null)
 		var dragon_name = assigned_dragon.dragon_name
-		DefenseManager.instance.remove_dragon_from_defense(assigned_dragon)
-		print("[TowerCard] Unassigned %s from defense" % dragon_name)
+		# Use tower-specific removal
+		DefenseManager.instance.remove_dragon_from_tower(tower_index)
+		print("[TowerCard] Unassigned %s from tower %d" % [dragon_name, tower_index])
 		refresh()
 
 # Public method to refresh display

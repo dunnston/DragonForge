@@ -257,6 +257,10 @@ func _ready():
 
 	print("[FactoryManager] Factory Manager UI initialized")
 
+func _process(_delta):
+	"""Continuously update the wave timer"""
+	if DefenseManager and DefenseManager.instance:
+		_update_defense_display()
 func _input(event):
 	"""Handle ESC key to show save & exit popup"""
 	if event is InputEventKey and event.pressed and event.keycode == KEY_ESCAPE:

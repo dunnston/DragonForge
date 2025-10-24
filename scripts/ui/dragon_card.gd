@@ -71,6 +71,10 @@ func _get_state_text(state: Dragon.DragonState) -> String:
 		Dragon.DragonState.RESTING: return "Resting"
 		_: return "Unknown"
 
+func refresh():
+	"""Force a refresh of the display (called when dragon data changes)"""
+	_update_display()
+
 func _on_gui_input(event: InputEvent):
 	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
 		card_clicked.emit(dragon)

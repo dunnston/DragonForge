@@ -29,6 +29,7 @@ var happiness_label: Label
 var toy_slot_label: Label
 var treat_button: Button
 var health_pot_button: Button
+var knight_meat_button: Button
 var equip_toy_button: Button
 
 # Parts
@@ -51,6 +52,9 @@ var current_dragon: Dragon = null
 var update_timer: Timer
 
 func _ready():
+	# Add to group so DefenseManager can refresh this UI after combat
+	add_to_group("dragon_details_modal")
+	
 	close_button.pressed.connect(_on_close_pressed)
 	feed_button.pressed.connect(_on_feed_pressed)
 	train_button.pressed.connect(_on_train_pressed)
@@ -153,6 +157,14 @@ func _create_consumable_ui():
 	health_pot_button.add_theme_font_size_override("font_size", 12)
 	health_pot_button.pressed.connect(_on_health_pot_pressed)
 	button_hbox.add_child(health_pot_button)
+	
+	# Knight meat button
+	knight_meat_button = Button.new()
+	knight_meat_button.text = "Feed Knight Meat"
+	knight_meat_button.custom_minimum_size = Vector2(150, 35)
+	knight_meat_button.add_theme_font_size_override("font_size", 12)
+	knight_meat_button.pressed.connect(_on_knight_meat_pressed)
+	button_hbox.add_child(knight_meat_button)
 
 func _create_toy_slot_ui():
 	"""Add toy slot UI"""
@@ -306,8 +318,12 @@ func _update_display():
 	health_label.text = "Health: %d/%d" % [current_dragon.current_health, current_dragon.get_health()]
 	speed_label.text = "Speed: %d" % current_dragon.get_speed()
 
-	# Calculate XP to next level
-	var xp_needed = current_dragon.level * 100
+	# Calculate XP to next level using DragonStateManager's correct formula
+	var xp_needed = 0
+	if DragonStateManager and DragonStateManager.instance and current_dragon.level < 10:
+		xp_needed = DragonStateManager.instance.get_experience_for_level(current_dragon.level + 1)
+	else:
+		xp_needed = current_dragon.experience  # Max level, show current as max
 	xp_label.text = "XP: %d/%d" % [current_dragon.experience, xp_needed]
 
 	# Status
@@ -694,6 +710,16 @@ func _on_health_pot_pressed():
 		return
 
 	var success = DragonStateManager.use_health_pot_on_dragon(current_dragon)
+	if success:
+		_update_display()
+		dragon_updated.emit()
+
+func _on_knight_meat_pressed():
+	"""Feed knight meat to the current dragon (30% hunger heal, 15% fatigue cost)"""
+	if not current_dragon or not DragonStateManager:
+		return
+	
+	var success = DragonStateManager.use_knight_meat_on_dragon(current_dragon)
 	if success:
 		_update_display()
 		dragon_updated.emit()

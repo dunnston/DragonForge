@@ -3,7 +3,7 @@
 extends Node
 
 # === SINGLETON ===
-static var instance: DefenseTowerManager
+static var instance: Node  # Will be DefenseTowerManager when autoloaded
 
 # === CONSTANTS ===
 const STARTING_TOWERS: int = 3
@@ -11,8 +11,10 @@ const MAX_TOWERS: int = 15
 const BASE_BUILD_COST: int = 100  # Cost of first tower beyond starting
 const COST_MULTIPLIER: float = 1.5  # Each tower costs 1.5x the previous
 const BASE_REPAIR_COST: int = 10  # Cost per health point
+const REBUILD_COST: int = 75  # Cost to rebuild a destroyed tower
 const SMALL_DAMAGE: int = 5  # Damage per tower on successful defense
 const LARGE_DAMAGE: int = 20  # Damage per tower on failed defense
+const MASSIVE_DAMAGE: int = 40  # Damage per tower when undefended
 
 # === STATE ===
 var towers: Array[DefenseTower] = []
@@ -168,6 +170,50 @@ func repair_all_towers() -> int:
 				break
 
 	return repaired_count
+
+# === TOWER REBUILD ===
+
+func can_rebuild_tower(tower_index: int) -> bool:
+	"""Check if a tower can be rebuilt"""
+	if tower_index < 0 or tower_index >= towers.size():
+		return false
+	return towers[tower_index].is_destroyed()
+
+func rebuild_tower(tower_index: int) -> bool:
+	"""
+	Rebuild a destroyed tower for a flat cost.
+	Returns true if successful.
+	"""
+	# Validate tower index
+	if tower_index < 0 or tower_index >= towers.size():
+		print("[DefenseTowerManager] Invalid tower index: %d" % tower_index)
+		return false
+	
+	var tower = towers[tower_index]
+	
+	# Check if tower is destroyed
+	if not tower.is_destroyed():
+		print("[DefenseTowerManager] Tower %d is not destroyed (HP: %d/%d)" % [tower_index, tower.current_health, tower.max_health])
+		return false
+	
+	# Check gold
+	if not TreasureVault.instance:
+		print("[DefenseTowerManager] ERROR: TreasureVault not found!")
+		return false
+	
+	if not TreasureVault.instance.spend_gold(REBUILD_COST):
+		print("[DefenseTowerManager] Cannot rebuild tower: Insufficient gold (need %d)" % REBUILD_COST)
+		insufficient_gold_for_repair.emit(REBUILD_COST)
+		return false
+	
+	# Rebuild tower to full health
+	tower.current_health = tower.max_health
+	tower_repaired.emit(tower, tower.max_health)
+	tower_capacity_changed.emit(get_defense_capacity())
+	
+	print("[DefenseTowerManager] Tower %d rebuilt for %d gold! (HP: %d/%d)" % [tower_index, REBUILD_COST, tower.current_health, tower.max_health])
+	
+	return true
 
 # === TOWER DAMAGE ===
 

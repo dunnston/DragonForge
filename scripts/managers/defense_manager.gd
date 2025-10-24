@@ -6,13 +6,30 @@ extends Node
 static var instance: DefenseManager
 
 # === WAVE CONFIG ===
-const BASE_WAVE_INTERVAL: float = 300.0  # 5 minutes between waves (adjustable)
+const BASE_WAVE_INTERVAL: float = 20.0  # 30 seconds between waves
 
 # === STATE ===
 var wave_number: int = 1
-var defending_dragons: Array[Dragon] = []
+var tower_assignments: Dictionary = {}  # {tower_index: Dragon} - maps tower to defending dragon
 var time_until_next_wave: float = BASE_WAVE_INTERVAL
 var is_in_combat: bool = false
+
+# Store pending stat changes to apply after battle animation
+var pending_stat_changes: Array[Dictionary] = []
+
+# Store pending wave completion data
+var pending_wave_victory: bool = false
+var pending_wave_rewards: Dictionary = {}
+var pending_wave_enemies: Array = []  # Store enemies for reward calculation
+
+# === CUMULATIVE REWARDS (since last UI open) ===
+var cumulative_rewards: Dictionary = {
+	"gold": 0,
+	"meat": 0,
+	"waves_won": 0,
+	"waves_lost": 0,
+	"total_waves": 0
+}
 
 # === SIGNALS ===
 signal wave_incoming(time_remaining: float)
@@ -46,6 +63,11 @@ func _update_wave_timer():
 	if is_in_combat:
 		return
 
+	# Check if player is completely out of resources - pause raids if so
+	if _is_player_out_of_resources():
+		print("[DefenseManager] Raids PAUSED - Vault is empty, no parts, and no dragons to explore")
+		return
+
 	# Apply vault risk multiplier (more treasure = more frequent attacks)
 	var frequency_multiplier = 1.0
 	if TreasureVault.instance:
@@ -65,12 +87,55 @@ func _update_wave_timer():
 func reset_wave_timer():
 	time_until_next_wave = BASE_WAVE_INTERVAL
 
+func _is_player_out_of_resources() -> bool:
+	"""Check if player has no resources left (empty vault, no parts, no dragons to send)"""
+	
+	# Check 1: Is vault empty (no gold)?
+	var has_gold = false
+	if TreasureVault and TreasureVault.instance:
+		has_gold = TreasureVault.instance.get_total_gold() > 75
+	
+	# Check 2: Are there any dragon parts available?
+	var has_parts = false
+	if InventoryManager and InventoryManager.instance:
+		var parts = InventoryManager.instance.get_all_dragon_parts()
+		has_parts = parts.size() > 3
+	
+	# Check 3: Are there any idle dragons that could explore for parts?
+	var has_explorable_dragons = false
+	var factory_manager_nodes = get_tree().get_nodes_in_group("factory_manager")
+	for node in factory_manager_nodes:
+		if node.has_method("get") and node.get("factory"):
+			var factory = node.get("factory")
+			if factory and "active_dragons" in factory:
+				var dragons = factory.active_dragons
+				for dragon in dragons:
+					# Check if dragon is idle and not too fatigued
+					if dragon.current_state == Dragon.DragonState.IDLE and dragon.fatigue_level < 0.5:
+						has_explorable_dragons = true
+						break
+	
+	# Pause raids only if ALL resources are depleted
+	if not has_gold and not has_parts and not has_explorable_dragons:
+		print("[DefenseManager] ❌ RAIDS PAUSED: Vault empty (Gold: %s, Parts: %s, Explorable Dragons: %s)" % 
+			[has_gold, has_parts, has_explorable_dragons])
+		return true
+	
+	return false
+
 # === DRAGON ASSIGNMENT ===
 
-func assign_dragon_to_defense(dragon: Dragon) -> bool:
-	if dragon in defending_dragons:
-		print("[DefenseManager] Dragon already defending!")
+func assign_dragon_to_tower(dragon: Dragon, tower_index: int) -> bool:
+	"""Assign a dragon to defend a specific tower"""
+	
+	# Validate tower index
+	if not DefenseTowerManager or not DefenseTowerManager.instance:
+		print("[DefenseManager] ERROR: DefenseTowerManager not found!")
 		return false
+	
+	var towers = DefenseTowerManager.instance.get_towers()
+	if tower_index < 0 or tower_index >= towers.size():
+		print("[DefenseManager] Invalid tower index: %d" % tower_index)
 
 	# Check if dragon is a pet (pets cannot be assigned to defense)
 	if dragon is PetDragon:
@@ -86,48 +151,118 @@ func assign_dragon_to_defense(dragon: Dragon) -> bool:
 		print("[DefenseManager] Maximum %d defenders (based on tower capacity)!" % max_defenders)
 		defense_slots_full.emit()
 		return false
-
-	if dragon.current_health <= 0:
+	
+	var tower = towers[tower_index]
+	if tower.is_destroyed():
+		print("[DefenseManager] Cannot assign to destroyed tower!")
+		return false
+	
+	# Check if tower already has a dragon
+	if tower_assignments.has(tower_index):
+		print("[DefenseManager] Tower %d already has a defender!" % tower_index)
+		return false
+	
+	# Check if dragon is already defending another tower
+	for t_idx in tower_assignments.keys():
+		if tower_assignments[t_idx] == dragon:
+			print("[DefenseManager] %s is already defending tower %d!" % [dragon.dragon_name, t_idx])
+			return false
+	
+	# Check dragon status
+	if dragon.current_health <= 0 or dragon.is_dead:
 		print("[DefenseManager] Dragon is dead!")
 		return false
-
-	# Check if dragon is too fatigued (must be at least 50% rested)
+	
 	if dragon.fatigue_level > 0.5:
 		print("[DefenseManager] %s is too fatigued to defend (needs 50%% rest)!" % dragon.dragon_name)
 		return false
-
-	defending_dragons.append(dragon)
-	# Use proper state setter to update state_start_time
-	if DragonStateManager and DragonStateManager.instance:
+	
+	# Assign dragon to tower
+	tower_assignments[tower_index] = dragon
+	
+	# Set dragon state to DEFENDING
+	if DragonStateManager.instance:
 		DragonStateManager.instance.set_dragon_state(dragon, Dragon.DragonState.DEFENDING)
 	else:
 		dragon.current_state = Dragon.DragonState.DEFENDING
+	
 	dragon_assigned_to_defense.emit(dragon)
-	print("[DefenseManager] %s assigned to defense (Total: %d/%d)" % [dragon.dragon_name, defending_dragons.size(), max_defenders])
+	print("[DefenseManager] %s assigned to tower %d (Total defenders: %d)" % [dragon.dragon_name, tower_index, tower_assignments.size()])
 	return true
 
-func remove_dragon_from_defense(dragon: Dragon) -> bool:
-	if dragon not in defending_dragons:
+func remove_dragon_from_tower(tower_index: int) -> bool:
+	"""Remove dragon assignment from a specific tower"""
+	if not tower_assignments.has(tower_index):
 		return false
-
-	defending_dragons.erase(dragon)
-	# Use proper state setter to update state_start_time
-	if DragonStateManager and DragonStateManager.instance:
+	
+	var dragon = tower_assignments[tower_index]
+	tower_assignments.erase(tower_index)
+	
+	# Set dragon state to IDLE
+	if DragonStateManager.instance:
 		DragonStateManager.instance.set_dragon_state(dragon, Dragon.DragonState.IDLE)
 	else:
 		dragon.current_state = Dragon.DragonState.IDLE
+	
 	dragon_removed_from_defense.emit(dragon)
-	print("[DefenseManager] %s removed from defense" % dragon.dragon_name)
+	print("[DefenseManager] %s removed from tower %d" % [dragon.dragon_name, tower_index])
 	return true
 
+func get_dragon_for_tower(tower_index: int) -> Dragon:
+	"""Get the dragon assigned to a specific tower"""
+	return tower_assignments.get(tower_index, null)
+
 func get_defending_dragons() -> Array[Dragon]:
-	return defending_dragons.duplicate()
+	"""Get all currently defending dragons"""
+	var dragons: Array[Dragon] = []
+	for dragon in tower_assignments.values():
+		dragons.append(dragon)
+	return dragons
+
+func get_tower_assignments() -> Dictionary:
+	"""Get the complete tower assignment dictionary"""
+	return tower_assignments.duplicate()
 
 func get_max_defenders() -> int:
 	"""Returns the maximum number of dragons that can defend (based on tower capacity)"""
 	if DefenseTowerManager and DefenseTowerManager.instance:
 		return DefenseTowerManager.instance.get_defense_capacity()
 	return 3  # Default fallback
+
+# === BACKWARD COMPATIBILITY ===
+
+func assign_dragon_to_defense(dragon: Dragon) -> bool:
+	"""
+	Legacy method for backward compatibility.
+	Assigns dragon to the first available tower slot.
+	"""
+	if not DefenseTowerManager or not DefenseTowerManager.instance:
+		print("[DefenseManager] ERROR: DefenseTowerManager not found!")
+		return false
+	
+	var towers = DefenseTowerManager.instance.get_towers()
+	
+	# Find first available tower (not destroyed, no dragon assigned)
+	for i in range(towers.size()):
+		if not towers[i].is_destroyed() and not tower_assignments.has(i):
+			return assign_dragon_to_tower(dragon, i)
+	
+	print("[DefenseManager] No available tower slots!")
+	defense_slots_full.emit()
+	return false
+
+func remove_dragon_from_defense(dragon: Dragon) -> bool:
+	"""
+	Legacy method for backward compatibility.
+	Removes dragon from whichever tower it's assigned to.
+	"""
+	# Find which tower this dragon is assigned to
+	for tower_idx in tower_assignments.keys():
+		if tower_assignments[tower_idx] == dragon:
+			return remove_dragon_from_tower(tower_idx)
+	
+	print("[DefenseManager] Dragon not found in any tower assignment")
+	return false
 
 # === WAVE GENERATION & COMBAT ===
 
@@ -140,6 +275,9 @@ func _start_wave():
 	print("[DefenseManager] COMBAT: WAVE %d - %d enemies attacking!" % [wave_number, enemies.size()])
 	wave_started.emit(wave_number, enemies)
 
+	# Get all defending dragons
+	var defending_dragons = get_defending_dragons()
+
 	# Check if we have defenders
 	if defending_dragons.is_empty():
 		print("[DefenseManager] ERROR: NO DEFENDERS! Auto-loss!")
@@ -147,27 +285,43 @@ func _start_wave():
 		_complete_wave(false, {})
 		return
 
-	# Resolve combat
-	var victory = _resolve_combat(defending_dragons, enemies)
+	# Calculate pending stat changes for after combat
+	_resolve_combat(defending_dragons, enemies)
+	
+	# Store enemies for reward calculation later
+	pending_wave_enemies = enemies
+	
+	# DON'T determine victory here - wait for visual combat to report actual result!
 
+func on_visual_combat_result(victory: bool):
+	"""Called by visual combat when the winner is determined"""
+	print("[DefenseManager] Visual combat result received: Victory=%s" % victory)
+	
+	# Now apply the actual result
 	if victory:
-		var rewards = _calculate_rewards(enemies)
+		var rewards = _calculate_rewards(pending_wave_enemies)
 		_apply_rewards(rewards)
 		wave_number += 1
-		print("[DefenseManager] ✅ VICTORY! Wave %d complete. Rewards: %d gold" % [wave_number - 1, rewards["gold"]])
-		_complete_wave(true, rewards)
+		print("[DefenseManager] ✅ VICTORY! Wave %d complete. Rewards: %d gold, %d meat 🍖" % [wave_number - 1, rewards.get("gold", 0), rewards.get("meat", 0)])
+		
+		# Store for after animation
+		pending_wave_victory = true
+		pending_wave_rewards = rewards
 	else:
 		_apply_raid_loss()
 		print("[DefenseManager] ❌ DEFEAT! Raiders stole from your vault!")
-		_complete_wave(false, {})
+		
+		# Store for after animation
+		pending_wave_victory = false
+		pending_wave_rewards = {}
 
 func _generate_wave(wave_num: int) -> Array:
 	var enemies: Array = []
 
 	# Apply vault risk multiplier (more treasure = stronger enemies)
 	var difficulty_multiplier = 1.0
-	if TreasureVault.instance:
-		difficulty_multiplier = TreasureVault.instance.get_attack_difficulty_multiplier()
+	#if TreasureVault.instance:
+	#	difficulty_multiplier = TreasureVault.instance.get_attack_difficulty_multiplier()
 
 	# Base enemy count increases with wave number
 	var enemy_count = 1 + int(wave_num / 5.0)
@@ -175,14 +329,22 @@ func _generate_wave(wave_num: int) -> Array:
 	enemy_count = max(1, enemy_count)  # At least 1 enemy
 
 	for i in enemy_count:
-		var enemy = _create_knight(wave_num, difficulty_multiplier)
+		# Random enemy type: 60% knight, 30% wizard, 10% mixed
+		var rand = randf()
+		var enemy: Dictionary
+		
+		if rand < 0.60:
+			enemy = _create_knight(wave_num, difficulty_multiplier)
+		else:
+			enemy = _create_wizard(wave_num, difficulty_multiplier)
+		
 		enemies.append(enemy)
 
 	# Boss every 10 waves
-	if wave_num % 10 == 0:
-		var boss = _create_boss(wave_num, difficulty_multiplier)
-		enemies.append(boss)
-		print("[DefenseManager] [BOSS] BOSS WAVE!")
+	#if wave_num % 10 == 0:
+	#	var boss = _create_boss(wave_num, difficulty_multiplier)
+	#	enemies.append(boss)
+	#	print("[DefenseManager] [BOSS] BOSS WAVE!")
 
 	return enemies
 
@@ -190,11 +352,25 @@ func _create_knight(wave_num: int, difficulty_mult: float = 1.0) -> Dictionary:
 	return {
 		"type": "knight",
 		"level": wave_num,
-		"attack": int((10 + wave_num * 3) * difficulty_mult),
-		"health": int((50 + wave_num * 10) * difficulty_mult),
+		"attack": int((8 + wave_num * 3) * difficulty_mult),
+		"health": int((40 + wave_num * 10) * difficulty_mult),
 		"speed": int((5 + wave_num) * difficulty_mult),
-		"reward_gold": int((10 + wave_num * 5) * difficulty_mult),
-		"reward_parts": 1
+		"reward_gold": int((10 + wave_num * 5) * difficulty_mult)
+	}
+
+func _create_wizard(wave_num: int, difficulty_mult: float = 1.0) -> Dictionary:
+	# Wizards have lower health but higher attack and elemental damage
+	var random_element = randi() % DragonPart.Element.size()
+	return {
+		"type": "wizard",
+		"is_wizard": true,  # Flag for visual identification
+		"level": wave_num,
+		"attack": int((6 + wave_num * 3) * difficulty_mult),  # Higher base attack than knight
+		"health": int((30 + wave_num * 7) * difficulty_mult),  # Lower health than knight
+		"speed": int((8 + wave_num * 1.5) * difficulty_mult),
+		"reward_gold": int((15 + wave_num * 7) * difficulty_mult),
+		"elemental_type": random_element,  # Fire, Ice, Lightning, Poison, Shadow
+		"elemental_damage": int((5 + wave_num * 2) * difficulty_mult)  # Extra elemental damage
 	}
 
 func _create_boss(wave_num: int, difficulty_mult: float = 1.0) -> Dictionary:
@@ -204,8 +380,7 @@ func _create_boss(wave_num: int, difficulty_mult: float = 1.0) -> Dictionary:
 		"attack": int((25 + wave_num * 6) * difficulty_mult),
 		"health": int((150 + wave_num * 20) * difficulty_mult),
 		"speed": int((10 + wave_num * 2) * difficulty_mult),
-		"reward_gold": int((50 + wave_num * 10) * difficulty_mult),
-		"reward_parts": 3
+		"reward_gold": int((50 + wave_num * 10) * difficulty_mult)
 	}
 
 func _resolve_combat(dragons: Array[Dragon], enemies: Array) -> bool:
@@ -233,36 +408,45 @@ func _resolve_combat(dragons: Array[Dragon], enemies: Array) -> bool:
 	var enemy_power: float = 0.0
 	for enemy in enemies:
 		var e_power = enemy["attack"] + (enemy["health"] * 0.5) + (enemy["speed"] * 0.3)
+		
+		# Wizards deal elemental damage
+		if enemy.get("type") == "wizard" and dragons.size() > 0:
+			var elemental_bonus = _calculate_elemental_damage(enemy, dragons)
+			e_power += elemental_bonus
+			print("[DefenseManager] Wizard elemental damage: +%.1f" % elemental_bonus)
+		
 		enemy_power += e_power
 
 	print("[DefenseManager] Dragon power: %.1f vs Enemy power: %.1f" % [dragon_power, enemy_power])
 
 	# Victory if dragons have at least 10% more power
 	if dragon_power >= enemy_power * 1.1:
-		# Victory - dragons gain XP and fatigue
+		# Victory - store stat changes to apply after animation
+		pending_stat_changes.clear()
 		for dragon in dragons:
-			if DragonStateManager.instance:
-				DragonStateManager.instance.gain_experience(dragon, 50 * wave_number)
-			dragon.fatigue_level = min(1.0, dragon.fatigue_level + 0.1)  # Combat is tiring
-			dragon_defended_successfully.emit(dragon, enemies.size())
+			pending_stat_changes.append({
+				"dragon": dragon,
+				"xp": 50 * wave_number,
+				"fatigue": 0.1,
+				"damage": 0,
+				"victory": true
+			})
 
 		return true
 	else:
-		# Defeat - dragons take damage
+		# Defeat - store stat changes to apply after animation
 		var damage_per_dragon = (enemy_power - dragon_power) / dragons.size()
 		damage_per_dragon = max(10, damage_per_dragon)  # Minimum 10 damage
-
+		
+		pending_stat_changes.clear()
 		for dragon in dragons:
-			dragon.take_damage(int(damage_per_dragon))  # Use Dragon's take_damage method
-			dragon.fatigue_level = min(1.0, dragon.fatigue_level + 0.15)  # Losing is exhausting
-			dragon_damaged.emit(dragon, int(damage_per_dragon))
-
-			print("[DefenseManager] %s took %.0f damage (HP: %.0f/%.0f)" %
-				[dragon.dragon_name, damage_per_dragon, dragon.current_health, dragon.get_health()])
-
-			# Death handled by Dragon.take_damage()
-			if dragon.is_dead:
-				print("[DefenseManager] DEAD: %s has fallen!" % dragon.dragon_name)
+			pending_stat_changes.append({
+				"dragon": dragon,
+				"xp": 0,
+				"fatigue": 0.15,
+				"damage": int(damage_per_dragon),
+				"victory": false
+			})
 
 				# Trigger part recovery system
 				if DragonDeathManager and DragonDeathManager.instance:
@@ -270,19 +454,47 @@ func _resolve_combat(dragons: Array[Dragon], enemies: Array) -> bool:
 
 		return false
 
+func _calculate_elemental_damage(wizard: Dictionary, dragons: Array[Dragon]) -> float:
+	"""Calculate bonus damage from wizard's elemental attack against dragons"""
+	var base_elemental_damage = wizard.get("elemental_damage", 0)
+	var wizard_element = wizard.get("elemental_type", 0)
+	
+	# Calculate average elemental effectiveness against all defending dragons
+	var total_effectiveness = 0.0
+	for dragon in dragons:
+		# Get dragon's resistance to wizard's element
+		var resistance = dragon.get_elemental_resistance(wizard_element)
+		# Convert resistance multiplier to effectiveness
+		# resistance > 1.0 = weak to element (more damage)
+		# resistance < 1.0 = resistant to element (less damage)
+		total_effectiveness += resistance
+	
+	var avg_effectiveness = total_effectiveness / dragons.size()
+	var final_damage = base_elemental_damage * avg_effectiveness
+	
+	return final_damage
+
 # === REWARDS & LOSSES ===
 
 func _calculate_rewards(enemies: Array) -> Dictionary:
 	var total_gold = 0
-	var total_parts = 0
+	var total_meat = 0
 
 	for enemy in enemies:
 		total_gold += enemy.get("reward_gold", 10)
-		total_parts += enemy.get("reward_parts", 1)
+		
+		# Chance-based meat drops (only from knights and bosses, not wizards)
+		if enemy.get("type") == "knight":
+			if randf() < 0.50:  # 50% chance for normal knights
+				total_meat += 1
+		elif enemy.get("type") == "boss":
+			if randf() < 0.75:  # 75% chance for bosses
+				total_meat += randi_range(2, 3)
+		# Wizards don't drop meat
 
 	return {
 		"gold": total_gold,
-		"parts": total_parts
+		"meat": total_meat
 	}
 
 func _apply_rewards(rewards: Dictionary):
@@ -292,11 +504,16 @@ func _apply_rewards(rewards: Dictionary):
 
 	# Add gold
 	TreasureVault.instance.add_gold(rewards["gold"])
-
-	# Add random parts
-	for i in rewards["parts"]:
-		var random_element = DragonPart.Element.values().pick_random()
-		TreasureVault.instance.add_part(random_element)
+	
+	# Add knight meat to inventory
+	var meat_count = rewards.get("meat", 0)
+	if meat_count > 0 and InventoryManager.instance:
+		InventoryManager.instance.add_item_by_id("knight_meat", meat_count)
+		print("[DefenseManager] [LOOT] Gained %d knight meat!" % meat_count)
+	
+	# Track cumulative rewards
+	cumulative_rewards["gold"] += rewards.get("gold", 0)
+	cumulative_rewards["meat"] += rewards.get("meat", 0)
 
 func _apply_raid_loss():
 	if not TreasureVault.instance:
@@ -320,42 +537,212 @@ func _apply_auto_loss():
 	print("[DefenseManager] [STOLEN] UNDEFENDED! Raiders stole %d gold and parts!" % stolen.get("gold", 0))
 
 func _complete_wave(victory: bool, rewards: Dictionary):
-	is_in_combat = false
+	# Don't set is_in_combat to false yet - wait for battle animation to finish
+	# This keeps the wave timer paused during the battle animation
 
-	# Apply damage to towers
-	if DefenseTowerManager and DefenseTowerManager.instance:
-		DefenseTowerManager.instance.apply_wave_damage(victory)
+	# Track cumulative wave stats
+	cumulative_rewards["total_waves"] += 1
+	if victory:
+		cumulative_rewards["waves_won"] += 1
+	else:
+		cumulative_rewards["waves_lost"] += 1
 
+	# Note: Dragon death and tower destruction is now handled in end_combat()
+	# after the battle animation finishes
+	
 	reset_wave_timer()
 	wave_completed.emit(victory, rewards)
+	
+	# Safety fallback: If no battle animation happens, end combat after 5 seconds
+	# This handles background battles when UI isn't open
+	get_tree().create_timer(5.0).timeout.connect(func():
+		if is_in_combat:
+			print("[DefenseManager] No battle animation detected, auto-ending combat")
+			end_combat()
+	)
+
+func end_combat():
+	"""Called when battle animation finishes - resumes wave timer and applies stat changes"""
+	is_in_combat = false
+	print("[DefenseManager] Combat ended, applying stat changes to dragons...")
+	
+	# Apply all pending stat changes now that animation is done
+	for change in pending_stat_changes:
+		var dragon = change["dragon"]
+		
+		# Skip if dragon died during combat
+		if dragon.is_dead:
+			continue
+		
+		# Apply XP
+		if change["xp"] > 0 and DragonStateManager.instance:
+			DragonStateManager.instance.gain_experience(dragon, change["xp"])
+			print("[DefenseManager] %s gained %d XP" % [dragon.dragon_name, change["xp"]])
+		
+		# Apply fatigue
+		dragon.fatigue_level = min(1.0, dragon.fatigue_level + change["fatigue"])
+		print("[DefenseManager] %s fatigue: %.1f%%" % [dragon.dragon_name, dragon.fatigue_level * 100])
+		
+		# Apply damage
+		if change["damage"] > 0:
+			dragon.take_damage(change["damage"])
+			dragon_damaged.emit(dragon, change["damage"])
+			print("[DefenseManager] %s took %d damage (HP: %.0f/%.0f)" %
+				[dragon.dragon_name, change["damage"], dragon.current_health, dragon.get_health()])
+			
+			# Check if dragon died from damage
+			if dragon.is_dead or dragon.current_health <= 0:
+				print("[DefenseManager] DEAD: %s has fallen!" % dragon.dragon_name)
+				_handle_dragon_death(dragon)
+		
+		# Emit success signal for victories
+		if change["victory"]:
+			dragon_defended_successfully.emit(dragon, 1)
+	
+	pending_stat_changes.clear()
+	print("[DefenseManager] Wave timer resumed")
+	
+	# Refresh all UIs on next frame to ensure dragon data is fully updated
+	await get_tree().process_frame
+	_refresh_all_dragon_uis()
+	
+	# NOW complete the wave after animation and stat changes
+	_complete_wave(pending_wave_victory, pending_wave_rewards)
+
+func _handle_dragon_death(dragon: Dragon):
+	"""Handle all cleanup when a dragon dies"""
+	print("[DefenseManager] Handling death of %s" % dragon.dragon_name)
+	
+	# Ensure dragon is marked as dead
+	if not dragon.is_dead:
+		dragon._die()
+	
+	# Find which tower this dragon was defending and destroy it
+	var tower_to_destroy: int = -1
+	for tower_idx in tower_assignments.keys():
+		if tower_assignments[tower_idx] == dragon:
+			tower_to_destroy = tower_idx
+			break
+	
+	if tower_to_destroy >= 0:
+		print("[DefenseManager] Destroying tower %d because %s died" % [tower_to_destroy, dragon.dragon_name])
+		
+		# Destroy the tower
+		if DefenseTowerManager and DefenseTowerManager.instance:
+			var towers = DefenseTowerManager.instance.get_towers()
+			if tower_to_destroy < towers.size():
+				var tower = towers[tower_to_destroy]
+				tower.current_health = 0
+				print("[DefenseManager] Tower %d health set to 0" % tower_to_destroy)
+		
+		# Remove dragon from tower assignments
+		tower_assignments.erase(tower_to_destroy)
+	
+	# Remove from dragon state manager
+	if DragonStateManager and DragonStateManager.instance:
+		DragonStateManager.instance.unregister_dragon(dragon)
+	
+	# Remove from factory
+	_remove_dragon_from_factory(dragon)
+	
+	# Refresh tower UI if it's open
+	_refresh_tower_ui()
+
+func _remove_dragon_from_factory(dragon: Dragon):
+	"""Remove dead dragon from factory manager and refresh UI"""
+	var factory_manager_nodes = get_tree().get_nodes_in_group("factory_manager")
+	
+	for node in factory_manager_nodes:
+		if node.has_method("get") and node.get("factory"):
+			var factory = node.get("factory")
+			if factory and factory.has_method("remove_dragon"):
+				factory.remove_dragon(dragon)
+				print("[DefenseManager] Removed %s from factory" % dragon.dragon_name)
+				
+				# Force immediate UI refresh
+				if node.has_method("_update_dragons_list"):
+					node._update_dragons_list()
+					print("[DefenseManager] Refreshed factory manager UI after dragon death")
+				return
+
+func _refresh_tower_ui():
+	"""Refresh defense tower UI to remove dead dragons"""
+	var tower_ui_nodes = get_tree().get_nodes_in_group("defense_towers_ui")
+	
+	for node in tower_ui_nodes:
+		if node.has_method("_refresh_tower_cards"):
+			node._refresh_tower_cards()
+			print("[DefenseManager] Refreshed tower UI after dragon death")
+
+func _refresh_all_dragon_uis():
+	"""Refresh all UIs that display dragon data after combat"""
+	# Refresh factory manager dragon list
+	var factory_manager_nodes = get_tree().get_nodes_in_group("factory_manager")
+	for node in factory_manager_nodes:
+		if node.has_method("_update_dragons_list"):
+			node._update_dragons_list()
+			print("[DefenseManager] Refreshed factory manager dragon list after combat")
+	
+	# Refresh dragon details modal if it's open
+	var dragon_details_nodes = get_tree().get_nodes_in_group("dragon_details_modal")
+	for node in dragon_details_nodes:
+		if node.visible and node.has_method("_update_display"):
+			node._update_display()
+			print("[DefenseManager] Refreshed dragon details modal after combat")
+	
+	# Refresh tower UI
+	_refresh_tower_ui()
+
+# === CUMULATIVE REWARDS ===
+
+func get_cumulative_rewards() -> Dictionary:
+	"""Get cumulative rewards since last UI open"""
+	return cumulative_rewards.duplicate()
+
+func reset_cumulative_rewards():
+	"""Reset cumulative rewards (called when UI is opened and rewards are shown)"""
+	cumulative_rewards = {
+		"gold": 0,
+		"meat": 0,
+		"waves_won": 0,
+		"waves_lost": 0,
+		"total_waves": 0
+	}
 
 # === SERIALIZATION ===
 
 func to_dict() -> Dictionary:
-	var defending_ids: Array[String] = []
-	for dragon in defending_dragons:
-		defending_ids.append(dragon.dragon_id)
+	# Save tower assignments as {tower_index: dragon_id}
+	var assignments_data: Dictionary = {}
+	for tower_idx in tower_assignments.keys():
+		var dragon = tower_assignments[tower_idx]
+		assignments_data[str(tower_idx)] = dragon.dragon_id
 
 	return {
 		"wave_number": wave_number,
 		"time_until_next_wave": time_until_next_wave,
-		"defending_dragon_ids": defending_ids
+		"tower_assignments": assignments_data
 	}
 
 func from_dict(data: Dictionary, dragon_factory = null):
 	wave_number = data.get("wave_number", 1)
 	time_until_next_wave = data.get("time_until_next_wave", BASE_WAVE_INTERVAL)
 
-	# Restore defending dragons if factory is provided
-	if dragon_factory and data.has("defending_dragon_ids"):
-		defending_dragons.clear()
-		for dragon_id in data["defending_dragon_ids"]:
+	# Restore tower assignments if factory is provided
+	tower_assignments.clear()
+	if dragon_factory and data.has("tower_assignments"):
+		var assignments_data = data["tower_assignments"]
+		for tower_idx_str in assignments_data.keys():
+			var tower_idx = int(tower_idx_str)
+			var dragon_id = assignments_data[tower_idx_str]
 			var dragon = dragon_factory.get_dragon_by_id(dragon_id)
+			
 			if dragon and not dragon.is_dead:
-				defending_dragons.append(dragon)
-				print("[DefenseManager] Restored defending dragon: %s" % dragon.dragon_name)
+				tower_assignments[tower_idx] = dragon
+				dragon.current_state = Dragon.DragonState.DEFENDING
+				print("[DefenseManager] Restored tower %d defender: %s" % [tower_idx, dragon.dragon_name])
 			else:
-				print("[DefenseManager] WARNING: Could not restore defending dragon %s" % dragon_id)
+				print("[DefenseManager] WARNING: Could not restore defending dragon %s for tower %d" % [dragon_id, tower_idx])
 
 # === DEBUG ===
 

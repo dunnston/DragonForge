@@ -15,6 +15,8 @@ const FATIGUE_RECOVERY_RESTING: float = 0.045  # 4.5% per 30 seconds (~11 minute
 
 # Food/Healing Constants
 const FOOD_HUNGER_HEAL: float = 0.25  # Food heals 25% hunger
+const KNIGHT_MEAT_HUNGER_HEAL: float = 0.30  # Knight meat heals 30% hunger
+const KNIGHT_MEAT_FATIGUE_COST: float = 0.15  # Knight meat adds 15% fatigue
 
 # Happiness Constants
 const HAPPINESS_DECAY_RATE: float = 0.005 / 60.0  # 0.5% per minute (slower than hunger)
@@ -409,6 +411,44 @@ func use_food_on_dragon(dragon: Dragon) -> bool:
 			print("[DragonStateManager] No food available!")
 			return false
 
+	print("[DragonStateManager] No inventory system available!")
+	return false
+
+func use_knight_meat_on_dragon(dragon: Dragon) -> bool:
+	"""Use knight meat to feed dragon (30% hunger reduction, 15% fatigue increase)"""
+	if not dragon or dragon.is_dead:
+		return false
+	
+	# Only feed if dragon has at least 5% hunger
+	if dragon.hunger_level < 0.05:
+		print("[DragonStateManager] %s is not hungry!" % dragon.dragon_name)
+		return false
+	
+	# Try InventoryManager
+	if InventoryManager and InventoryManager.instance:
+		var removed = InventoryManager.instance.remove_item_by_id("knight_meat", 1)
+		if removed > 0:
+			# Reduce hunger by 30%
+			var old_hunger = dragon.hunger_level
+			dragon.hunger_level = max(0.0, dragon.hunger_level - KNIGHT_MEAT_HUNGER_HEAL)
+			
+			# Add fatigue by 15%
+			var old_fatigue = dragon.fatigue_level
+			dragon.fatigue_level = min(1.0, dragon.fatigue_level + KNIGHT_MEAT_FATIGUE_COST)
+			
+			# Update last_fed_time to reflect the new hunger level
+			var current_time = Time.get_unix_time_from_system()
+			var new_time_since_fed = dragon.hunger_level / HUNGER_RATE
+			dragon.last_fed_time = int(current_time - new_time_since_fed)
+			
+			dragon_hunger_changed.emit(dragon, dragon.hunger_level)
+			print("[DragonStateManager] %s ate knight meat! Hunger: %.0f%% -> %.0f%%, Fatigue: %.0f%% -> %.0f%%" % 
+				[dragon.dragon_name, old_hunger * 100, dragon.hunger_level * 100, old_fatigue * 100, dragon.fatigue_level * 100])
+			return true
+		else:
+			print("[DragonStateManager] No knight meat available!")
+			return false
+	
 	print("[DragonStateManager] No inventory system available!")
 	return false
 
