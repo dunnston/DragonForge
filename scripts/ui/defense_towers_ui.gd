@@ -464,11 +464,16 @@ func _show_cumulative_rewards():
 	"""Show cumulative rewards from battles that happened while UI was closed"""
 	if not DefenseManager or not DefenseManager.instance:
 		return
-	
+
 	var cumulative = DefenseManager.instance.get_cumulative_rewards()
-	
+
 	# Only show if there were battles
 	if cumulative["total_waves"] == 0:
+		return
+
+	# Don't show cumulative rewards if this is the first wave (new player just starting)
+	if DefenseManager.instance.is_first_wave:
+		print("[DefenseTowersUI] Skipping cumulative rewards - player is new and hasn't completed first wave yet")
 		return
 	
 	# Create popup dialog to show rewards

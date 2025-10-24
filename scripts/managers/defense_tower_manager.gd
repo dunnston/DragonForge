@@ -312,7 +312,21 @@ func from_dict(data: Dictionary):
 		tower.tower_repaired.connect(_on_tower_repaired)
 		towers.append(tower)
 
+	# BUGFIX: Ensure we always have at least the starting number of towers
+	# This handles old save files from before the tower system was implemented
+	if towers.size() < STARTING_TOWERS:
+		print("[DefenseTowerManager] WARNING: Save file has %d towers, creating %d starting towers" % [towers.size(), STARTING_TOWERS - towers.size()])
+		var towers_to_create = STARTING_TOWERS - towers.size()
+		for i in towers_to_create:
+			var tower = DefenseTower.new()
+			tower.tower_damaged.connect(_on_tower_damaged)
+			tower.tower_destroyed.connect(_on_tower_destroyed)
+			tower.tower_repaired.connect(_on_tower_repaired)
+			towers.append(tower)
+
 	total_towers_built = data.get("total_towers_built", towers.size())
+	# Ensure total_towers_built is at least STARTING_TOWERS
+	total_towers_built = max(total_towers_built, STARTING_TOWERS)
 
 	print("[DefenseTowerManager] Loaded %d towers (Capacity: %d)" % [towers.size(), get_defense_capacity()])
 	tower_capacity_changed.emit(get_defense_capacity())

@@ -333,6 +333,7 @@
 				"hunger_reduction": 0.30,
 				"fatigue_increase": 0.15
 			}
+		},
 		"pet_gift": {
 			"id": "pet_gift",
 			"name": "Pet Gift",

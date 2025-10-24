@@ -210,14 +210,22 @@ func fade_out() -> void:
 func initialize_starting_inventory() -> void:
 	"""Initialize starting gold and dragon parts (from Professor's letter)"""
 	# Set starting gold (30 pieces as mentioned in the letter)
-	TreasureVault.add_gold(30)
+	if TreasureVault and TreasureVault.instance:
+		TreasureVault.instance.add_gold(30)
+		print("[OpeningLetter] Added 30 starting gold")
+	else:
+		print("[OpeningLetter] ERROR: TreasureVault not available!")
 
 	# Generate 6 random starting parts with constraints (at least 1 head, body, tail)
 	var parts_to_add = generate_starting_parts()
 
 	# Add parts to inventory
-	for part in parts_to_add:
-		InventoryManager.add_item_by_id(part, 1)
+	if InventoryManager and InventoryManager.instance:
+		for part in parts_to_add:
+			InventoryManager.instance.add_item_by_id(part, 1)
+		print("[OpeningLetter] Added %d starting parts: %s" % [parts_to_add.size(), parts_to_add])
+	else:
+		print("[OpeningLetter] ERROR: InventoryManager not available!")
 
 
 func generate_starting_parts() -> Array[String]:

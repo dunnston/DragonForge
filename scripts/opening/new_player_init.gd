@@ -29,16 +29,18 @@ static func start_new_player_experience() -> void:
 static func initialize_starting_resources() -> void:
 	"""Initialize starting gold and dragon parts for new players"""
 	# Set starting gold
-	if TreasureVault:
-		TreasureVault.add_gold(30)
+	if TreasureVault and TreasureVault.instance:
+		TreasureVault.instance.add_gold(30)
+		print("[NewPlayerInit] Added 30 starting gold")
 
 	# Generate 6 random starting parts with constraints
 	var parts_to_add = generate_starting_parts()
 
 	# Add parts to inventory
-	if InventoryManager:
+	if InventoryManager and InventoryManager.instance:
 		for part in parts_to_add:
-			InventoryManager.add_item_by_id(part, 1)
+			InventoryManager.instance.add_item_by_id(part, 1)
+		print("[NewPlayerInit] Added %d starting parts: %s" % [parts_to_add.size(), parts_to_add])
 
 
 ## Generate 6 starting parts with at least 1 of each type

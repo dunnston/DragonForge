@@ -6,13 +6,15 @@ extends Node
 static var instance: DefenseManager
 
 # === WAVE CONFIG ===
-const BASE_WAVE_INTERVAL: float = 20.0  # 30 seconds between waves
+const BASE_WAVE_INTERVAL: float = 20.0  # 20 seconds between waves (after first wave)
+const FIRST_WAVE_GRACE_PERIOD: float = 300.0  # 10 minutes for new players to set up
 
 # === STATE ===
 var wave_number: int = 1
 var tower_assignments: Dictionary = {}  # {tower_index: Dragon} - maps tower to defending dragon
-var time_until_next_wave: float = BASE_WAVE_INTERVAL
+var time_until_next_wave: float = FIRST_WAVE_GRACE_PERIOD  # Start with grace period for new players
 var is_in_combat: bool = false
+var is_first_wave: bool = true  # Track if this is the first wave
 
 # Store pending stat changes to apply after battle animation
 var pending_stat_changes: Array[Dictionary] = []
@@ -55,7 +57,7 @@ func _ready():
 	add_child(timer)
 	timer.start()
 
-	print("[DefenseManager] Initialized - First wave in %.0f seconds" % BASE_WAVE_INTERVAL)
+	print("[DefenseManager] Initialized - First wave in %.0f seconds (%.1f min grace period)" % [FIRST_WAVE_GRACE_PERIOD, FIRST_WAVE_GRACE_PERIOD / 60.0])
 
 # === WAVE TIMER ===
 
@@ -85,6 +87,10 @@ func _update_wave_timer():
 		_start_wave()
 
 func reset_wave_timer():
+	# After first wave, use normal interval
+	if is_first_wave:
+		is_first_wave = false
+		print("[DefenseManager] First wave completed - subsequent waves will occur every %.0f seconds" % BASE_WAVE_INTERVAL)
 	time_until_next_wave = BASE_WAVE_INTERVAL
 
 func _is_player_out_of_resources() -> bool:
@@ -147,7 +153,7 @@ func assign_dragon_to_tower(dragon: Dragon, tower_index: int) -> bool:
 	if DefenseTowerManager and DefenseTowerManager.instance:
 		max_defenders = DefenseTowerManager.instance.get_defense_capacity()
 
-	if defending_dragons.size() >= max_defenders:
+	if tower_assignments.size() >= max_defenders:
 		print("[DefenseManager] Maximum %d defenders (based on tower capacity)!" % max_defenders)
 		defense_slots_full.emit()
 		return false
@@ -448,10 +454,6 @@ func _resolve_combat(dragons: Array[Dragon], enemies: Array) -> bool:
 				"victory": false
 			})
 
-				# Trigger part recovery system
-				if DragonDeathManager and DragonDeathManager.instance:
-					DragonDeathManager.instance.handle_dragon_death(dragon, "combat_defending")
-
 		return false
 
 func _calculate_elemental_damage(wizard: Dictionary, dragons: Array[Dragon]) -> float:
@@ -721,12 +723,14 @@ func to_dict() -> Dictionary:
 	return {
 		"wave_number": wave_number,
 		"time_until_next_wave": time_until_next_wave,
-		"tower_assignments": assignments_data
+		"tower_assignments": assignments_data,
+		"is_first_wave": is_first_wave
 	}
 
 func from_dict(data: Dictionary, dragon_factory = null):
 	wave_number = data.get("wave_number", 1)
 	time_until_next_wave = data.get("time_until_next_wave", BASE_WAVE_INTERVAL)
+	is_first_wave = data.get("is_first_wave", false)  # Default to false for saved games
 
 	# Restore tower assignments if factory is provided
 	tower_assignments.clear()

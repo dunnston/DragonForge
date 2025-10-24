@@ -17,9 +17,8 @@ func _on_start_game_button_pressed() -> void:
 
 
 func _on_new_game_button_pressed() -> void:
-	# Initialize starting resources (30 gold + 6 parts)
-	NewPlayerInit.initialize_starting_resources()
 	# Start opening letter and tutorial sequence
+	# Note: Starting resources are initialized in opening_letter.gd after the letter is read
 	NewPlayerInit.start_new_player_experience()
 
 
