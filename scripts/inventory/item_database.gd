@@ -50,6 +50,16 @@ func load_items():
 			items[part_id] = part_data
 			dragon_parts[part_id] = part_data
 
+			# Also create a "_recovered" variant for parts recovered from death
+			# These stack separately and show decay timers
+			var recovered_id = part_id + "_recovered"
+			var recovered_data = part_data.duplicate(true)
+			recovered_data["id"] = recovered_id
+			recovered_data["name"] = part_data["name"] + " (Recovered)"
+			recovered_data["description"] = part_data.get("description", "") + " - Recovered from a fallen dragon. Will decay in 24 hours."
+			items[recovered_id] = recovered_data
+			dragon_parts[recovered_id] = recovered_data
+
 	# Load consumables
 	if data.has("consumables"):
 		for item_id in data["consumables"]:

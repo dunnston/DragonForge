@@ -7,10 +7,12 @@ signal slot_hovered(slot_index: int, item: Item)
 @onready var item_icon: TextureRect = $MarginContainer/ItemIcon
 @onready var stack_label: Label = $StackLabel
 @onready var empty_indicator: ColorRect = $EmptyIndicator
+@onready var decay_timer_label: Label = $DecayTimerLabel
 
 var slot_index: int = -1
 var current_item: Item = null
 var stack_count: int = 0
+var is_decaying_item: bool = false
 
 # Visual settings
 const SLOT_SIZE: Vector2 = Vector2(80, 80)
@@ -59,6 +61,14 @@ func update_slot(slot: InventorySlot):
 	else:
 		stack_label.visible = false
 
+	# Check if this is a recovered part (has decay timer)
+	is_decaying_item = current_item.id.ends_with("_recovered")
+	if is_decaying_item:
+		decay_timer_label.visible = true
+		_update_decay_timer()
+	else:
+		decay_timer_label.visible = false
+
 	# Update background
 	empty_indicator.visible = false
 	self_modulate = FILLED_COLOR
@@ -67,9 +77,11 @@ func set_empty():
 	"""Set slot to empty state"""
 	current_item = null
 	stack_count = 0
+	is_decaying_item = false
 
 	item_icon.visible = false
 	stack_label.visible = false
+	decay_timer_label.visible = false
 	empty_indicator.visible = true
 	self_modulate = EMPTY_COLOR
 
@@ -122,3 +134,59 @@ func get_item() -> Item:
 func get_stack_count() -> int:
 	"""Get the stack count"""
 	return stack_count
+
+func _process(_delta):
+	"""Update decay timer every frame for decaying items"""
+	if is_decaying_item and decay_timer_label.visible:
+		_update_decay_timer()
+
+func _update_decay_timer():
+	"""Update the decay timer display"""
+	if not current_item or not DragonDeathManager or not DragonDeathManager.instance:
+		return
+
+	# Find the soonest decay time for this part type
+	var soonest_decay_time = -1
+	for part in DragonDeathManager.instance.recovered_parts:
+		# Convert part to item_id to match
+		var part_item_id = DragonDeathManager.instance._convert_part_to_item_id(part)
+		if part_item_id == current_item.id:
+			var time_remaining = part.get_time_until_decay()
+			if soonest_decay_time == -1 or time_remaining < soonest_decay_time:
+				soonest_decay_time = time_remaining
+
+	# Display time remaining
+	if soonest_decay_time > 0:
+		decay_timer_label.text = _format_time_remaining(soonest_decay_time)
+
+		# Color code by urgency
+		var hours_remaining = soonest_decay_time / 3600.0
+		if hours_remaining < 1:
+			decay_timer_label.add_theme_color_override("font_color", Color(1, 0.2, 0.2))  # Red - critical
+		elif hours_remaining < 3:
+			decay_timer_label.add_theme_color_override("font_color", Color(1, 0.6, 0))  # Orange - urgent
+		elif hours_remaining < 6:
+			decay_timer_label.add_theme_color_override("font_color", Color(1, 1, 0.3))  # Yellow - warning
+		else:
+			decay_timer_label.add_theme_color_override("font_color", Color(0.8, 0.8, 0.8))  # Gray - safe
+	elif soonest_decay_time == 0:
+		decay_timer_label.text = "DECAYED"
+		decay_timer_label.add_theme_color_override("font_color", Color(0.5, 0.5, 0.5))
+	else:
+		decay_timer_label.visible = false
+
+func _format_time_remaining(seconds: int) -> String:
+	"""Format seconds as '23h 45m' or '45m' or '30s'"""
+	if seconds <= 0:
+		return "0s"
+
+	var hours = seconds / 3600
+	var minutes = (seconds % 3600) / 60
+	var secs = seconds % 60
+
+	if hours > 0:
+		return "%dh %dm" % [hours, minutes]
+	elif minutes > 0:
+		return "%dm" % minutes
+	else:
+		return "%ds" % secs

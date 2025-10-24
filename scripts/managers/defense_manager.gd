@@ -259,6 +259,10 @@ func _resolve_combat(dragons: Array[Dragon], enemies: Array) -> bool:
 			if dragon.is_dead:
 				print("[DefenseManager] DEAD: %s has fallen!" % dragon.dragon_name)
 
+				# Trigger part recovery system
+				if DragonDeathManager and DragonDeathManager.instance:
+					DragonDeathManager.instance.handle_dragon_death(dragon, "combat_defending")
+
 		return false
 
 # === REWARDS & LOSSES ===

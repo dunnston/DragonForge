@@ -447,6 +447,13 @@ func _add_dragon_debug_section():
 	mutation_btn.pressed.connect(_force_mutation)
 	items_container.add_child(mutation_btn)
 
+	# Kill Dragon button (for testing death system)
+	var kill_btn = Button.new()
+	kill_btn.text = "💀 Kill Dragon (Test Death System)"
+	kill_btn.pressed.connect(_kill_dragon)
+	kill_btn.add_theme_color_override("font_color", Color(1.0, 0.3, 0.3, 1))
+	items_container.add_child(kill_btn)
+
 	# Reset button
 	var reset_btn = Button.new()
 	reset_btn.text = "Reset Dragon to Perfect Condition"
@@ -462,35 +469,49 @@ func _add_button_to_hbox(hbox: HBoxContainer, text: String, callback: Callable):
 	hbox.add_child(btn)
 
 func _refresh_dragon_list(selector: OptionButton):
-	"""Populate dragon selector"""
+	"""Populate dragon selector (excluding dead dragons)"""
 	selector.clear()
 
 	if not DragonStateManager or not DragonStateManager.instance:
 		selector.add_item("No dragons available")
 		return
 
-	var dragons = DragonStateManager.instance.managed_dragons.values()
-	if dragons.is_empty():
-		selector.add_item("No dragons available")
+	var all_dragons = DragonStateManager.instance.managed_dragons.values()
+
+	# Filter out dead dragons
+	var living_dragons = []
+	for dragon in all_dragons:
+		if not dragon.is_dead:
+			living_dragons.append(dragon)
+
+	if living_dragons.is_empty():
+		selector.add_item("No living dragons")
+		current_dragon = null
 		return
 
-	for i in range(dragons.size()):
-		var dragon = dragons[i]
+	for i in range(living_dragons.size()):
+		var dragon = living_dragons[i]
 		selector.add_item(dragon.dragon_name, i)
 
-	# Auto-select first dragon
-	if dragons.size() > 0:
+	# Auto-select first living dragon
+	if living_dragons.size() > 0:
 		selector.select(0)
-		current_dragon = dragons[0]
+		current_dragon = living_dragons[0]
 
 func _on_dragon_selected(index: int):
 	"""Dragon selected in dropdown"""
 	if not DragonStateManager or not DragonStateManager.instance:
 		return
 
-	var dragons = DragonStateManager.instance.managed_dragons.values()
-	if index >= 0 and index < dragons.size():
-		current_dragon = dragons[index]
+	# Get only living dragons (same filter as refresh)
+	var all_dragons = DragonStateManager.instance.managed_dragons.values()
+	var living_dragons = []
+	for dragon in all_dragons:
+		if not dragon.is_dead:
+			living_dragons.append(dragon)
+
+	if index >= 0 and index < living_dragons.size():
+		current_dragon = living_dragons[index]
 		print("[DevMenu] Selected dragon: %s" % current_dragon.dragon_name)
 
 # === DRAGON DEBUG FUNCTIONS ===
@@ -538,3 +559,41 @@ func _force_mutation():
 func _reset_dragon():
 	if current_dragon and DragonStateManager.instance:
 		DragonStateManager.instance.reset_dragon_state(current_dragon)
+
+func _kill_dragon():
+	"""Kill the current dragon and trigger the death system"""
+	print("\n🔪 [DevMenu] _kill_dragon() called")
+
+	if not current_dragon:
+		print("❌ [DevMenu] No dragon selected!")
+		return
+
+	if current_dragon.is_dead:
+		print("⚠️ [DevMenu] Dragon is already dead!")
+		return
+
+	print("✅ [DevMenu] Killing dragon: %s" % current_dragon.dragon_name)
+	print("   Current health: %d" % current_dragon.current_health)
+	print("   Current state: %s" % Dragon.DragonState.keys()[current_dragon.current_state])
+
+	# Kill the dragon
+	current_dragon.is_dead = true
+	current_dragon.current_state = Dragon.DragonState.DEAD
+	current_dragon.current_health = 0
+
+	print("💀 [DevMenu] Dragon marked as dead")
+	print("   is_dead: %s" % current_dragon.is_dead)
+	print("   health: %d" % current_dragon.current_health)
+	print("   state: %s" % Dragon.DragonState.keys()[current_dragon.current_state])
+
+	# Trigger death system with combat cause (most generous recovery)
+	print("🎯 [DevMenu] Calling DragonDeathManager.handle_dragon_death()")
+	if DragonDeathManager and DragonDeathManager.instance:
+		DragonDeathManager.instance.handle_dragon_death(current_dragon, "combat_defending")
+		print("✅ [DevMenu] DragonDeathManager.handle_dragon_death() called")
+		print("💀 [DevMenu] Killed %s - Death popup should appear!" % current_dragon.dragon_name)
+	else:
+		print("❌ [DevMenu] DragonDeathManager not available!")
+
+	# Refresh dragon list (dead dragons should be hidden)
+	_refresh_dragon_selector()
