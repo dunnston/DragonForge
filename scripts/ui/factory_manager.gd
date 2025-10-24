@@ -63,6 +63,7 @@ var defense_slots: Array[Label] = []
 @onready var dragon_tooltip: Control = $DragonTooltip
 @onready var dragon_details_modal: Control = $DragonDetailsModal
 @onready var dragon_grounds_modal: DragonGroundsModal = $DragonGroundsModal
+@onready var save_exit_popup: Control = $SaveExitPopup
 
 # Defense Towers UI (created dynamically)
 var defense_towers_ui: DefenseTowersUI
@@ -192,6 +193,9 @@ func _ready():
 			# It's a Control-based modal
 			hire_modal.z_index = 100
 			hire_modal.z_as_relative = false
+	if save_exit_popup:
+		save_exit_popup.z_index = 200  # Highest priority - should be on top of everything
+		save_exit_popup.z_as_relative = false
 
 	# Connect to TreasureVault signals for gold
 	if TreasureVault:
@@ -252,6 +256,32 @@ func _ready():
 		_setup_pet_system()
 
 	print("[FactoryManager] Factory Manager UI initialized")
+
+func _input(event):
+	"""Handle ESC key to show save & exit popup"""
+	if event is InputEventKey and event.pressed and event.keycode == KEY_ESCAPE:
+		# Don't show popup if another modal is already open
+		if inventory_panel and inventory_panel.visible:
+			return
+		if part_selector and part_selector.visible:
+			return
+		if dragon_details_modal and dragon_details_modal.visible:
+			return
+		if dragon_grounds_modal and dragon_grounds_modal.visible:
+			return
+		if defense_towers_ui and defense_towers_ui.visible:
+			return
+		if training_yard_ui and training_yard_ui.visible:
+			return
+		if exploration_map_ui and exploration_map_ui.visible:
+			return
+		if save_exit_popup and save_exit_popup.visible:
+			return
+
+		# Show save & exit popup
+		if save_exit_popup:
+			save_exit_popup.show_popup()
+			get_viewport().set_input_as_handled()
 
 func _setup_part_slot_buttons():
 	# Use gui_input on the slot rectangles (the "Empty" areas) for click detection
@@ -709,7 +739,8 @@ func _update_collection_display():
 # === SIGNAL HANDLERS ===
 
 func _on_gold_changed(new_amount: int, delta: int):
-	_update_gold_display(new_amount)
+	# Always get total gold (unprotected + protected) for display
+	_update_gold_display(TreasureVault.get_total_gold())
 
 func _on_inventory_changed(slot_index: int):
 	# Update parts display when inventory changes
