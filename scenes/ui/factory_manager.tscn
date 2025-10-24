@@ -1,4 +1,4 @@
-[gd_scene load_steps=11 format=3 uid="uid://c8x2k4j5nan3p"]
+[gd_scene load_steps=20 format=3 uid="uid://c8x2k4j5nan3p"]
 
 [ext_resource type="Script" uid="uid://briemfklglw3k" path="res://scripts/ui/factory_manager.gd" id="1"]
 [ext_resource type="Theme" uid="uid://bo8g4sssf0ihw" path="res://themes/game_theme.tres" id="1_rymoh"]
@@ -6,10 +6,45 @@
 [ext_resource type="PackedScene" uid="uid://b3c4d5e6f7g8h" path="res://scenes/ui/part_selector.tscn" id="3"]
 [ext_resource type="Texture2D" uid="uid://v72fnyfeh3ul" path="res://assets/cracked_texture.png" id="3_2n4c4"]
 [ext_resource type="PackedScene" uid="uid://ipjdvqjhnvk4" path="res://scenes/ui/dragon_tooltip.tscn" id="4"]
+[ext_resource type="Texture2D" uid="uid://h454uf23q7dp" path="res://assets/ui/coins_icon.png" id="4_dn5bi"]
 [ext_resource type="PackedScene" uid="uid://b2j8h5k7m4oap" path="res://scenes/ui/scientist_panel.tscn" id="4_prvw3"]
 [ext_resource type="PackedScene" uid="uid://dad0e1f2g3h4i" path="res://scenes/ui/dragon_details_modal.tscn" id="5"]
+[ext_resource type="Texture2D" uid="uid://u0hpqv4jirlm" path="res://assets/ui/fire_icon.png" id="5_m5e4g"]
+[ext_resource type="Texture2D" uid="uid://b0nabm5ivdud4" path="res://assets/ui/ice_icon.png" id="6_h7akn"]
+[ext_resource type="FontFile" uid="uid://drcpudjaef4p8" path="res://assets/fonts/Walshes.otf" id="6_m5e4g"]
+[ext_resource type="Texture2D" uid="uid://ca2ngrdmdqcqc" path="res://assets/ui/lightning_icon.png" id="7_7607m"]
+[ext_resource type="Texture2D" uid="uid://qouho6qbi7m6" path="res://assets/ui/nature_icon.png" id="8_lkorh"]
+[ext_resource type="Texture2D" uid="uid://dkgc8dlolhupl" path="res://assets/ui/shadow_icon.png" id="9_6vuwu"]
 [ext_resource type="PackedScene" uid="uid://c3lam6n8p2q4r" path="res://scenes/ui/scientist_hire_modal.tscn" id="9_atd5s"]
-[ext_resource type="PackedScene" path="res://scenes/ui/dragon_grounds_modal.tscn" id="10_drgn_grnds"]
+[ext_resource type="PackedScene" uid="uid://d4f6lan2p8r1q" path="res://scenes/ui/dragon_grounds_modal.tscn" id="10_drgn_grnds"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_m5e4g"]
+content_margin_left = 16.0
+content_margin_top = 8.0
+content_margin_right = 16.0
+content_margin_bottom = 8.0
+bg_color = Color(0.1253469, 5.574744e-05, 0.16536394, 1)
+draw_center = false
+border_color = Color(3.6398882e-07, 0.20921424, 0.096946634, 1)
+border_blend = true
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_h7akn"]
+content_margin_left = 16.0
+content_margin_top = 8.0
+content_margin_right = 16.0
+content_margin_bottom = 8.0
+bg_color = Color(0.1253469, 5.574744e-05, 0.16536394, 1)
+draw_center = false
+border_color = Color(3.6398882e-07, 0.20921424, 0.096946634, 1)
+border_blend = true
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
 
 [node name="FactoryManager" type="Control"]
 layout_mode = 3
@@ -26,23 +61,15 @@ layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_left = 11.0
-offset_top = 47.5
-offset_right = 11.0
-offset_bottom = 47.5
 grow_horizontal = 2
 grow_vertical = 2
 color = Color(0.1, 0.12, 0.1, 1)
 
-[node name="CrackedTexture" type="TextureRect" parent="."]
+[node name="CrackedTexture" type="TextureRect" parent="Background"]
 layout_mode = 1
-anchors_preset = -1
+anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_left = 10.999999
-offset_top = 47.499996
-offset_right = -70.42651
-offset_bottom = 47.5
 grow_horizontal = 2
 grow_vertical = 2
 scale = Vector2(1.0807291, 1.0087891)
@@ -54,12 +81,13 @@ layout_mode = 1
 anchors_preset = -1
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_left = 11.0
-offset_top = 11.0
-offset_right = 21.0
-offset_bottom = 84.0
+offset_left = 8.0
+offset_top = 29.0
+offset_right = 3.0
+offset_bottom = 285.0
 grow_horizontal = 2
 grow_vertical = 2
+scale = Vector2(1, 0.7)
 theme_override_constants/margin_left = 15
 theme_override_constants/margin_top = 15
 theme_override_constants/margin_right = 15
@@ -71,144 +99,197 @@ theme_override_constants/separation = 10
 
 [node name="TopBar" type="HBoxContainer" parent="MarginContainer/MainVBox"]
 layout_mode = 2
+size_flags_vertical = 0
 theme_override_constants/separation = 10
 
 [node name="GoldDisplay" type="PanelContainer" parent="MarginContainer/MainVBox/TopBar"]
-custom_minimum_size = Vector2(160, 50)
+custom_minimum_size = Vector2(160, 65)
 layout_mode = 2
 
 [node name="HBox" type="HBoxContainer" parent="MarginContainer/MainVBox/TopBar/GoldDisplay"]
 layout_mode = 2
-size_flags_vertical = 8
+size_flags_vertical = 4
 theme_override_constants/separation = 10
 
-[node name="GoldIcon" type="ColorRect" parent="MarginContainer/MainVBox/TopBar/GoldDisplay/HBox"]
+[node name="GoldIcon" type="TextureRect" parent="MarginContainer/MainVBox/TopBar/GoldDisplay/HBox"]
 custom_minimum_size = Vector2(35, 35)
 layout_mode = 2
-color = Color(1, 0.843, 0, 1)
+size_flags_horizontal = 2
+size_flags_vertical = 4
+texture = ExtResource("4_dn5bi")
+expand_mode = 1
 
 [node name="GoldLabel" type="Label" parent="MarginContainer/MainVBox/TopBar/GoldDisplay/HBox"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.8, 1, 0.8, 1)
+size_flags_horizontal = 4
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_constants/outline_size = 3
+theme_override_fonts/font = ExtResource("6_m5e4g")
 theme_override_font_sizes/font_size = 24
-text = "0"
+theme_override_styles/normal = SubResource("StyleBoxFlat_m5e4g")
+text = "9023131233"
 
 [node name="PartsDisplay" type="PanelContainer" parent="MarginContainer/MainVBox/TopBar"]
 layout_mode = 2
-size_flags_horizontal = 3
-size_flags_vertical = 8
+size_flags_vertical = 0
 
 [node name="PartsHBox" type="HBoxContainer" parent="MarginContainer/MainVBox/TopBar/PartsDisplay"]
 layout_mode = 2
+size_flags_vertical = 4
 theme_override_constants/separation = 15
 
 [node name="FireParts" type="VBoxContainer" parent="MarginContainer/MainVBox/TopBar/PartsDisplay/PartsHBox"]
 layout_mode = 2
+size_flags_vertical = 0
+theme_override_constants/separation = -25
 alignment = 1
 
-[node name="Icon" type="ColorRect" parent="MarginContainer/MainVBox/TopBar/PartsDisplay/PartsHBox/FireParts"]
+[node name="Icon" type="TextureRect" parent="MarginContainer/MainVBox/TopBar/PartsDisplay/PartsHBox/FireParts"]
 custom_minimum_size = Vector2(35, 35)
 layout_mode = 2
 size_flags_vertical = 8
-color = Color(1, 0.3, 0.2, 1)
+texture = ExtResource("5_m5e4g")
+expand_mode = 4
 
 [node name="Count" type="Label" parent="MarginContainer/MainVBox/TopBar/PartsDisplay/PartsHBox/FireParts"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.8, 1, 0.8, 1)
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_colors/font_shadow_color = Color(0, 0, 0, 0)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 10
+theme_override_fonts/font = ExtResource("6_m5e4g")
+theme_override_font_sizes/font_size = 24
+theme_override_styles/normal = SubResource("StyleBoxFlat_h7akn")
 text = "0"
 horizontal_alignment = 1
 
 [node name="IceParts" type="VBoxContainer" parent="MarginContainer/MainVBox/TopBar/PartsDisplay/PartsHBox"]
 layout_mode = 2
+theme_override_constants/separation = -25
 alignment = 1
 
-[node name="Icon" type="ColorRect" parent="MarginContainer/MainVBox/TopBar/PartsDisplay/PartsHBox/IceParts"]
+[node name="Icon" type="TextureRect" parent="MarginContainer/MainVBox/TopBar/PartsDisplay/PartsHBox/IceParts"]
 custom_minimum_size = Vector2(35, 35)
 layout_mode = 2
-color = Color(0.4, 0.7, 1, 1)
+texture = ExtResource("6_h7akn")
+expand_mode = 4
 
 [node name="Count" type="Label" parent="MarginContainer/MainVBox/TopBar/PartsDisplay/PartsHBox/IceParts"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.8, 1, 0.8, 1)
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_colors/font_shadow_color = Color(0, 0, 0, 0)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 10
+theme_override_fonts/font = ExtResource("6_m5e4g")
+theme_override_font_sizes/font_size = 24
+theme_override_styles/normal = SubResource("StyleBoxFlat_h7akn")
 text = "0"
 horizontal_alignment = 1
+vertical_alignment = 1
 
 [node name="LightningParts" type="VBoxContainer" parent="MarginContainer/MainVBox/TopBar/PartsDisplay/PartsHBox"]
 layout_mode = 2
+theme_override_constants/separation = -25
 alignment = 1
 
-[node name="Icon" type="ColorRect" parent="MarginContainer/MainVBox/TopBar/PartsDisplay/PartsHBox/LightningParts"]
+[node name="Icon" type="TextureRect" parent="MarginContainer/MainVBox/TopBar/PartsDisplay/PartsHBox/LightningParts"]
 custom_minimum_size = Vector2(35, 35)
 layout_mode = 2
-color = Color(1, 1, 0.3, 1)
+texture = ExtResource("7_7607m")
+expand_mode = 4
 
 [node name="Count" type="Label" parent="MarginContainer/MainVBox/TopBar/PartsDisplay/PartsHBox/LightningParts"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.8, 1, 0.8, 1)
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_colors/font_shadow_color = Color(0, 0, 0, 0)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 10
+theme_override_fonts/font = ExtResource("6_m5e4g")
+theme_override_font_sizes/font_size = 24
+theme_override_styles/normal = SubResource("StyleBoxFlat_h7akn")
 text = "0"
 horizontal_alignment = 1
+vertical_alignment = 1
 
 [node name="NatureParts" type="VBoxContainer" parent="MarginContainer/MainVBox/TopBar/PartsDisplay/PartsHBox"]
 layout_mode = 2
+theme_override_constants/separation = -25
 alignment = 1
 
-[node name="Icon" type="ColorRect" parent="MarginContainer/MainVBox/TopBar/PartsDisplay/PartsHBox/NatureParts"]
+[node name="Icon" type="TextureRect" parent="MarginContainer/MainVBox/TopBar/PartsDisplay/PartsHBox/NatureParts"]
 custom_minimum_size = Vector2(35, 35)
 layout_mode = 2
-color = Color(0.3, 1, 0.3, 1)
+texture = ExtResource("8_lkorh")
+expand_mode = 4
 
 [node name="Count" type="Label" parent="MarginContainer/MainVBox/TopBar/PartsDisplay/PartsHBox/NatureParts"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.8, 1, 0.8, 1)
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_colors/font_shadow_color = Color(0, 0, 0, 0)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 10
+theme_override_fonts/font = ExtResource("6_m5e4g")
+theme_override_font_sizes/font_size = 24
+theme_override_styles/normal = SubResource("StyleBoxFlat_h7akn")
 text = "0"
 horizontal_alignment = 1
+vertical_alignment = 1
 
 [node name="ShadowParts" type="VBoxContainer" parent="MarginContainer/MainVBox/TopBar/PartsDisplay/PartsHBox"]
 layout_mode = 2
+theme_override_constants/separation = -25
 alignment = 1
 
-[node name="Icon" type="ColorRect" parent="MarginContainer/MainVBox/TopBar/PartsDisplay/PartsHBox/ShadowParts"]
+[node name="Icon" type="TextureRect" parent="MarginContainer/MainVBox/TopBar/PartsDisplay/PartsHBox/ShadowParts"]
 custom_minimum_size = Vector2(35, 35)
 layout_mode = 2
-color = Color(0.6, 0.4, 1, 1)
+texture = ExtResource("9_6vuwu")
+expand_mode = 4
 
 [node name="Count" type="Label" parent="MarginContainer/MainVBox/TopBar/PartsDisplay/PartsHBox/ShadowParts"]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.8, 1, 0.8, 1)
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_colors/font_shadow_color = Color(0, 0, 0, 0)
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 10
+theme_override_fonts/font = ExtResource("6_m5e4g")
+theme_override_font_sizes/font_size = 24
+theme_override_styles/normal = SubResource("StyleBoxFlat_h7akn")
 text = "0"
 horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="PanelContainer" type="PanelContainer" parent="MarginContainer/MainVBox/TopBar"]
+layout_mode = 2
+size_flags_horizontal = 3
 
 [node name="ViewInventoryButton" type="Button" parent="MarginContainer/MainVBox/TopBar"]
 custom_minimum_size = Vector2(120, 50)
 layout_mode = 2
-size_flags_vertical = 8
 theme_override_font_sizes/font_size = 14
 text = "VIEW VAULT"
 
 [node name="ManageDefensesButton" type="Button" parent="MarginContainer/MainVBox/TopBar"]
 custom_minimum_size = Vector2(160, 50)
 layout_mode = 2
-size_flags_vertical = 8
 theme_override_font_sizes/font_size = 14
 text = "MANAGE DEFENSES"
 
 [node name="ManageTrainingButton" type="Button" parent="MarginContainer/MainVBox/TopBar"]
 custom_minimum_size = Vector2(160, 50)
 layout_mode = 2
-size_flags_vertical = 8
 theme_override_font_sizes/font_size = 14
 text = "TRAINING GROUNDS"
 
 [node name="ExplorationMapButton" type="Button" parent="MarginContainer/MainVBox/TopBar"]
 custom_minimum_size = Vector2(160, 50)
 layout_mode = 2
-size_flags_vertical = 8
 theme_override_font_sizes/font_size = 14
 text = "EXPLORATION MAP"
 
 [node name="MainContent" type="HBoxContainer" parent="MarginContainer/MainVBox"]
 layout_mode = 2
-size_flags_vertical = 3
+size_flags_vertical = 0
 theme_override_constants/separation = 10
 
 [node name="LeftPanel" type="PanelContainer" parent="MarginContainer/MainVBox/MainContent"]

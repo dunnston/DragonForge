@@ -9,6 +9,10 @@ var lightning_timer: Timer
 var flash_timer: Timer
 var is_active: bool = false
 
+#Custom colors for this animation
+var colors: Array[Color] = []
+
+
 # Settings
 const LIGHTNING_COUNT: int = 8  # Number of simultaneous lightning bolts
 const BOLT_SEGMENTS: int = 12   # Segments per bolt
@@ -34,10 +38,11 @@ func _ready():
 	flash_timer.timeout.connect(_hide_lightning)
 	add_child(flash_timer)
 
-func start_effect():
+func start_effect(custom_colors: Array = []):
 	"""Start the lightning effect"""
 	is_active = true
 	visible = true
+	colors = custom_colors.duplicate() if not custom_colors.is_empty() else []
 	lightning_timer.start()
 	_create_lightning_flash()
 
@@ -64,7 +69,10 @@ func _create_lightning_flash():
 	for i in LIGHTNING_COUNT:
 		var line = Line2D.new()
 		line.width = LIGHTNING_WIDTH
-		line.default_color = Color(0.8 + randf() * 0.2, 0.9 + randf() * 0.1, 1.0, 0.9)
+		if not colors.is_empty():
+			line.default_color = colors[randi() % colors.size()]
+		else:
+			line.default_color = Color(0.8 + randf() * 0.2, 0.9 + randf() * 0.1, 1.0, 0.9)
 		line.antialiased = true
 
 		# Random start position at top of screen

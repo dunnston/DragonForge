@@ -506,7 +506,11 @@ func _start_dragon_animation(head_part: DragonPart, body_part: DragonPart, tail_
 	if creation_audio:
 		creation_audio.play()
 	if lightning_effect:
-		lightning_effect.start_effect()
+		var colors: Array[Color] = []
+		colors.append(ELEMENT_COLORS.get(head_part.element, Color.WHITE))
+		colors.append(ELEMENT_COLORS.get(body_part.element, Color.WHITE))
+		colors.append(ELEMENT_COLORS.get(tail_part.element, Color.WHITE))
+		lightning_effect.start_effect(colors)
 
 	# Disable animate button during animation
 	animate_button.disabled = true

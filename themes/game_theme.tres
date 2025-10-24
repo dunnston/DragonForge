@@ -106,6 +106,7 @@ corner_radius_bottom_right = 8
 corner_radius_bottom_left = 8
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_x88xt"]
+content_margin_top = 16.0
 bg_color = Color(0.07058824, 0.07058824, 0.07058824, 0.81960785)
 border_width_left = 1
 border_width_top = 1

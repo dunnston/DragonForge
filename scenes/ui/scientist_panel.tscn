@@ -1,33 +1,37 @@
 [gd_scene load_steps=5 format=3 uid="uid://b2j8h5k7m4oap"]
 
-[ext_resource type="Script" path="res://scripts/ui/scientist_panel.gd" id="1_scientist_panel"]
-[ext_resource type="StyleBox" uid="uid://unique_green_border" path="res://resources/ui/green_border_style.tres" id="2_green_border"]
+[ext_resource type="Script" uid="uid://cgbudla7n6jpo" path="res://scripts/ui/scientist_panel.gd" id="1_scientist_panel"]
+[ext_resource type="StyleBox" uid="uid://cy8fpk6uvlrye" path="res://resources/ui/green_border_style.tres" id="2_green_border"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_progress_bg"]
+content_margin_left = 2.0
+content_margin_top = 2.0
+content_margin_right = 2.0
+content_margin_bottom = 2.0
 bg_color = Color(0.1, 0.1, 0.1, 1)
 border_width_left = 2
 border_width_top = 2
 border_width_right = 2
 border_width_bottom = 2
 border_color = Color(0.2, 1, 0.2, 1)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_progress_fill"]
 content_margin_left = 2.0
 content_margin_top = 2.0
 content_margin_right = 2.0
 content_margin_bottom = 2.0
-
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_progress_fill"]
 bg_color = Color(0.2, 1, 0.2, 1)
 corner_radius_top_left = 3
 corner_radius_top_right = 3
 corner_radius_bottom_right = 3
 corner_radius_bottom_left = 3
-content_margin_left = 2.0
-content_margin_top = 2.0
-content_margin_right = 2.0
-content_margin_bottom = 2.0
 
 [node name="ScientistPanel" type="PanelContainer"]
-custom_minimum_size = Vector2(140, 180)
+custom_minimum_size = Vector2(140, 120)
+anchors_preset = -1
+offset_right = 140.0
+offset_bottom = 164.0
+scale = Vector2(0.75, 0.75)
 script = ExtResource("1_scientist_panel")
 
 [node name="VBox" type="VBoxContainer" parent="."]
@@ -72,8 +76,7 @@ theme_override_styles/panel = ExtResource("2_green_border")
 [node name="PlaceholderText" type="Label" parent="VBox/ScientistButton/ImageContainer/PlaceholderBG"]
 unique_name_in_owner = true
 layout_mode = 1
-mouse_filter = 2
-anchors_preset = 8
+anchors_preset = -1
 anchor_left = 0.5
 anchor_top = 0.5
 anchor_right = 0.5
@@ -142,11 +145,11 @@ horizontal_alignment = 1
 unique_name_in_owner = true
 custom_minimum_size = Vector2(120, 16)
 layout_mode = 2
+theme_override_styles/background = SubResource("StyleBoxFlat_progress_bg")
+theme_override_styles/fill = SubResource("StyleBoxFlat_progress_fill")
 max_value = 1.0
 value = 0.5
 show_percentage = false
-theme_override_styles/background = SubResource("StyleBoxFlat_progress_bg")
-theme_override_styles/fill = SubResource("StyleBoxFlat_progress_fill")
 
 [connection signal="pressed" from="VBox/ScientistButton" to="." method="_on_scientist_button_pressed"]
 [connection signal="pressed" from="VBox/ScientistButton/FireButton" to="." method="_on_fire_button_pressed"]
