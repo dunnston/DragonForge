@@ -170,7 +170,7 @@ func play_thunder() -> void:
 
 
 func proceed_to_tutorial() -> void:
-	"""Fade out and transition to tutorial"""
+	"""Fade out and transition to game (skipping tutorial)"""
 	can_continue = false
 
 	# Fade out music
@@ -184,8 +184,11 @@ func proceed_to_tutorial() -> void:
 	# Emit signal that letter is complete
 	letter_complete.emit()
 
-	# Load tutorial scene
-	get_tree().change_scene_to_file("res://scenes/opening/tutorial_manager.tscn")
+	# Initialize starting inventory (30 gold + 6 parts)
+	initialize_starting_inventory()
+
+	# Load main game (skip tutorial)
+	get_tree().change_scene_to_file("res://scenes/ui/factory_manager.tscn")
 
 
 func fade_in() -> void:
@@ -202,3 +205,36 @@ func fade_out() -> void:
 	tween.tween_property(fade_overlay, "modulate:a", 1.0, fade_duration)
 	tween.set_ease(Tween.EASE_IN_OUT)
 	await tween.finished
+
+
+func initialize_starting_inventory() -> void:
+	"""Initialize starting gold and dragon parts (from Professor's letter)"""
+	# Set starting gold (30 pieces as mentioned in the letter)
+	TreasureVault.add_gold(30)
+
+	# Generate 6 random starting parts with constraints (at least 1 head, body, tail)
+	var parts_to_add = generate_starting_parts()
+
+	# Add parts to inventory
+	for part in parts_to_add:
+		InventoryManager.add_item_by_id(part, 1)
+
+
+func generate_starting_parts() -> Array[String]:
+	"""Generate 6 starting parts with at least 1 of each type"""
+	var parts: Array[String] = []
+	var elements = ["fire", "ice", "lightning", "nature", "shadow"]
+	var part_types = ["head", "body", "tail"]
+
+	# Ensure at least one of each type (as mentioned in letter)
+	for part_type in part_types:
+		var random_element = elements[randi() % elements.size()]
+		parts.append(random_element + "_" + part_type)
+
+	# Add 3 more random parts (total 6 as mentioned in letter)
+	for i in range(3):
+		var random_element = elements[randi() % elements.size()]
+		var random_type = part_types[randi() % part_types.size()]
+		parts.append(random_element + "_" + random_type)
+
+	return parts

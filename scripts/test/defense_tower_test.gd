@@ -30,9 +30,9 @@ func test_initial_state():
 	var tower_manager = DefenseTowerManager.instance
 
 	# Should start with 3 towers
-	assert(tower_manager.get_total_towers() == 3, "Should start with 3 towers")
-	assert(tower_manager.get_defense_capacity() == 3, "Defense capacity should be 3")
-	assert(tower_manager.can_build_tower(), "Should be able to build more towers")
+	assert_true(tower_manager.get_total_towers() == 3, "Should start with 3 towers")
+	assert_true(tower_manager.get_defense_capacity() == 3, "Defense capacity should be 3")
+	assert_true(tower_manager.can_build_tower(), "Should be able to build more towers")
 
 	print("✓ Starting towers: %d" % tower_manager.get_total_towers())
 	print("✓ Defense capacity: %d" % tower_manager.get_defense_capacity())
@@ -56,9 +56,9 @@ func test_tower_building():
 	# Build a tower
 	var new_tower = tower_manager.build_tower()
 
-	assert(new_tower != null, "Tower should be built")
-	assert(tower_manager.get_total_towers() == initial_towers + 1, "Tower count should increase")
-	assert(vault.get_total_gold() == initial_gold - tower_cost, "Gold should be deducted")
+	assert_true(new_tower != null, "Tower should be built")
+	assert_true(tower_manager.get_total_towers() == initial_towers + 1, "Tower count should increase")
+	assert_true(vault.get_total_gold() == initial_gold - tower_cost, "Gold should be deducted")
 
 	print("✓ Tower built successfully")
 	print("✓ Total towers: %d" % tower_manager.get_total_towers())
@@ -76,7 +76,7 @@ func test_tower_capacity():
 	var capacity = tower_manager.get_defense_capacity()
 	var max_defenders = defense_manager.get_max_defenders()
 
-	assert(capacity == max_defenders, "Defense capacity should match max defenders")
+	assert_true(capacity == max_defenders, "Defense capacity should match max defenders")
 
 	print("✓ Tower capacity: %d" % capacity)
 	print("✓ Max defenders: %d" % max_defenders)
@@ -100,7 +100,7 @@ func test_tower_damage():
 	# Apply wave damage (victory = small damage)
 	tower_manager.apply_wave_damage(true)
 
-	assert(first_tower.current_health < initial_health, "Tower should take damage")
+	assert_true(first_tower.current_health < initial_health, "Tower should take damage")
 	print("✓ Tower took damage on wave success")
 	print("✓ Health: %d -> %d" % [initial_health, first_tower.current_health])
 
@@ -147,9 +147,9 @@ func test_tower_repair():
 	# Repair tower
 	var success = tower_manager.repair_tower(damaged_tower)
 
-	assert(success, "Repair should succeed")
-	assert(damaged_tower.current_health == damaged_tower.max_health, "Tower should be fully repaired")
-	assert(vault.get_total_gold() == initial_gold - repair_cost, "Gold should be deducted")
+	assert_true(success, "Repair should succeed")
+	assert_true(damaged_tower.current_health == damaged_tower.max_health, "Tower should be fully repaired")
+	assert_true(vault.get_total_gold() == initial_gold - repair_cost, "Gold should be deducted")
 
 	print("✓ Tower repaired successfully")
 	print("✓ Health: %d -> %d" % [initial_health, damaged_tower.current_health])
@@ -175,14 +175,14 @@ func test_save_load():
 	# Restore from save
 	tower_manager.from_dict(save_data)
 
-	assert(tower_manager.get_total_towers() == original_count, "Tower count should match after load")
-	assert(tower_manager.get_defense_capacity() == original_capacity, "Capacity should match after load")
+	assert_true(tower_manager.get_total_towers() == original_count, "Tower count should match after load")
+	assert_true(tower_manager.get_defense_capacity() == original_capacity, "Capacity should match after load")
 
 	print("✓ Loaded state: %d towers, %d capacity" % [tower_manager.get_total_towers(), tower_manager.get_defense_capacity()])
 	print("✓ Save/Load working correctly")
 	print("")
 
-func assert(condition: bool, message: String):
+func assert_true(condition: bool, message: String):
 	if not condition:
 		push_error("ASSERTION FAILED: " + message)
 		print("❌ FAIL: " + message)

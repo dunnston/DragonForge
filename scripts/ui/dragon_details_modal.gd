@@ -4,15 +4,15 @@ extends Control
 signal dragon_updated
 
 @onready var close_button: Button = $CenterContainer/PanelContainer/MarginContainer/MainVBox/TopBar/CloseButton
-@onready var name_label: Label = $CenterContainer/PanelContainer/MarginContainer/MainVBox/ContentContainer/LeftPanel/NameLabel
+@onready var name_label: Label = $CenterContainer/PanelContainer/MarginContainer/MainVBox/ScrollContainer/ScrollContent/ContentContainer/LeftPanel/NameLabel
 @onready var dragon_visual: DragonVisual = %DragonVisual
 
 # Stats
-@onready var level_label: Label = $CenterContainer/PanelContainer/MarginContainer/MainVBox/ContentContainer/RightPanel/StatsSection/LevelLabel
-@onready var attack_label: Label = $CenterContainer/PanelContainer/MarginContainer/MainVBox/ContentContainer/RightPanel/StatsSection/AttackLabel
-@onready var health_label: Label = $CenterContainer/PanelContainer/MarginContainer/MainVBox/ContentContainer/RightPanel/StatsSection/HealthLabel
-@onready var speed_label: Label = $CenterContainer/PanelContainer/MarginContainer/MainVBox/ContentContainer/RightPanel/StatsSection/SpeedLabel
-@onready var xp_label: Label = $CenterContainer/PanelContainer/MarginContainer/MainVBox/ContentContainer/RightPanel/StatsSection/XPLabel
+@onready var level_label: Label = $CenterContainer/PanelContainer/MarginContainer/MainVBox/ScrollContainer/ScrollContent/ContentContainer/RightPanel/StatsSection/LevelLabel
+@onready var attack_label: Label = $CenterContainer/PanelContainer/MarginContainer/MainVBox/ScrollContainer/ScrollContent/ContentContainer/RightPanel/StatsSection/AttackLabel
+@onready var health_label: Label = $CenterContainer/PanelContainer/MarginContainer/MainVBox/ScrollContainer/ScrollContent/ContentContainer/RightPanel/StatsSection/HealthLabel
+@onready var speed_label: Label = $CenterContainer/PanelContainer/MarginContainer/MainVBox/ScrollContainer/ScrollContent/ContentContainer/RightPanel/StatsSection/SpeedLabel
+@onready var xp_label: Label = $CenterContainer/PanelContainer/MarginContainer/MainVBox/ScrollContainer/ScrollContent/ContentContainer/RightPanel/StatsSection/XPLabel
 
 # Advanced Stats Panel (created dynamically)
 var view_all_stats_button: Button
@@ -20,9 +20,9 @@ var advanced_stats_panel: VBoxContainer
 var is_advanced_stats_visible: bool = false
 
 # Status
-@onready var state_label: Label = $CenterContainer/PanelContainer/MarginContainer/MainVBox/ContentContainer/RightPanel/StatusSection/StateLabel
-@onready var hunger_label: Label = $CenterContainer/PanelContainer/MarginContainer/MainVBox/ContentContainer/RightPanel/StatusSection/HungerLabel
-@onready var fatigue_label: Label = $CenterContainer/PanelContainer/MarginContainer/MainVBox/ContentContainer/RightPanel/StatusSection/FatigueLabel
+@onready var state_label: Label = $CenterContainer/PanelContainer/MarginContainer/MainVBox/ScrollContainer/ScrollContent/ContentContainer/RightPanel/StatusSection/StateLabel
+@onready var hunger_label: Label = $CenterContainer/PanelContainer/MarginContainer/MainVBox/ScrollContainer/ScrollContent/ContentContainer/RightPanel/StatusSection/HungerLabel
+@onready var fatigue_label: Label = $CenterContainer/PanelContainer/MarginContainer/MainVBox/ScrollContainer/ScrollContent/ContentContainer/RightPanel/StatusSection/FatigueLabel
 
 # Dynamic UI elements (created programmatically)
 var happiness_label: Label
@@ -32,20 +32,20 @@ var health_pot_button: Button
 var equip_toy_button: Button
 
 # Parts
-@onready var head_label: Label = $CenterContainer/PanelContainer/MarginContainer/MainVBox/ContentContainer/RightPanel/PartsSection/HeadLabel
-@onready var body_label: Label = $CenterContainer/PanelContainer/MarginContainer/MainVBox/ContentContainer/RightPanel/PartsSection/BodyLabel
-@onready var tail_label: Label = $CenterContainer/PanelContainer/MarginContainer/MainVBox/ContentContainer/RightPanel/PartsSection/TailLabel
+@onready var head_label: Label = $CenterContainer/PanelContainer/MarginContainer/MainVBox/ScrollContainer/ScrollContent/ContentContainer/RightPanel/PartsSection/HeadLabel
+@onready var body_label: Label = $CenterContainer/PanelContainer/MarginContainer/MainVBox/ScrollContainer/ScrollContent/ContentContainer/RightPanel/PartsSection/BodyLabel
+@onready var tail_label: Label = $CenterContainer/PanelContainer/MarginContainer/MainVBox/ScrollContainer/ScrollContent/ContentContainer/RightPanel/PartsSection/TailLabel
 
 # Action buttons
-@onready var feed_button: Button = $CenterContainer/PanelContainer/MarginContainer/MainVBox/BottomPanel/SectionsContainer/ActionsSection/ButtonsGrid/FeedButton
-@onready var train_button: Button = $CenterContainer/PanelContainer/MarginContainer/MainVBox/BottomPanel/SectionsContainer/ActionsSection/ButtonsGrid/TrainButton
-@onready var rest_button: Button = $CenterContainer/PanelContainer/MarginContainer/MainVBox/BottomPanel/SectionsContainer/ActionsSection/ButtonsGrid/RestButton
-@onready var defend_button: Button = $CenterContainer/PanelContainer/MarginContainer/MainVBox/BottomPanel/SectionsContainer/ActionsSection/ButtonsGrid/DefendButton
+@onready var feed_button: Button = $CenterContainer/PanelContainer/MarginContainer/MainVBox/ScrollContainer/ScrollContent/BottomPanel/SectionsContainer/ActionsSection/ButtonsGrid/FeedButton
+@onready var train_button: Button = $CenterContainer/PanelContainer/MarginContainer/MainVBox/ScrollContainer/ScrollContent/BottomPanel/SectionsContainer/ActionsSection/ButtonsGrid/TrainButton
+@onready var rest_button: Button = $CenterContainer/PanelContainer/MarginContainer/MainVBox/ScrollContainer/ScrollContent/BottomPanel/SectionsContainer/ActionsSection/ButtonsGrid/RestButton
+@onready var defend_button: Button = $CenterContainer/PanelContainer/MarginContainer/MainVBox/ScrollContainer/ScrollContent/BottomPanel/SectionsContainer/ActionsSection/ButtonsGrid/DefendButton
 
 # Exploration
-@onready var exploration_status_label: Label = $CenterContainer/PanelContainer/MarginContainer/MainVBox/BottomPanel/SectionsContainer/ExplorationSection/StatusLabel
-@onready var destination_dropdown: OptionButton = $CenterContainer/PanelContainer/MarginContainer/MainVBox/BottomPanel/SectionsContainer/ExplorationSection/ExplorationControls/DestinationDropdown
-@onready var send_exploration_button: Button = $CenterContainer/PanelContainer/MarginContainer/MainVBox/BottomPanel/SectionsContainer/ExplorationSection/ExplorationControls/SendButton
+@onready var exploration_status_label: Label = $CenterContainer/PanelContainer/MarginContainer/MainVBox/ScrollContainer/ScrollContent/BottomPanel/SectionsContainer/ExplorationSection/StatusLabel
+@onready var destination_dropdown: OptionButton = $CenterContainer/PanelContainer/MarginContainer/MainVBox/ScrollContainer/ScrollContent/BottomPanel/SectionsContainer/ExplorationSection/ExplorationControls/DestinationDropdown
+@onready var send_exploration_button: Button = $CenterContainer/PanelContainer/MarginContainer/MainVBox/ScrollContainer/ScrollContent/BottomPanel/SectionsContainer/ExplorationSection/ExplorationControls/SendButton
 
 var current_dragon: Dragon = null
 var update_timer: Timer
@@ -105,7 +105,7 @@ func _populate_destination_dropdown():
 
 func _create_happiness_ui():
 	"""Add happiness label to status section"""
-	var status_section = $CenterContainer/PanelContainer/MarginContainer/MainVBox/ContentContainer/RightPanel/StatusSection
+	var status_section = $CenterContainer/PanelContainer/MarginContainer/MainVBox/ScrollContainer/ScrollContent/ContentContainer/RightPanel/StatusSection
 	happiness_label = Label.new()
 	happiness_label.name = "HappinessLabel"
 	happiness_label.add_theme_color_override("font_color", Color(1, 0.8, 1, 1))
@@ -114,7 +114,7 @@ func _create_happiness_ui():
 
 func _create_consumable_ui():
 	"""Add consumable item buttons"""
-	var right_panel = $CenterContainer/PanelContainer/MarginContainer/MainVBox/ContentContainer/RightPanel
+	var right_panel = $CenterContainer/PanelContainer/MarginContainer/MainVBox/ScrollContainer/ScrollContent/ContentContainer/RightPanel
 
 	# Create items section
 	var items_section = VBoxContainer.new()
@@ -156,7 +156,7 @@ func _create_consumable_ui():
 
 func _create_toy_slot_ui():
 	"""Add toy slot UI"""
-	var right_panel = $CenterContainer/PanelContainer/MarginContainer/MainVBox/ContentContainer/RightPanel
+	var right_panel = $CenterContainer/PanelContainer/MarginContainer/MainVBox/ScrollContainer/ScrollContent/ContentContainer/RightPanel
 
 	# Separator
 	var separator = HSeparator.new()
@@ -191,7 +191,7 @@ func _create_toy_slot_ui():
 
 func _create_advanced_stats_ui():
 	"""Add advanced stats panel with view all stats button"""
-	var stats_section = $CenterContainer/PanelContainer/MarginContainer/MainVBox/ContentContainer/RightPanel/StatsSection
+	var stats_section = $CenterContainer/PanelContainer/MarginContainer/MainVBox/ScrollContainer/ScrollContent/ContentContainer/RightPanel/StatsSection
 
 	# Add button to toggle advanced stats
 	view_all_stats_button = Button.new()
