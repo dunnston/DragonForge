@@ -151,6 +151,11 @@ func repair_tower(tower: DefenseTower, repair_amount: int = -1) -> bool:
 
 	# Repair tower
 	tower.repair(repair_amount)
+
+	# Play repair sound
+	if AudioManager and AudioManager.instance:
+		AudioManager.instance.play_repair()
+
 	print("[DefenseTowerManager] Tower repaired for %d gold (+%d HP)" % [cost, repair_amount])
 
 	return true
@@ -210,9 +215,13 @@ func rebuild_tower(tower_index: int) -> bool:
 	tower.current_health = tower.max_health
 	tower_repaired.emit(tower, tower.max_health)
 	tower_capacity_changed.emit(get_defense_capacity())
-	
+
+	# Play repair sound
+	if AudioManager and AudioManager.instance:
+		AudioManager.instance.play_repair()
+
 	print("[DefenseTowerManager] Tower %d rebuilt for %d gold! (HP: %d/%d)" % [tower_index, REBUILD_COST, tower.current_health, tower.max_health])
-	
+
 	return true
 
 # === TOWER DAMAGE ===
@@ -227,6 +236,10 @@ func apply_wave_damage(wave_victory: bool):
 	for tower in towers:
 		if not tower.is_destroyed():
 			tower.take_damage(damage_per_tower)
+
+			# Play attack hit sound when tower takes damage
+			if AudioManager and AudioManager.instance:
+				AudioManager.instance.play_attack_hit()
 
 	var status = "SUCCESS" if wave_victory else "FAILURE"
 	print("[DefenseTowerManager] Wave %s: All towers took %d damage" % [status, damage_per_tower])

@@ -540,11 +540,6 @@ horizontal_alignment = 1
 layout_mode = 2
 theme_override_constants/separation = 10
 
-[node name="WaveIcon" type="ColorRect" parent="MarginContainer/MainVBox/BottomBar/DefensePanel/VBox/HBox"]
-custom_minimum_size = Vector2(30, 30)
-layout_mode = 2
-color = Color(1, 0.3, 0.3, 1)
-
 [node name="WaveLabel" type="Label" parent="MarginContainer/MainVBox/BottomBar/DefensePanel/VBox/HBox"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.8, 1, 0.8, 1)

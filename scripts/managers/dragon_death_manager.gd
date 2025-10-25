@@ -128,6 +128,10 @@ func handle_dragon_death(dragon: Dragon, death_cause: String):
 	print("📡 [DragonDeathManager] Emitting dragon_died signal")
 	dragon_died.emit(dragon.dragon_name, death_cause, recovered)
 
+	# Play death sound
+	if AudioManager and AudioManager.instance:
+		AudioManager.instance.play_dragon_death()
+
 	# Queue death for consolidated notification (save dragon parts for visual)
 	pending_deaths.append({
 		"dragon_name": dragon.dragon_name,

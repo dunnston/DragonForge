@@ -331,6 +331,10 @@ func _check_level_up() -> void:
 		level += 1
 		calculate_stats()  # Recalculate stats with new level
 		level_up.emit(self, level)
+
+		# Play level up sound
+		if AudioManager and AudioManager.instance:
+			AudioManager.instance.play_dragon_level_up()
 		
 		# Check for next level up (in case of massive exp gain)
 		if level < MAX_LEVEL:

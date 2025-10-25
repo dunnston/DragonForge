@@ -125,6 +125,11 @@ func feed_dragon(dragon: Dragon) -> bool:
 		dragon_health_changed.emit(dragon, dragon.current_health, dragon.total_health)
 	
 	dragon_hunger_changed.emit(dragon, 0.0)
+
+	# Play feeding sound
+	if AudioManager and AudioManager.instance:
+		AudioManager.instance.play_dragon_fed()
+
 	print("%s has been fed and feels much better!" % dragon.dragon_name)
 	return true
 
@@ -252,8 +257,13 @@ func attempt_chimera_mutation(dragon: Dragon) -> bool:
 		dragon.is_chimera_mutation = true
 		dragon.dragon_name += " ⚡CHIMERA⚡"
 		dragon.calculate_stats()  # Recalculate with ALL element bonuses!
-		
+
 		chimera_mutation_discovered.emit(dragon)
+
+		# Play success sound for major achievement
+		if AudioManager and AudioManager.instance:
+			AudioManager.instance.play_success()
+
 		print("🔥⚡ HOLY SHIT! %s has mutated into a CHIMERA DRAGON! ⚡🔥" % dragon.dragon_name)
 		return true
 	
@@ -348,6 +358,11 @@ func use_health_pot_on_dragon(dragon: Dragon) -> bool:
 	# Heal to full
 	dragon.current_health = dragon.total_health
 	dragon_health_changed.emit(dragon, dragon.current_health, dragon.total_health)
+
+	# Play heal sound
+	if AudioManager and AudioManager.instance:
+		AudioManager.instance.play_dragon_healed()
+
 	print("[DragonStateManager] %s drank a health potion and is fully healed!" % dragon.dragon_name)
 	return true
 
@@ -376,6 +391,11 @@ func use_food_on_dragon(dragon: Dragon) -> bool:
 			dragon.last_fed_time = int(current_time - new_time_since_fed)
 
 			dragon_hunger_changed.emit(dragon, dragon.hunger_level)
+
+			# Play feeding sound
+			if AudioManager and AudioManager.instance:
+				AudioManager.instance.play_dragon_fed()
+
 			print("[DragonStateManager] %s ate food! Hunger reduced from %.0f%% to %.0f%%" % [dragon.dragon_name, old_hunger * 100, dragon.hunger_level * 100])
 			return true
 
@@ -408,9 +428,14 @@ func use_knight_meat_on_dragon(dragon: Dragon) -> bool:
 			var current_time = Time.get_unix_time_from_system()
 			var new_time_since_fed = dragon.hunger_level / HUNGER_RATE
 			dragon.last_fed_time = int(current_time - new_time_since_fed)
-			
+
 			dragon_hunger_changed.emit(dragon, dragon.hunger_level)
-			print("[DragonStateManager] %s ate knight meat! Hunger: %.0f%% -> %.0f%%, Fatigue: %.0f%% -> %.0f%%" % 
+
+			# Play feeding sound
+			if AudioManager and AudioManager.instance:
+				AudioManager.instance.play_dragon_fed()
+
+			print("[DragonStateManager] %s ate knight meat! Hunger: %.0f%% -> %.0f%%, Fatigue: %.0f%% -> %.0f%%" %
 				[dragon.dragon_name, old_hunger * 100, dragon.hunger_level * 100, old_fatigue * 100, dragon.fatigue_level * 100])
 			return true
 		else:

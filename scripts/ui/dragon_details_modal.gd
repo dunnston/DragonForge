@@ -296,6 +296,10 @@ func open_for_dragon(dragon: Dragon):
 	else:
 		update_timer.stop()
 
+	# Play dragon growl when modal opens
+	if AudioManager and AudioManager.instance:
+		AudioManager.instance.play_dragon_growl()
+
 	show()
 
 func _update_display():

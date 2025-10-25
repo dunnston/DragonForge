@@ -143,6 +143,10 @@ func assign_dragon_to_slot(slot_id: int, dragon: Dragon) -> bool:
 	slot.assign_dragon(dragon, trainer_assigned)
 	dragon_assigned.emit(slot_id, dragon)
 
+	# Play dragon growl when assigned to training
+	if AudioManager and AudioManager.instance:
+		AudioManager.instance.play_dragon_growl()
+
 	print("[TrainingManager] Assigned %s to slot %d (duration: %d seconds)" % [dragon.dragon_name, slot_id, slot.training_duration])
 	return true
 

@@ -333,9 +333,9 @@ func _auto_create_dragons():
 	var dragon = dragon_factory.create_dragon(head, body, tail)
 
 	if dragon:
-		# Play dragon finished sound effect (if available)
-		if AudioManager and AudioManager.instance and AudioManager.instance.has_method("play_dragon_finished"):
-			AudioManager.instance.play_dragon_finished()
+		# Play dragon created sound effect
+		if AudioManager and AudioManager.instance:
+			AudioManager.instance.play_dragon_created()
 
 		scientist_action_performed.emit(Scientist.Type.STITCHER, "Created dragon: %s" % dragon.dragon_name)
 		print("[Stitcher T1] ✅ Auto-created dragon: %s" % dragon.dragon_name)

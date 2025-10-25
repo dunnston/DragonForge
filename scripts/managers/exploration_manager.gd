@@ -97,17 +97,23 @@ func start_exploration(dragon: Dragon, duration_minutes: int, destination: Strin
 
 	if dragon.is_dead:
 		exploration_failed.emit(dragon, "Dragon is dead")
+		if AudioManager and AudioManager.instance:
+			AudioManager.instance.play_error()
 		return false
 
 	# Allow exploration from IDLE, RESTING, TRAINING, and DEFENDING states
 	# But not from EXPLORING (can't explore twice) or DEAD
 	if dragon.current_state == Dragon.DragonState.EXPLORING:
 		exploration_failed.emit(dragon, "Dragon is already exploring")
+		if AudioManager and AudioManager.instance:
+			AudioManager.instance.play_error()
 		return false
 
 	# Check if dragon is too fatigued (must be at least 50% rested)
 	if dragon.fatigue_level > 0.5:
 		exploration_failed.emit(dragon, "Dragon is too fatigued to explore (needs 50% rest)")
+		if AudioManager and AudioManager.instance:
+			AudioManager.instance.play_error()
 		return false
 
 	# Validate duration
@@ -150,6 +156,11 @@ func start_exploration(dragon: Dragon, duration_minutes: int, destination: Strin
 	}
 
 	exploration_started.emit(dragon, destination)
+
+	# Play dragon exploring sound
+	if AudioManager and AudioManager.instance:
+		AudioManager.instance.play_dragon_exploring()
+
 	print("[ExplorationManager] %s started exploring for %d minutes" % [dragon.dragon_name, duration_minutes])
 	return true
 
@@ -379,6 +390,10 @@ func _complete_exploration(dragon_id: String):
 	# Emit completion signal
 	exploration_completed.emit(dragon, destination, rewards)
 	active_explorations.erase(dragon_id)
+
+	# Play notification sound when exploration completes
+	if AudioManager and AudioManager.instance:
+		AudioManager.instance.play_notification()
 
 	print("[ExplorationManager] %s returned from exploration!" % dragon.dragon_name)
 

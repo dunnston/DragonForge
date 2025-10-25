@@ -206,14 +206,19 @@ func assign_dragon_to_tower(dragon: Dragon, tower_index: int) -> bool:
 	
 	# Assign dragon to tower
 	tower_assignments[tower_index] = dragon
-	
+
 	# Set dragon state to DEFENDING
 	if DragonStateManager.instance:
 		DragonStateManager.instance.set_dragon_state(dragon, Dragon.DragonState.DEFENDING)
 	else:
 		dragon.current_state = Dragon.DragonState.DEFENDING
-	
+
 	dragon_assigned_to_defense.emit(dragon)
+
+	# Play dragon growl when assigned to defense
+	if AudioManager and AudioManager.instance:
+		AudioManager.instance.play_dragon_growl()
+
 	print("[DefenseManager] %s assigned to tower %d (Total defenders: %d)" % [dragon.dragon_name, tower_index, tower_assignments.size()])
 	return true
 
@@ -316,6 +321,11 @@ func _start_wave():
 	# Give players 3 seconds to see notification and click "WATCH BATTLE"
 	print("[DefenseManager] Battle notification shown - waiting 3 seconds before combat starts...")
 	wave_started.emit(wave_number, enemies)
+
+	# Play wave start sound
+	if AudioManager and AudioManager.instance:
+		AudioManager.instance.play_wave_start()
+
 	await get_tree().create_timer(3.0).timeout
 	print("[DefenseManager] Starting combat now!")
 
@@ -614,6 +624,10 @@ func _complete_wave(victory: bool, rewards: Dictionary):
 	# Note: Dragon death and tower destruction is now handled in end_combat()
 	# after the battle animation finishes
 
+	# Play battle won sound if victorious
+	if victory and AudioManager and AudioManager.instance:
+		AudioManager.instance.play_battle_won()
+
 	reset_wave_timer()
 	wave_completed.emit(victory, rewards)
 	
@@ -653,6 +667,11 @@ func end_combat():
 		if change["damage"] > 0:
 			dragon.take_damage(change["damage"])
 			dragon_damaged.emit(dragon, change["damage"])
+
+			# Play attack hit sound
+			if AudioManager and AudioManager.instance:
+				AudioManager.instance.play_attack_hit()
+
 			print("[DefenseManager] %s took %d damage (HP: %.0f/%.0f)" %
 				[dragon.dragon_name, change["damage"], dragon.current_health, dragon.get_health()])
 			

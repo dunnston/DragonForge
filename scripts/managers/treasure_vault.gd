@@ -58,6 +58,11 @@ func add_gold(amount: int):
 	gold += amount
 	_update_vault_value()
 	gold_changed.emit(gold, amount)
+
+	# Play gold sound
+	if AudioManager and AudioManager.instance:
+		AudioManager.instance.play_gold()
+
 	print("[TreasureVault] +%d gold (Total: %d)" % [amount, gold])
 
 func spend_gold(amount: int) -> bool:
@@ -67,6 +72,10 @@ func spend_gold(amount: int) -> bool:
 	# Can spend from protected + unprotected gold
 	var available = gold + protected_gold
 	if available < amount:
+		# Play error sound for insufficient gold
+		if AudioManager and AudioManager.instance:
+			AudioManager.instance.play_error()
+
 		print("[TreasureVault] Insufficient gold! Need %d, have %d" % [amount, available])
 		return false
 
@@ -80,6 +89,11 @@ func spend_gold(amount: int) -> bool:
 
 	_update_vault_value()
 	gold_changed.emit(gold, -amount)
+
+	# Play gold sound
+	if AudioManager and AudioManager.instance:
+		AudioManager.instance.play_gold()
+
 	print("[TreasureVault] -%d gold (Total: %d)" % [amount, gold])
 	return true
 
