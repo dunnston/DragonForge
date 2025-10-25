@@ -67,7 +67,7 @@ func get_random_name() -> String:
 func _reset_name_pool():
 	"""Reset the name pool when all names have been used"""
 	print("[DragonNameManager] All names used, resetting pool")
-	available_names = used_names.duplicate()
+	available_names.assign(used_names)
 	used_names.clear()
 
 func get_available_count() -> int:
@@ -90,10 +90,10 @@ func to_dict() -> Dictionary:
 func from_dict(data: Dictionary):
 	"""Restore name manager state from saved data"""
 	if data.has("available_names"):
-		available_names = data["available_names"].duplicate()
+		available_names.assign(data["available_names"])
 
 	if data.has("used_names"):
-		used_names = data["used_names"].duplicate()
+		used_names.assign(data["used_names"])
 
 	print("[DragonNameManager] Restored state: %d available, %d used" % [
 		available_names.size(),

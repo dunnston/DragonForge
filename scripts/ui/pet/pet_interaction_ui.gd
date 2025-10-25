@@ -821,9 +821,19 @@ func _on_explore_destination_pressed(destination: String):
 
 	print("[PetInteractionUI] Pet state: %s, Hunger: %.2f, Fatigue: %.2f" % [pet.current_state, pet.hunger_level, pet.fatigue_level])
 
-	# Start exploration (15 minutes)
-	if ExplorationManager.instance.start_exploration(pet, 15, destination):
-		print("[PetInteractionUI] ✅ Exploration started successfully to %s!" % destination)
+	# Map destinations to their durations (1/5/10/15 minutes)
+	var destination_durations = {
+		"volcanic_caves": 1,
+		"ancient_forest": 5,
+		"frozen_tundra": 10,
+		"thunder_peak": 15
+	}
+
+	var duration_minutes = destination_durations.get(destination, 15)  # Default to 15 if unknown
+
+	# Start exploration with correct duration
+	if ExplorationManager.instance.start_exploration(pet, duration_minutes, destination):
+		print("[PetInteractionUI] ✅ Exploration started successfully to %s for %d minutes!" % [destination, duration_minutes])
 		if dialogue_label:
 			dialogue_label.text = "\"I'll be back soon!\""
 

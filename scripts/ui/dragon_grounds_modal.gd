@@ -18,6 +18,7 @@ const DragonCardSmallScene = preload("res://scenes/ui/dragon_card_small.tscn")
 var dragon_factory: DragonFactory
 
 signal closed()
+signal dragon_clicked(dragon: Dragon)
 
 func _ready():
 	# Hide by default
@@ -73,10 +74,17 @@ func _on_close_pressed():
 	closed.emit()
 
 func _on_dragon_card_clicked(dragon: Dragon):
-	"""Handle dragon card click"""
+	"""Handle dragon card click - emit signal and close modal"""
 	print("[DragonGrounds] Dragon clicked: %s" % dragon.dragon_name)
-	# Could open detailed view here
-	# For now, just close and let factory manager handle it
+
+	# Hide tooltip
+	tooltip_panel.visible = false
+
+	# Close modal
+	visible = false
+
+	# Emit signal so factory manager can open appropriate modal
+	dragon_clicked.emit(dragon)
 	closed.emit()
 
 func _on_dragon_card_hovered(dragon: Dragon):

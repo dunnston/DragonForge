@@ -11,7 +11,8 @@ The knights have discovered our work. They've been hunting dragons to extinction
 
 The laboratory is yours now. I've left you what I could:
 - 30 gold pieces
-- 6 dragon parts from my collection (at least one head, body, and tail)
+- 9 dragon parts from my collection (3 heads, 3 bodies, 3 tails)
+- 5 energy tonics to help your dragons explore faster
 
 The knights know about the laboratory now. They will come. You must be ready.
 
@@ -216,7 +217,7 @@ func initialize_starting_inventory() -> void:
 	else:
 		print("[OpeningLetter] ERROR: TreasureVault not available!")
 
-	# Generate 6 random starting parts with constraints (at least 1 head, body, tail)
+	# Generate 9 random starting parts with constraints (3 of each type)
 	var parts_to_add = generate_starting_parts()
 
 	# Add parts to inventory
@@ -224,25 +225,24 @@ func initialize_starting_inventory() -> void:
 		for part in parts_to_add:
 			InventoryManager.instance.add_item_by_id(part, 1)
 		print("[OpeningLetter] Added %d starting parts: %s" % [parts_to_add.size(), parts_to_add])
+
+		# Add 5 starting Energy Tonics
+		InventoryManager.instance.add_item_by_id("energy_tonic", 5)
+		print("[OpeningLetter] Added 5 starting Energy Tonics")
 	else:
 		print("[OpeningLetter] ERROR: InventoryManager not available!")
 
 
 func generate_starting_parts() -> Array[String]:
-	"""Generate 6 starting parts with at least 1 of each type"""
+	"""Generate 9 starting parts with 3 of each type (enough for 2 full dragons)"""
 	var parts: Array[String] = []
 	var elements = ["fire", "ice", "lightning", "nature", "shadow"]
 	var part_types = ["head", "body", "tail"]
 
-	# Ensure at least one of each type (as mentioned in letter)
+	# Ensure 3 of each part type (3 heads, 3 bodies, 3 tails)
 	for part_type in part_types:
-		var random_element = elements[randi() % elements.size()]
-		parts.append(random_element + "_" + part_type)
-
-	# Add 3 more random parts (total 6 as mentioned in letter)
-	for i in range(3):
-		var random_element = elements[randi() % elements.size()]
-		var random_type = part_types[randi() % part_types.size()]
-		parts.append(random_element + "_" + random_type)
+		for i in range(3):
+			var random_element = elements[randi() % elements.size()]
+			parts.append(random_element + "_" + part_type)
 
 	return parts

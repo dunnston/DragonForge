@@ -5,17 +5,18 @@ extends Node
 # === SINGLETON ===
 static var instance: ExplorationManager
 
-# === DEV MODE (SET TO false FOR PRODUCTION) ===
-const DEV_MODE: bool = true  # When true, uses SECONDS instead of MINUTES for exploration
-const DEV_TIME_SCALE: int = 1  # 1 = seconds, 60 = minutes
-
 # === EXPLORATION TRACKING ===
 var active_explorations: Dictionary = {}  # {dragon_id: exploration_data}
 
+# === ENERGY TONIC TRACKING ===
+var energy_tonic_active: bool = false
+var energy_tonic_end_time: float = 0.0
+
 # === EXPLORATION DURATIONS (in seconds) ===
-const DURATION_SHORT: int = 900   # 15 minutes (or 15 seconds in DEV_MODE)
-const DURATION_MEDIUM: int = 1800  # 30 minutes (or 30 seconds in DEV_MODE)
-const DURATION_LONG: int = 3600    # 60 minutes (or 60 seconds in DEV_MODE)
+const DURATION_VERY_SHORT: int = 60   # 1 minute (Volcanic Caves)
+const DURATION_SHORT: int = 300       # 5 minutes (Ancient Forest)
+const DURATION_MEDIUM: int = 600      # 10 minutes (Frozen Tundra)
+const DURATION_LONG: int = 900        # 15 minutes (Thunder Peak)
 
 # === RISK/REWARD CONSTANTS ===
 # Base rewards (scaled by duration and dragon level)
@@ -43,17 +44,14 @@ const ITEM_DROP_CHANCES = {
 	"toys": 0.15         # 15% chance
 }
 
-# Damage and hunger penalties (percentage of max)
-const DAMAGE_RISK = {
-	15: 0.15,  # 15% chance of taking 10-20% damage
-	30: 0.25,  # 25% chance of taking 15-30% damage
-	60: 0.35   # 35% chance of taking 20-40% damage
-}
+# Damage chances are now handled inline in _apply_exploration_costs()
 
 # === SIGNALS ===
 signal exploration_started(dragon: Dragon, destination: String)
 signal exploration_completed(dragon: Dragon, destination: String, rewards: Dictionary)
 signal exploration_failed(dragon: Dragon, reason: String)
+signal energy_tonic_activated(duration: float)
+signal energy_tonic_expired()
 
 func _ready():
 	if instance == null:
@@ -62,21 +60,21 @@ func _ready():
 		queue_free()
 		return
 
-	# Print DEV_MODE status on startup
-	if DEV_MODE:
-		print("\n⚡ [EXPLORATION MANAGER] DEV MODE ENABLED ⚡")
-		print("   → Explorations use SECONDS instead of MINUTES")
-		print("   → 15min = 15sec, 30min = 30sec, 60min = 60sec")
-		print("   → Set DEV_MODE = false for production\n")
-	else:
-		print("[ExplorationManager] Production mode - using real-time durations")
+	print("[ExplorationManager] Initialized - Exploration durations: 1/5/10/15 minutes")
 
-	# Check explorations every 10 seconds (or 1 second in dev mode for responsiveness)
+	# Check explorations every 10 seconds
 	var timer = Timer.new()
-	timer.wait_time = 1.0 if DEV_MODE else 10.0
+	timer.wait_time = 10.0
 	timer.timeout.connect(_check_explorations)
 	add_child(timer)
 	timer.start()
+
+	# Check energy tonic expiration every second
+	var tonic_timer = Timer.new()
+	tonic_timer.wait_time = 1.0
+	tonic_timer.timeout.connect(_check_energy_tonic)
+	add_child(tonic_timer)
+	tonic_timer.start()
 
 # === EXPLORATION MANAGEMENT ===
 
@@ -86,7 +84,7 @@ func start_exploration(dragon: Dragon, duration_minutes: int, destination: Strin
 
 	Args:
 		dragon: The dragon to send exploring
-		duration_minutes: How long to explore (15, 30, or 60)
+		duration_minutes: How long to explore (5, 10, 15, or 20)
 		destination: Which destination to explore (for map visualization)
 
 	Returns:
@@ -113,15 +111,17 @@ func start_exploration(dragon: Dragon, duration_minutes: int, destination: Strin
 		return false
 
 	# Validate duration
-	if duration_minutes not in [15, 30, 60]:
-		print("[ExplorationManager] ERROR: Invalid duration %d (must be 15, 30, or 60)" % duration_minutes)
+	if duration_minutes not in [1, 5, 10, 15]:
+		print("[ExplorationManager] ERROR: Invalid duration %d (must be 1, 5, 10, or 15)" % duration_minutes)
 		return false
 
-	# Calculate duration in seconds (uses seconds instead of minutes in DEV_MODE)
+	# Calculate duration in seconds
 	var duration_seconds = duration_minutes * 60
-	if DEV_MODE:
-		duration_seconds = duration_minutes  # Use seconds for fast testing
-		print("[ExplorationManager] [DEV MODE] Using %d SECONDS instead of minutes" % duration_minutes)
+
+	# Apply energy tonic speed boost if active
+	if energy_tonic_active:
+		duration_seconds = int(duration_seconds / 4.0)  # 4x faster = quarter the time
+		print("[ExplorationManager] Energy Tonic active! Exploration time reduced to 25%!")
 
 	# Apply speed bonus for PetDragons with high affection
 	if dragon is PetDragon:
@@ -150,8 +150,7 @@ func start_exploration(dragon: Dragon, duration_minutes: int, destination: Strin
 	}
 
 	exploration_started.emit(dragon, destination)
-	var time_unit = "seconds" if DEV_MODE else "minutes"
-	print("[ExplorationManager] %s started exploring for %d %s" % [dragon.dragon_name, duration_minutes, time_unit])
+	print("[ExplorationManager] %s started exploring for %d minutes" % [dragon.dragon_name, duration_minutes])
 	return true
 
 func cancel_exploration(dragon: Dragon) -> bool:
@@ -205,6 +204,103 @@ func get_exploration_duration_minutes(dragon: Dragon) -> int:
 
 	var exploration = active_explorations[dragon.dragon_id]
 	return exploration.get("duration_minutes", 0)
+
+# === ENERGY TONIC ===
+
+func consume_energy_tonic() -> bool:
+	"""
+	Consume an energy tonic to boost all dragon exploration speed by 4x for 2 minutes.
+	Affects both new explorations and dragons already exploring!
+	Returns true if successful, false if no tonics available or already active.
+	"""
+	# Check if already active
+	if energy_tonic_active:
+		print("[ExplorationManager] Energy Tonic already active! Wait for it to expire.")
+		return false
+
+	# Check if player has energy tonics
+	if not InventoryManager or not InventoryManager.instance:
+		print("[ExplorationManager] ERROR: InventoryManager not found!")
+		return false
+
+	# Try to consume one energy tonic
+	if not InventoryManager.instance.has_item("energy_tonic", 1):
+		print("[ExplorationManager] No Energy Tonics available!")
+		return false
+
+	if not InventoryManager.instance.remove_item_by_id("energy_tonic", 1):
+		print("[ExplorationManager] Failed to consume Energy Tonic!")
+		return false
+
+	# Activate the tonic
+	energy_tonic_active = true
+	energy_tonic_end_time = Time.get_unix_time_from_system() + 120.0  # 2 minutes
+
+	# Apply speed boost to all currently active explorations
+	_apply_tonic_to_active_explorations()
+
+	energy_tonic_activated.emit(120.0)
+	print("[ExplorationManager] Energy Tonic activated! All dragons explore 4x faster for 2 minutes!")
+	return true
+
+func _apply_tonic_to_active_explorations():
+	"""Apply 4x speed boost to all dragons currently exploring"""
+	var current_time = Time.get_unix_time_from_system()
+	var boosted_count = 0
+
+	for dragon_id in active_explorations.keys():
+		var exploration = active_explorations[dragon_id]
+		var start_time = exploration["start_time"]
+		var duration = exploration["duration"]
+
+		# Calculate elapsed and remaining time
+		var elapsed = current_time - start_time
+		var remaining = duration - elapsed
+
+		if remaining > 0:
+			# Speed up remaining time by 4x (divide by 4)
+			var new_remaining = remaining / 4.0
+
+			# Adjust start_time so exploration ends at: current_time + new_remaining
+			# Formula: new_start_time = current_time + new_remaining - duration
+			var new_start_time = current_time + new_remaining - duration
+
+			exploration["start_time"] = new_start_time
+			boosted_count += 1
+
+			var dragon: Dragon = exploration.get("dragon")
+			if dragon:
+				print("[ExplorationManager] Boosted %s - remaining time: %.0fs → %.0fs" % [
+					dragon.dragon_name,
+					remaining,
+					new_remaining
+				])
+
+	if boosted_count > 0:
+		print("[ExplorationManager] Applied tonic boost to %d active exploration(s)" % boosted_count)
+
+func _check_energy_tonic():
+	"""Check if energy tonic has expired"""
+	if not energy_tonic_active:
+		return
+
+	var current_time = Time.get_unix_time_from_system()
+	if current_time >= energy_tonic_end_time:
+		energy_tonic_active = false
+		energy_tonic_expired.emit()
+		print("[ExplorationManager] Energy Tonic expired!")
+
+func is_energy_tonic_active() -> bool:
+	"""Check if energy tonic is currently active"""
+	return energy_tonic_active
+
+func get_energy_tonic_time_remaining() -> float:
+	"""Get seconds remaining on energy tonic effect"""
+	if not energy_tonic_active:
+		return 0.0
+
+	var current_time = Time.get_unix_time_from_system()
+	return max(0.0, energy_tonic_end_time - current_time)
 
 # === EXPLORATION UPDATES ===
 
@@ -325,11 +421,29 @@ func _calculate_rewards(dragon: Dragon, duration_minutes: int, destination: Stri
 	rewards["xp"] = int(scaled_xp)  # XP stays consistent
 
 	# Dragon parts drop chance (now returns specific item IDs)
+	# Guaranteed parts until first wave completes, then use chance-based system
+	var first_wave_done = false
+	if DefenseManager and DefenseManager.instance:
+		first_wave_done = DefenseManager.instance.first_wave_completed
+
 	var parts_count = 0
 	match duration_minutes:
-		15: parts_count = 1 if randf() < PARTS_DROP_CHANCE else 0
-		30: parts_count = 2 if randf() < PARTS_DROP_CHANCE else 1
-		60: parts_count = 3 if randf() < PARTS_DROP_CHANCE else 2
+		1:
+			if first_wave_done:
+				parts_count = 1 if randf() < PARTS_DROP_CHANCE else 0  # 30% chance after first wave
+			else:
+				parts_count = 1  # Guaranteed until first wave
+		5:
+			if first_wave_done:
+				parts_count = 1 if randf() < PARTS_DROP_CHANCE else 0  # 30% chance after first wave
+			else:
+				parts_count = 1  # Guaranteed until first wave
+		10:
+			if first_wave_done:
+				parts_count = 1 if randf() < PARTS_DROP_CHANCE else 0  # 30% chance after first wave
+			else:
+				parts_count = 1  # Guaranteed until first wave
+		15: parts_count = 2 if randf() < PARTS_DROP_CHANCE else 1
 
 	# Select random dragon parts from database
 	var possible_parts = ["fire", "ice", "lightning", "nature", "shadow"]
@@ -354,10 +468,12 @@ func _calculate_rewards(dragon: Dragon, duration_minutes: int, destination: Stri
 
 		# Longer explorations get more rolls
 		var num_rolls = 1
-		if duration_minutes >= 30:
+		if duration_minutes >= 5:
 			num_rolls = 2
-		if duration_minutes >= 60:
+		if duration_minutes >= 10:
 			num_rolls = 3
+		if duration_minutes >= 15:
+			num_rolls = 4
 
 		var item_count = 0
 		for roll in num_rolls:
@@ -398,9 +514,10 @@ func _apply_exploration_costs(dragon: Dragon, duration_minutes: int):
 	# Calculate base fatigue gain
 	var base_fatigue = 0.0
 	match duration_minutes:
-		15: base_fatigue = 0.15
-		30: base_fatigue = 0.25
-		60: base_fatigue = 0.40
+		1: base_fatigue = 0.05
+		5: base_fatigue = 0.10
+		10: base_fatigue = 0.15
+		15: base_fatigue = 0.25
 
 	# Apply fatigue resistance if this is a pet dragon
 	var fatigue_multiplier = 1.0
@@ -417,17 +534,24 @@ func _apply_exploration_costs(dragon: Dragon, duration_minutes: int):
 	dragon.fatigue_level = min(1.0, dragon.fatigue_level + final_fatigue)
 
 	# Apply hunger (longer exploration = more hunger)
-	var hunger_increase = duration_minutes / 30.0  # 15min=0.5, 30min=1.0, 60min=2.0
+	var hunger_increase = duration_minutes / 15.0  # 1min=0.067, 5min=0.33, 10min=0.67, 15min=1.0
 	dragon.hunger_level = min(1.0, dragon.hunger_level + (hunger_increase * 0.3))
 
 	# Random damage based on duration
-	var damage_chance = DAMAGE_RISK.get(duration_minutes, 0.0)
+	var damage_chance = 0.0
+	match duration_minutes:
+		1: damage_chance = 0.02   # 2% chance
+		5: damage_chance = 0.05   # 5% chance
+		10: damage_chance = 0.10  # 10% chance
+		15: damage_chance = 0.20  # 20% chance
+
 	if randf() < damage_chance:
 		var damage_percent = 0.0
 		match duration_minutes:
-			15: damage_percent = randf_range(0.10, 0.20)  # 10-20% damage
-			30: damage_percent = randf_range(0.15, 0.30)  # 15-30% damage
-			60: damage_percent = randf_range(0.20, 0.40)  # 20-40% damage
+			1: damage_percent = randf_range(0.02, 0.05)  # 2-5% damage
+			5: damage_percent = randf_range(0.05, 0.10)  # 5-10% damage
+			10: damage_percent = randf_range(0.10, 0.15)  # 10-15% damage
+			15: damage_percent = randf_range(0.15, 0.25)  # 15-25% damage
 
 		var damage = int(dragon.get_health() * damage_percent)
 		dragon.current_health = max(0, dragon.current_health - damage)
@@ -477,7 +601,6 @@ func get_active_explorations() -> Array:
 func print_exploration_status():
 	"""Debug: Print all active explorations"""
 	print("\n=== EXPLORATION STATUS ===")
-	print("DEV_MODE: %s" % ("ENABLED (using seconds)" if DEV_MODE else "DISABLED (using minutes)"))
 	print("Active Explorations: %d" % active_explorations.size())
 
 	for dragon_id in active_explorations:
@@ -503,19 +626,14 @@ func complete_all_explorations():
 
 	print("[ExplorationManager] DEBUG: Force-completed %d explorations" % count)
 
-func get_dev_mode_info() -> String:
-	"""Returns info about DEV_MODE status"""
-	if DEV_MODE:
-		return "DEV MODE ENABLED - Explorations use SECONDS instead of minutes (15s/30s/60s)"
-	else:
-		return "Production Mode - Explorations use real time (15min/30min/60min)"
-
 # === SAVE/LOAD SERIALIZATION ===
 
 func to_dict() -> Dictionary:
 	"""Serialize active explorations to a dictionary for saving"""
 	var data = {
-		"active_explorations": []
+		"active_explorations": [],
+		"energy_tonic_active": energy_tonic_active,
+		"energy_tonic_end_time": energy_tonic_end_time
 	}
 
 	for dragon_id in active_explorations.keys():
@@ -536,6 +654,17 @@ func from_dict(data: Dictionary, dragon_factory: DragonFactory):
 		return
 
 	active_explorations.clear()
+
+	# Restore energy tonic state
+	energy_tonic_active = data.get("energy_tonic_active", false)
+	energy_tonic_end_time = data.get("energy_tonic_end_time", 0.0)
+
+	# Check if saved tonic has expired
+	if energy_tonic_active:
+		var current_time = Time.get_unix_time_from_system()
+		if current_time >= energy_tonic_end_time:
+			energy_tonic_active = false
+			print("[ExplorationManager] Loaded energy tonic had expired")
 
 	for exploration_data in data["active_explorations"]:
 		var dragon_id = exploration_data["dragon_id"]

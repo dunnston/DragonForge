@@ -7,7 +7,7 @@ static var instance: DefenseManager
 
 # === WAVE CONFIG ===
 const BASE_WAVE_INTERVAL: float = 20.0  # 20 seconds between waves (after first wave)
-const FIRST_WAVE_GRACE_PERIOD: float = 300.0  # 10 minutes for new players to set up
+const FIRST_WAVE_GRACE_PERIOD: float = 360.0  # 6 minutes for new players to set up
 
 # === STATE ===
 var wave_number: int = 1
@@ -15,6 +15,7 @@ var tower_assignments: Dictionary = {}  # {tower_index: Dragon} - maps tower to 
 var time_until_next_wave: float = FIRST_WAVE_GRACE_PERIOD  # Start with grace period for new players
 var is_in_combat: bool = false
 var is_first_wave: bool = true  # Track if this is the first wave
+var first_wave_completed: bool = false  # Track if first wave has finished (for exploration rewards)
 
 # Store pending stat changes to apply after battle animation
 var pending_stat_changes: Array[Dictionary] = []
@@ -90,7 +91,9 @@ func reset_wave_timer():
 	# After first wave, use normal interval
 	if is_first_wave:
 		is_first_wave = false
+		first_wave_completed = true
 		print("[DefenseManager] First wave completed - subsequent waves will occur every %.0f seconds" % BASE_WAVE_INTERVAL)
+		print("[DefenseManager] Exploration part drops will now use chance-based system")
 	time_until_next_wave = BASE_WAVE_INTERVAL
 
 func _is_player_out_of_resources() -> bool:
@@ -724,13 +727,15 @@ func to_dict() -> Dictionary:
 		"wave_number": wave_number,
 		"time_until_next_wave": time_until_next_wave,
 		"tower_assignments": assignments_data,
-		"is_first_wave": is_first_wave
+		"is_first_wave": is_first_wave,
+		"first_wave_completed": first_wave_completed
 	}
 
 func from_dict(data: Dictionary, dragon_factory = null):
 	wave_number = data.get("wave_number", 1)
 	time_until_next_wave = data.get("time_until_next_wave", BASE_WAVE_INTERVAL)
 	is_first_wave = data.get("is_first_wave", false)  # Default to false for saved games
+	first_wave_completed = data.get("first_wave_completed", false)
 
 	# Restore tower assignments if factory is provided
 	tower_assignments.clear()

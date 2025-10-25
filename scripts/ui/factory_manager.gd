@@ -180,6 +180,7 @@ func _ready():
 	# Connect Dragon Grounds modal
 	if dragon_grounds_modal:
 		dragon_grounds_modal.closed.connect(_on_dragon_grounds_closed)
+		dragon_grounds_modal.dragon_clicked.connect(_on_dragon_grounds_dragon_clicked)
 
 	# Connect part selector signal
 	if part_selector:
@@ -1231,6 +1232,19 @@ func _on_dragon_grounds_closed():
 
 	# Refresh dragons list in case any state changed
 	_update_dragons_list()
+
+func _on_dragon_grounds_dragon_clicked(dragon: Dragon):
+	"""Called when a dragon is clicked in the Dragon Grounds modal"""
+	print("[FactoryManager] Dragon clicked in grounds: %s" % dragon.dragon_name)
+
+	# Check if it's a pet dragon
+	if dragon is PetDragon:
+		print("[FactoryManager] Opening pet interaction modal")
+		_open_pet_interaction_ui(dragon)
+	else:
+		print("[FactoryManager] Opening dragon details modal")
+		if dragon_details_modal:
+			dragon_details_modal.open_for_dragon(dragon)
 
 # === PET DRAGON SYSTEM ===
 

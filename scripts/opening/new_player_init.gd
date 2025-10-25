@@ -33,7 +33,7 @@ static func initialize_starting_resources() -> void:
 		TreasureVault.instance.add_gold(30)
 		print("[NewPlayerInit] Added 30 starting gold")
 
-	# Generate 6 random starting parts with constraints
+	# Generate 9 random starting parts with constraints (enough for 2 full dragons)
 	var parts_to_add = generate_starting_parts()
 
 	# Add parts to inventory
@@ -42,24 +42,23 @@ static func initialize_starting_resources() -> void:
 			InventoryManager.instance.add_item_by_id(part, 1)
 		print("[NewPlayerInit] Added %d starting parts: %s" % [parts_to_add.size(), parts_to_add])
 
+		# Add 5 starting Energy Tonics
+		InventoryManager.instance.add_item_by_id("energy_tonic", 5)
+		print("[NewPlayerInit] Added 5 starting Energy Tonics")
 
-## Generate 6 starting parts with at least 1 of each type
+
+## Generate 9 starting parts with 3 of each type (enough for 2 full dragons)
 static func generate_starting_parts() -> Array[String]:
-	"""Generate 6 starting parts ensuring at least 1 head, 1 body, 1 tail"""
+	"""Generate 9 starting parts ensuring 3 heads, 3 bodies, 3 tails for building 2 dragons"""
 	var parts: Array[String] = []
 	var elements = ["fire", "ice", "lightning", "nature", "shadow"]
 	var part_types = ["head", "body", "tail"]
 
-	# Ensure at least one of each type
+	# Ensure 3 of each part type (3 heads, 3 bodies, 3 tails)
 	for part_type in part_types:
-		var random_element = elements[randi() % elements.size()]
-		parts.append(random_element + "_" + part_type)
-
-	# Add 3 more random parts
-	for i in range(3):
-		var random_element = elements[randi() % elements.size()]
-		var random_type = part_types[randi() % part_types.size()]
-		parts.append(random_element + "_" + random_type)
+		for i in range(3):
+			var random_element = elements[randi() % elements.size()]
+			parts.append(random_element + "_" + part_type)
 
 	return parts
 

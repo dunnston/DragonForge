@@ -12,6 +12,11 @@ const TravelingDragonScene = preload("res://scenes/exploration/traveling_dragon.
 @onready var title_label: Label = $UIOverlay/TopBar/TitleLabel
 @onready var dragon_selector: ExplorationDragonSelector = $ExplorationDragonSelector
 
+# Energy Tonic UI (created programmatically)
+var energy_tonic_button: Button
+var energy_tonic_label: Label
+var energy_tonic_timer_label: Label
+
 # Location button areas
 @onready var ancient_forest_button: Button = $MapImage/LocationButtons/AncientForest/ClickArea
 @onready var ancient_forest_label: Label = $MapImage/LocationButtons/AncientForest/HoverLabel
@@ -87,15 +92,21 @@ func _ready():
 	if ExplorationManager and ExplorationManager.instance:
 		ExplorationManager.instance.exploration_started.connect(_on_exploration_started)
 		ExplorationManager.instance.exploration_completed.connect(_on_exploration_completed)
+		ExplorationManager.instance.energy_tonic_activated.connect(_on_energy_tonic_activated)
+		ExplorationManager.instance.energy_tonic_expired.connect(_on_energy_tonic_expired)
 		print("[ExplorationMapUI] Connected to ExplorationManager")
 	else:
 		push_error("[ExplorationMapUI] ExplorationManager not found!")
+
+	# Create energy tonic UI
+	_create_energy_tonic_ui()
 
 	# Load any in-progress explorations
 	_load_active_explorations()
 
 	# Update UI
 	_update_active_count()
+	_update_energy_tonic_ui()
 
 func _initialize_destinations():
 	"""Initialize destination data with actual marker positions from the scene"""
@@ -105,7 +116,7 @@ func _initialize_destinations():
 			"end_position": forest_end.position if forest_end else Vector2(192, 251),
 			"name": "Ancient Forest",
 			"element": "Nature",
-			"duration_minutes": 30,
+			"duration_minutes": 5,
 			"color": Color(0.2, 1.0, 0.2)
 		},
 		"frozen_tundra": {
@@ -113,7 +124,7 @@ func _initialize_destinations():
 			"end_position": tundra_end.position if tundra_end else Vector2(523, 205),
 			"name": "Frozen Tundra",
 			"element": "Ice",
-			"duration_minutes": 45,
+			"duration_minutes": 10,
 			"color": Color(0.3, 0.8, 1.0)
 		},
 		"thunder_peak": {
@@ -121,7 +132,7 @@ func _initialize_destinations():
 			"end_position": thunder_end.position if thunder_end else Vector2(842, 262),
 			"name": "Thunder Peak",
 			"element": "Lightning",
-			"duration_minutes": 60,
+			"duration_minutes": 15,
 			"color": Color(1.0, 1.0, 0.2)
 		},
 		"volcanic_caves": {
@@ -129,7 +140,7 @@ func _initialize_destinations():
 			"end_position": volcanic_end.position if volcanic_end else Vector2(808, 520),
 			"name": "Volcanic Caves",
 			"element": "Fire",
-			"duration_minutes": 15,
+			"duration_minutes": 1,
 			"color": Color(1.0, 0.3, 0.0)
 		}
 	}
@@ -172,9 +183,9 @@ func _spawn_traveling_dragon_from_existing(dragon: Dragon, destination: String, 
 	# Spawn the traveling dragon
 	var traveling_dragon = TravelingDragonScene.instantiate()
 
-	# Get exploration details
+	# Get exploration details - use ACTUAL duration from exploration_data (accounts for tonic)
 	var start_time = exploration_data.get("start_time", 0)
-	var duration_mins = dest_info["duration_minutes"]
+	var actual_duration_seconds = exploration_data.get("duration", dest_info["duration_minutes"] * 60)
 
 	dragons_layer.add_child(traveling_dragon)
 
@@ -184,7 +195,9 @@ func _spawn_traveling_dragon_from_existing(dragon: Dragon, destination: String, 
 	traveling_dragon.start_position = dest_info["start_position"]
 	traveling_dragon.end_position = dest_info["end_position"]
 	traveling_dragon.start_time = start_time
-	traveling_dragon.duration_seconds = duration_mins * 60
+	traveling_dragon.duration_seconds = actual_duration_seconds
+
+	print("[ExplorationMapUI] Loading existing exploration with ACTUAL duration: %d seconds" % actual_duration_seconds)
 
 	# Calculate current position based on elapsed time (round-trip logic)
 	var current_time = Time.get_unix_time_from_system()
@@ -229,10 +242,26 @@ func _spawn_traveling_dragon_from_existing(dragon: Dragon, destination: String, 
 
 func spawn_traveling_dragon(dragon: Dictionary, destination_key: String):
 	"""
-	Creates a traveling dragon on the map
+	Creates a traveling dragon on the map using default duration
 	Args:
 		dragon: Dictionary with {id, name, level, element}
 		destination_key: One of the DESTINATIONS keys
+	"""
+	if not DESTINATIONS.has(destination_key):
+		push_error("[ExplorationMapUI] Unknown destination: %s" % destination_key)
+		return
+
+	var dest_info = DESTINATIONS[destination_key]
+	var duration_seconds = dest_info["duration_minutes"] * 60
+	spawn_traveling_dragon_with_duration(dragon, destination_key, duration_seconds)
+
+func spawn_traveling_dragon_with_duration(dragon: Dictionary, destination_key: String, duration_seconds: int):
+	"""
+	Creates a traveling dragon on the map with specific duration
+	Args:
+		dragon: Dictionary with {id, name, level, element}
+		destination_key: One of the DESTINATIONS keys
+		duration_seconds: Actual duration in seconds (may be affected by tonic)
 	"""
 	if not DESTINATIONS.has(destination_key):
 		push_error("[ExplorationMapUI] Unknown destination: %s" % destination_key)
@@ -243,13 +272,16 @@ func spawn_traveling_dragon(dragon: Dictionary, destination_key: String):
 	var traveling_dragon = TravelingDragonScene.instantiate()
 	dragons_layer.add_child(traveling_dragon)
 
+	# Convert seconds back to "minutes" for the setup call (it will convert back to seconds)
+	var duration_mins = duration_seconds / 60.0
+
 	# Setup the dragon with start and end positions for round-trip journey
 	traveling_dragon.setup(
 		dragon,
 		destination_key,
 		dest_info["start_position"],
 		dest_info["end_position"],
-		dest_info["duration_minutes"]
+		duration_mins
 	)
 
 	# Connect signal
@@ -260,7 +292,7 @@ func spawn_traveling_dragon(dragon: Dictionary, destination_key: String):
 
 	_update_active_count()
 
-	print("[ExplorationMapUI] Spawned traveling dragon: %s -> %s (round trip)" % [dragon.name, destination_key])
+	print("[ExplorationMapUI] Spawned traveling dragon: %s -> %s (%d seconds)" % [dragon.name, destination_key, duration_seconds])
 
 func remove_traveling_dragon(dragon_id: String):
 	"""Remove a traveling dragon from the map"""
@@ -282,7 +314,18 @@ func _on_exploration_started(dragon: Dragon, destination: String):
 		"element": DragonPart.Element.keys()[dragon.head_part.element]
 	}
 
-	spawn_traveling_dragon(dragon_dict, destination)
+	# Get the ACTUAL exploration duration from ExplorationManager (accounts for tonic)
+	var actual_duration_seconds = 0
+	if ExplorationManager and ExplorationManager.instance:
+		var explorations = ExplorationManager.instance.get_active_explorations()
+		for exploration_data in explorations:
+			var exploring_dragon = exploration_data.get("dragon")
+			if exploring_dragon and exploring_dragon.dragon_id == dragon.dragon_id:
+				actual_duration_seconds = exploration_data["duration"]
+				print("[ExplorationMapUI] Found actual duration: %d seconds (accounts for tonic)" % actual_duration_seconds)
+				break
+
+	spawn_traveling_dragon_with_duration(dragon_dict, destination, actual_duration_seconds)
 
 func _on_exploration_completed(dragon: Dragon, destination: String, rewards: Dictionary):
 	"""Called when ExplorationManager completes an exploration"""
@@ -412,3 +455,109 @@ func _show_error_dialog(title: String, message: String):
 	dialog.dialog_text = message
 	dialog.confirmed.connect(func(): dialog.queue_free())
 	dialog.popup_centered()
+
+# === ENERGY TONIC UI ===
+
+func _create_energy_tonic_ui():
+	"""Create the energy tonic button and status display"""
+	# Find or create the top bar to add the button
+	var top_bar = $UIOverlay/TopBar
+	if not top_bar:
+		print("[ExplorationMapUI] WARNING: TopBar not found, can't create energy tonic UI")
+		return
+
+	# Create Energy Tonic button
+	energy_tonic_button = Button.new()
+	energy_tonic_button.name = "EnergyTonicButton"
+	energy_tonic_button.text = "Use Energy Tonic"
+	energy_tonic_button.custom_minimum_size = Vector2(150, 40)
+	energy_tonic_button.pressed.connect(_on_energy_tonic_button_pressed)
+	top_bar.add_child(energy_tonic_button)
+
+	# Create count label
+	energy_tonic_label = Label.new()
+	energy_tonic_label.name = "EnergyTonicLabel"
+	energy_tonic_label.text = "Tonics: 0"
+	top_bar.add_child(energy_tonic_label)
+
+	# Create timer label
+	energy_tonic_timer_label = Label.new()
+	energy_tonic_timer_label.name = "EnergyTonicTimerLabel"
+	energy_tonic_timer_label.text = ""
+	energy_tonic_timer_label.visible = false
+	top_bar.add_child(energy_tonic_timer_label)
+
+	# Add a timer to update the display every second
+	var update_timer = Timer.new()
+	update_timer.wait_time = 1.0
+	update_timer.timeout.connect(_update_energy_tonic_ui)
+	update_timer.autostart = true
+	add_child(update_timer)
+
+func _update_energy_tonic_ui():
+	"""Update the energy tonic button and status display"""
+	if not energy_tonic_button or not energy_tonic_label:
+		return
+
+	# Get tonic count from inventory
+	var tonic_count = 0
+	if InventoryManager and InventoryManager.instance:
+		tonic_count = InventoryManager.instance.get_item_count("energy_tonic")
+
+	# Update count label
+	energy_tonic_label.text = "Tonics: %d" % tonic_count
+
+	# Check if tonic is active
+	var is_active = false
+	var time_remaining = 0.0
+	if ExplorationManager and ExplorationManager.instance:
+		is_active = ExplorationManager.instance.is_energy_tonic_active()
+		time_remaining = ExplorationManager.instance.get_energy_tonic_time_remaining()
+
+	# Update button state
+	if is_active:
+		energy_tonic_button.disabled = true
+		energy_tonic_button.text = "Tonic Active"
+		energy_tonic_timer_label.visible = true
+		energy_tonic_timer_label.text = "Boost: %ds remaining" % int(time_remaining)
+	else:
+		energy_tonic_button.disabled = (tonic_count <= 0)
+		energy_tonic_button.text = "Use Energy Tonic (4x speed)"
+		energy_tonic_timer_label.visible = false
+
+func _on_energy_tonic_button_pressed():
+	"""Handle energy tonic button press"""
+	if not ExplorationManager or not ExplorationManager.instance:
+		_show_error_dialog("Error", "ExplorationManager not found!")
+		return
+
+	if ExplorationManager.instance.consume_energy_tonic():
+		print("[ExplorationMapUI] Energy Tonic consumed!")
+		_update_energy_tonic_ui()
+	else:
+		_show_error_dialog("Cannot Use Tonic", "Either you have no tonics, or one is already active!")
+
+func _on_energy_tonic_activated(duration: float):
+	"""Called when energy tonic is activated - update UI and traveling dragon animations"""
+	_update_energy_tonic_ui()
+
+	# Update all traveling dragons with new timing from ExplorationManager
+	if ExplorationManager and ExplorationManager.instance:
+		for dragon_id in active_traveling_dragons.keys():
+			var traveling_dragon = active_traveling_dragons[dragon_id]
+
+			# Get updated exploration data from manager
+			var explorations = ExplorationManager.instance.get_active_explorations()
+			for exploration_data in explorations:
+				var exploring_dragon = exploration_data.get("dragon")
+				if exploring_dragon and exploring_dragon.dragon_id == dragon_id:
+					# Update the traveling dragon's timing to match the sped-up exploration
+					var new_start_time = exploration_data["start_time"]
+					var new_duration = exploration_data["duration"]
+					traveling_dragon.update_timing(new_start_time, new_duration)
+					print("[ExplorationMapUI] Updated traveling dragon animation for: %s" % dragon_id)
+					break
+
+func _on_energy_tonic_expired():
+	"""Called when energy tonic expires"""
+	_update_energy_tonic_ui()

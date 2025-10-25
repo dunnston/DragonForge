@@ -39,13 +39,9 @@ func setup(dragon: Dictionary, dest_key: String, start_pos: Vector2, end_pos: Ve
 	end_position = end_pos
 	start_time = Time.get_unix_time_from_system()
 
-	# Check if in DEV_MODE (exploration uses seconds instead of minutes)
-	if ExplorationManager and ExplorationManager.instance and ExplorationManager.instance.DEV_MODE:
-		duration_seconds = duration_mins  # In dev mode, the "minutes" are actually seconds
-		print("[TravelingDragon] DEV MODE: Using %d seconds" % duration_seconds)
-	else:
-		duration_seconds = duration_mins * 60
-		print("[TravelingDragon] Production: Using %d seconds (%d minutes)" % [duration_seconds, duration_mins])
+	# Convert minutes to seconds
+	duration_seconds = duration_mins * 60
+	print("[TravelingDragon] Using %d seconds (%d minutes)" % [duration_seconds, duration_mins])
 
 	# Set position at start point
 	position = start_position
@@ -212,3 +208,15 @@ func get_time_remaining_formatted() -> String:
 	var mins = seconds / 60
 	var secs = seconds % 60
 	return "%02d:%02d" % [mins, secs]
+
+func update_timing(new_start_time: float, new_duration_seconds: int) -> void:
+	"""Update the exploration timing when Energy Tonic is consumed"""
+	print("[TravelingDragon] Updating timing for %s:" % dragon_data.get("name", "Dragon"))
+	print("  Old: start_time=%d, duration=%d" % [start_time, duration_seconds])
+	print("  New: start_time=%d, duration=%d" % [new_start_time, new_duration_seconds])
+
+	start_time = new_start_time
+	duration_seconds = new_duration_seconds
+
+	# Restart the animation with new timing
+	_animate_round_trip()

@@ -91,18 +91,18 @@ func _populate_destination_dropdown():
 	# Clear existing items
 	destination_dropdown.clear()
 
-	# Add destinations with name and duration
-	destination_dropdown.add_item("Volcanic Caves (15 min)", 0)
-	destination_dropdown.set_item_metadata(0, {"key": "volcanic_caves", "duration": 15})
+	# Add destinations with name and duration (updated to 5/10/15/20 minutes)
+	destination_dropdown.add_item("Volcanic Caves (1 min)", 0)
+	destination_dropdown.set_item_metadata(0, {"key": "volcanic_caves", "duration": 1})
 
-	destination_dropdown.add_item("Ancient Forest (30 min)", 1)
-	destination_dropdown.set_item_metadata(1, {"key": "ancient_forest", "duration": 30})
+	destination_dropdown.add_item("Ancient Forest (5 min)", 1)
+	destination_dropdown.set_item_metadata(1, {"key": "ancient_forest", "duration": 5})
 
-	destination_dropdown.add_item("Frozen Tundra (45 min)", 2)
-	destination_dropdown.set_item_metadata(2, {"key": "frozen_tundra", "duration": 45})
+	destination_dropdown.add_item("Frozen Tundra (10 min)", 2)
+	destination_dropdown.set_item_metadata(2, {"key": "frozen_tundra", "duration": 10})
 
-	destination_dropdown.add_item("Thunder Peak (60 min)", 3)
-	destination_dropdown.set_item_metadata(3, {"key": "thunder_peak", "duration": 60})
+	destination_dropdown.add_item("Thunder Peak (15 min)", 3)
+	destination_dropdown.set_item_metadata(3, {"key": "thunder_peak", "duration": 15})
 
 	# Select first item by default
 	destination_dropdown.selected = 0
@@ -676,23 +676,15 @@ func _on_exploration_completed(dragon: Dragon, destination: String, rewards: Dic
 		dragon_updated.emit()
 
 func _update_exploration_button_labels():
-	"""Update button labels based on DEV_MODE"""
+	"""Update button labels with exploration durations"""
 	if not ExplorationManager or not ExplorationManager.instance:
 		return
 
-	# Update dropdown text based on DEV_MODE
-	if ExplorationManager and ExplorationManager.instance and ExplorationManager.instance.DEV_MODE:
-		# In dev mode, show seconds instead of minutes
-		destination_dropdown.set_item_text(0, "Volcanic Caves (15 sec)")
-		destination_dropdown.set_item_text(1, "Ancient Forest (30 sec)")
-		destination_dropdown.set_item_text(2, "Frozen Tundra (45 sec)")
-		destination_dropdown.set_item_text(3, "Thunder Peak (60 sec)")
-	else:
-		# Normal mode - show minutes
-		destination_dropdown.set_item_text(0, "Volcanic Caves (15 min)")
-		destination_dropdown.set_item_text(1, "Ancient Forest (30 min)")
-		destination_dropdown.set_item_text(2, "Frozen Tundra (45 min)")
-		destination_dropdown.set_item_text(3, "Thunder Peak (60 min)")
+	# Update dropdown text with new durations (1/5/10/15 minutes)
+	destination_dropdown.set_item_text(0, "Volcanic Caves (1 min)")
+	destination_dropdown.set_item_text(1, "Ancient Forest (5 min)")
+	destination_dropdown.set_item_text(2, "Frozen Tundra (10 min)")
+	destination_dropdown.set_item_text(3, "Thunder Peak (15 min)")
 
 func _on_treat_pressed():
 	"""Use a treat on the current dragon"""

@@ -344,6 +344,22 @@
 			"stackable": true,
 			"max_stack": 999,
 			"rarity": 2
+		},
+		"energy_tonic": {
+			"id": "energy_tonic",
+			"name": "Energy Tonic",
+			"type": "consumable",
+			"category": "exploration_boost",
+			"description": "A powerful elixir that boosts dragon exploration speed by 4x for 2 minutes. Affects ALL dragons, even those already exploring!",
+			"icon": "res://assets/Icons/items/energy-tonic.png",
+			"stackable": true,
+			"max_stack": 99,
+			"rarity": 2,
+			"effect": {
+				"type": "exploration_speed_boost",
+				"multiplier": 4.0,
+				"duration": 120
+			}
 		}
 	}
 }
