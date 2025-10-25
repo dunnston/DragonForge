@@ -90,7 +90,7 @@ theme_override_constants/shadow_offset_y = 2
 theme_override_constants/outline_size = 4
 theme_override_font_sizes/font_size = 16
 text = "Ancient Forest
-10 minutes"
+5 minutes"
 horizontal_alignment = 1
 vertical_alignment = 1
 
@@ -135,7 +135,7 @@ theme_override_constants/shadow_offset_y = 2
 theme_override_constants/outline_size = 4
 theme_override_font_sizes/font_size = 16
 text = "Frozen Tundra
-20 minutes"
+10 minutes"
 horizontal_alignment = 1
 vertical_alignment = 1
 
@@ -225,7 +225,7 @@ theme_override_constants/shadow_offset_y = 2
 theme_override_constants/outline_size = 4
 theme_override_font_sizes/font_size = 16
 text = "Volcanic Caves
-5 minutes"
+1 minute"
 horizontal_alignment = 1
 vertical_alignment = 1
 

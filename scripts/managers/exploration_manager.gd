@@ -499,6 +499,16 @@ func _calculate_rewards(dragon: Dragon, duration_minutes: int, destination: Stri
 			var item_id = item_id_map[item_type]
 			rewards["items"][item_id] = item_count
 
+	# Energy Tonic drops (only from higher tier areas: Frozen Tundra 10min, Thunder Peak 15min)
+	if duration_minutes >= 10:
+		var tonic_chance = 0.15  # 15% base chance for 10min
+		if duration_minutes >= 15:
+			tonic_chance = 0.25  # 25% chance for 15min
+
+		if randf() < tonic_chance:
+			rewards["items"]["energy_tonic"] = 1
+			print("[ExplorationManager] Energy Tonic dropped! (%.0f%% chance)" % (tonic_chance * 100))
+
 	return rewards
 
 func _apply_rewards(rewards: Dictionary):
