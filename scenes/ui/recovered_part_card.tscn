@@ -25,19 +25,19 @@ theme_override_constants/separation = 5
 layout_mode = 2
 theme_override_colors/font_color = Color(0.5, 1, 0.5, 1)
 theme_override_font_sizes/font_size = 14
-text = "Fire Head"
+text = ""
 
 [node name="RarityLabel" type="Label" parent="HBox/VBox"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.8, 0.8, 1, 1)
 theme_override_font_sizes/font_size = 11
-text = "Rare"
+text = ""
 
 [node name="TimerLabel" type="Label" parent="HBox/VBox"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.4, 1, 0.4, 1)
 theme_override_font_sizes/font_size = 12
-text = "⏱️ 18h 23m"
+text = ""
 
 [node name="Buttons" type="VBoxContainer" parent="HBox"]
 layout_mode = 2

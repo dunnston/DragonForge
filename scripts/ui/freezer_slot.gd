@@ -37,8 +37,12 @@ func set_part(part: DragonPart):
 
 	# Show occupied UI
 	if icon_texture:
-		icon_texture.visible = true
-		# TODO: Set actual part icon texture
+		var icon = part.get_icon()
+		if icon:
+			icon_texture.texture = icon
+			icon_texture.visible = true
+		else:
+			icon_texture.visible = false
 
 	if name_label:
 		name_label.visible = true

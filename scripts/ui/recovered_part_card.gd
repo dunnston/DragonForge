@@ -51,7 +51,7 @@ func _update_display():
 	if rarity_label:
 		rarity_label.text = part.get_rarity_name()
 
-	# Set icon (TODO: Load actual icon)
+	# Set icon
 	if icon_texture:
 		var icon = part.get_icon()
 		if icon:

@@ -4,20 +4,17 @@ class_name PartsInventoryUI
 ## Main inventory screen for managing recovered parts and freezer
 
 # Node references
-@onready var close_button = $Panel/MarginContainer/VBox/Header/CloseButton
-@onready var title_label = $Panel/MarginContainer/VBox/Header/TitleLabel
-@onready var tab_container = $Panel/MarginContainer/VBox/Content
-@onready var recovered_parts_container = $Panel/MarginContainer/VBox/Content/RecoveredParts/ScrollContainer/PartsVBox
-@onready var freezer_section = $Panel/MarginContainer/VBox/Content/Freezer
-@onready var freezer_locked_panel = $Panel/MarginContainer/VBox/Content/Freezer/LockedPanel
-@onready var freezer_unlocked_panel = $Panel/MarginContainer/VBox/Content/Freezer/UnlockedPanel
-@onready var freezer_progress_bar = $Panel/MarginContainer/VBox/Content/Freezer/LockedPanel/VBox/ProgressBar
-@onready var freezer_progress_label = $Panel/MarginContainer/VBox/Content/Freezer/LockedPanel/VBox/ProgressLabel
-@onready var unlock_button = $Panel/MarginContainer/VBox/Content/Freezer/LockedPanel/VBox/UnlockButton
-@onready var freezer_title_label = $Panel/MarginContainer/VBox/Content/Freezer/UnlockedPanel/VBox/TitleLabel
-@onready var upgrade_button = $Panel/MarginContainer/VBox/Content/Freezer/UnlockedPanel/VBox/UpgradeButton
-@onready var freezer_slots_grid = $Panel/MarginContainer/VBox/Content/Freezer/UnlockedPanel/VBox/SlotsGrid
-@onready var freeze_all_button = $Panel/MarginContainer/VBox/Footer/FreezeAllButton
+@onready var close_button = $CenterContainer/PanelContainer/MarginContainer/ScrollContainer/VBoxContainer/HeaderContainer/CloseButton
+@onready var recovered_parts_container = $CenterContainer/PanelContainer/MarginContainer/ScrollContainer/VBoxContainer/RecoveredPartsSection/ScrollContainer/PartsVBox
+@onready var freezer_locked_panel = $CenterContainer/PanelContainer/MarginContainer/ScrollContainer/VBoxContainer/FreezerSection/FreezerLockedPanel
+@onready var freezer_unlocked_panel = $CenterContainer/PanelContainer/MarginContainer/ScrollContainer/VBoxContainer/FreezerSection/FreezerUnlockedPanel
+@onready var freezer_progress_bar = $CenterContainer/PanelContainer/MarginContainer/ScrollContainer/VBoxContainer/FreezerSection/FreezerLockedPanel/MarginContainer/VBox/ProgressBar
+@onready var freezer_progress_label = $CenterContainer/PanelContainer/MarginContainer/ScrollContainer/VBoxContainer/FreezerSection/FreezerLockedPanel/MarginContainer/VBox/ProgressLabel
+@onready var unlock_button = $CenterContainer/PanelContainer/MarginContainer/ScrollContainer/VBoxContainer/FreezerSection/FreezerLockedPanel/MarginContainer/VBox/UnlockButton
+@onready var freezer_title_label = $CenterContainer/PanelContainer/MarginContainer/ScrollContainer/VBoxContainer/FreezerSection/FreezerUnlockedPanel/FreezerHeader/TitleLabel
+@onready var upgrade_button = $CenterContainer/PanelContainer/MarginContainer/ScrollContainer/VBoxContainer/FreezerSection/FreezerUnlockedPanel/FreezerHeader/UpgradeButton
+@onready var freezer_slots_grid = $CenterContainer/PanelContainer/MarginContainer/ScrollContainer/VBoxContainer/FreezerSection/FreezerUnlockedPanel/SlotsGrid
+@onready var freeze_all_button = $CenterContainer/PanelContainer/MarginContainer/ScrollContainer/VBoxContainer/RecoveredPartsSection/RecoveredHeader/FreezeAllButton
 
 # Preloaded scenes
 const RECOVERED_PART_CARD = preload("res://scenes/ui/recovered_part_card.tscn")
@@ -67,8 +64,10 @@ func _display_recovered_parts():
 	if not recovered_parts_container:
 		return
 
-	# Clear existing cards
-	for child in recovered_parts_container.get_children():
+	# Clear existing cards - queue for deletion
+	var children = recovered_parts_container.get_children()
+	for child in children:
+		recovered_parts_container.remove_child(child)
 		child.queue_free()
 
 	var parts = death_manager.recovered_parts
@@ -88,10 +87,14 @@ func _display_recovered_parts():
 	# Create card for each part
 	for part in sorted_parts:
 		var card = RECOVERED_PART_CARD.instantiate()
+
+		# Add to scene tree first so @onready vars are initialized
+		recovered_parts_container.add_child(card)
+
+		# Now setup after nodes are ready
 		card.setup(part)
 		card.freeze_clicked.connect(_on_freeze_part_clicked.bind(part))
 		card.use_clicked.connect(_on_use_part_clicked.bind(part))
-		recovered_parts_container.add_child(card)
 
 func _display_freezer_section():
 	"""Display freezer section (locked or unlocked)"""
@@ -180,8 +183,10 @@ func _display_freezer_slots():
 	if not freezer_slots_grid:
 		return
 
-	# Clear existing slots
-	for child in freezer_slots_grid.get_children():
+	# Clear existing slots - queue for deletion
+	var children = freezer_slots_grid.get_children()
+	for child in children:
+		freezer_slots_grid.remove_child(child)
 		child.queue_free()
 
 	var capacity = death_manager.get_freezer_capacity()
@@ -189,6 +194,11 @@ func _display_freezer_slots():
 	# Create slot for each capacity
 	for i in range(capacity):
 		var slot = FREEZER_SLOT.instantiate()
+
+		# Add to scene tree first so @onready vars are initialized
+		freezer_slots_grid.add_child(slot)
+
+		# Now setup after nodes are ready
 		slot.setup(i)
 
 		var part = death_manager.get_part_in_freezer_slot(i)
@@ -198,8 +208,6 @@ func _display_freezer_slots():
 		else:
 			slot.set_empty()
 			slot.empty_clicked.connect(_on_empty_slot_clicked.bind(i))
-
-		freezer_slots_grid.add_child(slot)
 
 func _update_buttons():
 	"""Update button states"""
@@ -217,7 +225,7 @@ func _on_unlock_freezer_pressed():
 	"""Attempt to unlock freezer"""
 	if death_manager.unlock_freezer():
 		print("[PartsInventoryUI] Freezer unlocked!")
-		_refresh_display()
+		# Don't call _refresh_display() here - freezer_unlocked signal will handle it
 	else:
 		print("[PartsInventoryUI] Failed to unlock freezer")
 
@@ -225,7 +233,7 @@ func _on_upgrade_freezer_pressed():
 	"""Attempt to upgrade freezer"""
 	if death_manager.upgrade_freezer():
 		print("[PartsInventoryUI] Freezer upgraded!")
-		_refresh_display()
+		# Don't call _refresh_display() here - freezer_upgraded signal will handle it
 	else:
 		print("[PartsInventoryUI] Failed to upgrade freezer")
 
@@ -241,7 +249,7 @@ func _on_freeze_part_clicked(part: DragonPart):
 	if empty_slot >= 0:
 		if death_manager.freeze_part(part, empty_slot):
 			print("[PartsInventoryUI] Froze part in slot %d" % empty_slot)
-			_refresh_display()
+			# Don't call _refresh_display() here - it's already called by the part_frozen signal handler
 	else:
 		print("[PartsInventoryUI] No empty freezer slots!")
 
@@ -254,12 +262,71 @@ func _on_unfreeze_clicked(slot_index: int):
 	"""Handle unfreeze button on slot"""
 	if death_manager.unfreeze_part(slot_index):
 		print("[PartsInventoryUI] Unfroze part from slot %d" % slot_index)
-		_refresh_display()
+		# Don't call _refresh_display() here - part_unfrozen signal will handle it
 
 func _on_use_part_clicked(part: DragonPart):
-	"""Handle use button on part card"""
-	# TODO: Open dragon creation screen with this part pre-selected
-	print("[PartsInventoryUI] Use part: %s (not yet implemented)" % part.get_display_name())
+	"""Handle use button on part card - slots it into factory manager"""
+	if not part:
+		return
+
+	print("[PartsInventoryUI] Using part: %s" % part.get_display_name())
+
+	# Convert part to item_id (e.g. "fire_head_recovered")
+	var item_id = _convert_part_to_item_id(part)
+	if item_id.is_empty():
+		print("[PartsInventoryUI] ERROR: Could not convert part to item_id")
+		return
+
+	# Find the factory manager
+	var factory_manager = _find_factory_manager()
+	if not factory_manager:
+		print("[PartsInventoryUI] ERROR: Could not find FactoryManager")
+		return
+
+	# Determine which slot to fill based on part type
+	var slot_to_fill = ""
+	match part.part_type:
+		DragonPart.PartType.HEAD:
+			slot_to_fill = "head"
+		DragonPart.PartType.BODY:
+			slot_to_fill = "body"
+		DragonPart.PartType.TAIL:
+			slot_to_fill = "tail"
+
+	# Set the appropriate slot in factory manager and update display
+	match slot_to_fill:
+		"head":
+			factory_manager.selected_head_id = item_id
+			factory_manager._update_slot_display(
+				factory_manager.head_slot_label,
+				factory_manager.head_slot_rect,
+				factory_manager.head_slot_icon,
+				item_id
+			)
+			print("[PartsInventoryUI] Slotted %s into HEAD slot" % part.get_display_name())
+		"body":
+			factory_manager.selected_body_id = item_id
+			factory_manager._update_slot_display(
+				factory_manager.body_slot_label,
+				factory_manager.body_slot_rect,
+				factory_manager.body_slot_icon,
+				item_id
+			)
+			print("[PartsInventoryUI] Slotted %s into BODY slot" % part.get_display_name())
+		"tail":
+			factory_manager.selected_tail_id = item_id
+			factory_manager._update_slot_display(
+				factory_manager.tail_slot_label,
+				factory_manager.tail_slot_rect,
+				factory_manager.tail_slot_icon,
+				item_id
+			)
+			print("[PartsInventoryUI] Slotted %s into TAIL slot" % part.get_display_name())
+
+	# Close this UI
+	queue_free()
+
+	print("[PartsInventoryUI] Part successfully slotted and UI closed")
 
 func _on_freeze_all_pressed():
 	"""Freeze all recovered parts into available slots"""
@@ -282,7 +349,36 @@ func _on_freeze_all_pressed():
 
 func _on_close_pressed():
 	"""Close the inventory UI"""
+	_cleanup_signals()
 	queue_free()
+
+func _exit_tree():
+	"""Clean up when node is removed from tree"""
+	_cleanup_signals()
+
+func _cleanup_signals():
+	"""Disconnect all signal connections to prevent memory leaks"""
+	if not death_manager:
+		return
+
+	# Disconnect all death manager signals
+	if death_manager.part_recovered.is_connected(_on_part_recovered):
+		death_manager.part_recovered.disconnect(_on_part_recovered)
+
+	if death_manager.part_decayed.is_connected(_on_part_decayed):
+		death_manager.part_decayed.disconnect(_on_part_decayed)
+
+	if death_manager.part_frozen.is_connected(_on_part_frozen):
+		death_manager.part_frozen.disconnect(_on_part_frozen)
+
+	if death_manager.part_unfrozen.is_connected(_on_part_unfrozen):
+		death_manager.part_unfrozen.disconnect(_on_part_unfrozen)
+
+	if death_manager.freezer_unlocked.is_connected(_on_freezer_unlocked):
+		death_manager.freezer_unlocked.disconnect(_on_freezer_unlocked)
+
+	if death_manager.freezer_upgraded.is_connected(_on_freezer_upgraded):
+		death_manager.freezer_upgraded.disconnect(_on_freezer_upgraded)
 
 # ═══════════════════════════════════════════════════════════
 # SIGNAL HANDLERS
@@ -312,3 +408,64 @@ func _on_freezer_unlocked(level: int):
 func _on_freezer_upgraded(new_level: int, new_capacity: int):
 	"""Handle freezer upgrade event"""
 	_refresh_display()
+
+# ═══════════════════════════════════════════════════════════
+# HELPER FUNCTIONS
+# ═══════════════════════════════════════════════════════════
+
+func _convert_part_to_item_id(part: DragonPart) -> String:
+	"""Convert a DragonPart to an inventory item_id (e.g. 'fire_head_recovered')"""
+	if not part:
+		return ""
+
+	# Get element name (FIRE → "fire")
+	var element_name = ""
+	match part.element:
+		DragonPart.Element.FIRE:
+			element_name = "fire"
+		DragonPart.Element.ICE:
+			element_name = "ice"
+		DragonPart.Element.LIGHTNING:
+			element_name = "lightning"
+		DragonPart.Element.NATURE:
+			element_name = "nature"
+		DragonPart.Element.SHADOW:
+			element_name = "shadow"
+
+	# Get part type name (HEAD → "head")
+	var part_type_name = ""
+	match part.part_type:
+		DragonPart.PartType.HEAD:
+			part_type_name = "head"
+		DragonPart.PartType.BODY:
+			part_type_name = "body"
+		DragonPart.PartType.TAIL:
+			part_type_name = "tail"
+
+	# Add "_recovered" suffix so they stack separately from normal parts
+	return "%s_%s_recovered" % [element_name, part_type_name]
+
+func _find_factory_manager():
+	"""Find the FactoryManager node in the scene tree"""
+	# Search in the root's children
+	var root = get_tree().root
+	for child in root.get_children():
+		if child.name == "FactoryManager" or child is Control and child.has_method("_update_creation_slots"):
+			return child
+
+	# Fallback: search more deeply
+	return _find_node_by_class(root, "FactoryManager")
+
+func _find_node_by_class(node: Node, target_class_name: String):
+	"""Recursively find a node by checking its script's class name"""
+	if node.get_script():
+		var script = node.get_script()
+		if script.resource_path.contains("factory_manager"):
+			return node
+
+	for child in node.get_children():
+		var result = _find_node_by_class(child, target_class_name)
+		if result:
+			return result
+
+	return null

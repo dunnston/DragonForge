@@ -7,7 +7,7 @@ extends Node
 # CONSTANTS
 # ═══════════════════════════════════════════════════════════
 
-const FREEZER_UNLOCK_WAVES = 100
+const FREEZER_UNLOCK_WAVES = 10
 const FREEZER_LEVELS = [
 	{"level": 1, "capacity": 5, "cost": 500},
 	{"level": 2, "capacity": 10, "cost": 1500},
@@ -169,11 +169,17 @@ func _select_parts_from_dragon(dragon: Dragon, count: int) -> Array[DragonPart]:
 	# Get all parts from dragon
 	var available = []
 	if dragon.head_part:
-		available.append(dragon.head_part.duplicate())
+		var part_copy = dragon.head_part.duplicate(true)  # Deep duplicate
+		print("[DragonDeathManager] Duplicating head part - icon_path: '%s'" % part_copy.icon_path)
+		available.append(part_copy)
 	if dragon.body_part:
-		available.append(dragon.body_part.duplicate())
+		var part_copy = dragon.body_part.duplicate(true)  # Deep duplicate
+		print("[DragonDeathManager] Duplicating body part - icon_path: '%s'" % part_copy.icon_path)
+		available.append(part_copy)
 	if dragon.tail_part:
-		available.append(dragon.tail_part.duplicate())
+		var part_copy = dragon.tail_part.duplicate(true)  # Deep duplicate
+		print("[DragonDeathManager] Duplicating tail part - icon_path: '%s'" % part_copy.icon_path)
+		available.append(part_copy)
 
 	# Shuffle and take first 'count' parts
 	available.shuffle()

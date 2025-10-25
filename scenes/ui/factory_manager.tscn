@@ -237,6 +237,12 @@ layout_mode = 2
 theme_override_font_sizes/font_size = 14
 text = "VIEW VAULT"
 
+[node name="ViewFreezerButton" type="Button" parent="MarginContainer/MainVBox/TopBar"]
+custom_minimum_size = Vector2(120, 50)
+layout_mode = 2
+theme_override_font_sizes/font_size = 14
+text = "❄️ FREEZER"
+
 [node name="ManageDefensesButton" type="Button" parent="MarginContainer/MainVBox/TopBar"]
 custom_minimum_size = Vector2(160, 50)
 layout_mode = 2

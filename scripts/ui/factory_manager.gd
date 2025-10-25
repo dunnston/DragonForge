@@ -8,6 +8,7 @@ var scientist_manager: ScientistManager
 # === UI ELEMENTS - Top Bar ===
 @onready var gold_label: Label = $MarginContainer/MainVBox/TopBar/GoldDisplay/HBox/GoldLabel
 @onready var view_inventory_button: Button = $MarginContainer/MainVBox/TopBar/ViewInventoryButton
+@onready var view_freezer_button: Button = $MarginContainer/MainVBox/TopBar/ViewFreezerButton
 @onready var manage_defenses_button: Button = $MarginContainer/MainVBox/TopBar/ManageDefensesButton
 @onready var manage_training_button: Button = $MarginContainer/MainVBox/TopBar/ManageTrainingButton
 @onready var exploration_map_button: Button = $MarginContainer/MainVBox/TopBar/ExplorationMapButton
@@ -181,6 +182,7 @@ func _ready():
 	# Connect button signals
 	animate_button.pressed.connect(_on_animate_button_pressed)
 	view_inventory_button.pressed.connect(_on_view_inventory_pressed)
+	view_freezer_button.pressed.connect(_on_view_freezer_pressed)
 	manage_defenses_button.pressed.connect(_on_manage_defenses_pressed)
 	manage_training_button.pressed.connect(_on_manage_training_pressed)
 	exploration_map_button.pressed.connect(_on_exploration_map_pressed)
@@ -321,6 +323,9 @@ func _process(_delta):
 
 	# Update Training Grounds button state
 	_update_training_button_state()
+
+	# Update Freezer button notification
+	_update_freezer_button_display()
 func _input(event):
 	"""Handle ESC key to show save & exit popup"""
 	if event is InputEventKey and event.pressed and event.keycode == KEY_ESCAPE:
@@ -829,6 +834,44 @@ func _update_collection_display():
 	else:
 		collection_progress.text = "0/125"
 
+func _update_freezer_button_display():
+	"""Update freezer button with notification badge for decaying parts"""
+	if not view_freezer_button or not DragonDeathManager or not DragonDeathManager.instance:
+		return
+
+	var death_manager = DragonDeathManager.instance
+	var recovered_count = death_manager.recovered_parts.size()
+
+	if recovered_count == 0:
+		# No recovered parts - normal state
+		view_freezer_button.text = "❄️ FREEZER"
+		view_freezer_button.modulate = Color.WHITE
+		return
+
+	# Check for critical parts (<1 hour decay time)
+	var critical_count = 0
+	var warning_count = 0
+
+	for part in death_manager.recovered_parts:
+		var urgency = part.get_decay_urgency()
+		if urgency == "critical":
+			critical_count += 1
+		elif urgency == "urgent" or urgency == "warning":
+			warning_count += 1
+
+	# Update button text with badge
+	if critical_count > 0:
+		view_freezer_button.text = "❄️ FREEZER 🚨 %d" % recovered_count
+		# Flash red for critical
+		var flash = sin(Time.get_ticks_msec() / 200.0) * 0.3 + 0.7
+		view_freezer_button.modulate = Color(1.0, flash, flash)
+	elif warning_count > 0:
+		view_freezer_button.text = "❄️ FREEZER ⚠️ %d" % recovered_count
+		view_freezer_button.modulate = Color(1.0, 1.0, 0.7)  # Yellow tint
+	else:
+		view_freezer_button.text = "❄️ FREEZER (%d)" % recovered_count
+		view_freezer_button.modulate = Color(0.7, 1.0, 0.7)  # Green tint
+
 func _update_training_button_state():
 	"""Update Training Grounds button based on Trainer hire status"""
 	if not manage_training_button:
@@ -900,6 +943,20 @@ func _on_game_loaded(success: bool, message: String):
 func _on_view_inventory_pressed():
 	if inventory_panel:
 		inventory_panel.open()
+
+func _on_view_freezer_pressed():
+	"""Open the Parts Inventory UI (Freezer & Recovered Parts)"""
+	print("[FactoryManager] Opening Parts Inventory UI (Freezer)")
+
+	# Load and instantiate the parts inventory UI
+	var parts_inventory_scene = load("res://scenes/ui/parts_inventory_ui.tscn")
+	if parts_inventory_scene:
+		var parts_inventory_ui = parts_inventory_scene.instantiate()
+		# Add as overlay
+		get_tree().root.add_child(parts_inventory_ui)
+		parts_inventory_ui.z_index = 100  # Make sure it's on top
+	else:
+		print("[FactoryManager] ERROR: Could not load parts_inventory_ui scene")
 
 # === SCIENTIST MANAGEMENT ===
 
