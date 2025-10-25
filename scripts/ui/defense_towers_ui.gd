@@ -164,8 +164,8 @@ func _update_wave_timer():
 	
 	var time_remaining = DefenseManager.instance.get_time_until_wave()
 	
-	# Check if raids are paused due to no resources
-	if DefenseManager.instance._is_player_out_of_resources():
+	# Check if raids are paused due to no resources (only if no defenders assigned)
+	if DefenseManager.instance.tower_assignments.is_empty() and DefenseManager.instance._is_player_out_of_resources():
 		wave_timer_label.text = "⏸ RAIDS PAUSED (No Resources)"
 		wave_timer_label.add_theme_color_override("font_color", Color(0.6, 0.6, 0.6, 1))  # Gray
 	# Check if in combat

@@ -73,7 +73,8 @@ func _update_wave_timer():
 		return
 
 	# Check if player is completely out of resources - pause raids if so
-	if _is_player_out_of_resources():
+	# BUT if there are defenders assigned, let the waves continue
+	if tower_assignments.is_empty() and _is_player_out_of_resources():
 		print("[DefenseManager] Raids PAUSED - Vault is empty, no parts, and no dragons to explore")
 		return
 
