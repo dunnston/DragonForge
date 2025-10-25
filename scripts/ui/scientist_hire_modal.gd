@@ -3,7 +3,7 @@ extends AcceptDialog
 ## Modal dialog for hiring a scientist
 ## Shows scientist image, description, and costs
 
-signal scientist_hired(scientist_type: ScientistManager.ScientistType)
+signal scientist_hired(scientist_type: Scientist.Type)
 
 @onready var scientist_image: TextureRect = %ScientistImage
 @onready var scientist_name_label: Label = %ScientistName
@@ -12,9 +12,9 @@ signal scientist_hired(scientist_type: ScientistManager.ScientistType)
 @onready var ongoing_cost_label: Label = %OngoingCostLabel
 @onready var warning_label: Label = %WarningLabel
 
-var current_scientist_type: ScientistManager.ScientistType
+var current_scientist_type: Scientist.Type
 
-func show_for_scientist(scientist_type: ScientistManager.ScientistType):
+func show_for_scientist(scientist_type: Scientist.Type):
 	"""Configure and show the modal for a specific scientist"""
 	current_scientist_type = scientist_type
 
@@ -41,7 +41,7 @@ func show_for_scientist(scientist_type: ScientistManager.ScientistType):
 	var ongoing_cost = ScientistManager.instance.get_scientist_ongoing_cost(scientist_type)
 
 	hire_cost_label.text = "Hire Cost: " + str(hire_cost) + " gold"
-	ongoing_cost_label.text = "Ongoing: -" + str(ongoing_cost) + " gold/minute"
+	ongoing_cost_label.text = "Ongoing: -" + str(ongoing_cost) + " gold/wave"
 
 	# Check if player can afford
 	var can_afford = TreasureVault.instance.get_total_gold() >= hire_cost

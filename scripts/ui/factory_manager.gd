@@ -11,6 +11,7 @@ var scientist_manager: ScientistManager
 @onready var manage_defenses_button: Button = $MarginContainer/MainVBox/TopBar/ManageDefensesButton
 @onready var manage_training_button: Button = $MarginContainer/MainVBox/TopBar/ManageTrainingButton
 @onready var exploration_map_button: Button = $MarginContainer/MainVBox/TopBar/ExplorationMapButton
+@onready var manage_scientists_button: Button = $MarginContainer/MainVBox/TopBar/ManageScientistsButton
 
 @onready var fire_parts_count: Label = $MarginContainer/MainVBox/TopBar/PartsDisplay/PartsHBox/FireParts/Count
 @onready var ice_parts_count: Label = $MarginContainer/MainVBox/TopBar/PartsDisplay/PartsHBox/IceParts/Count
@@ -86,6 +87,9 @@ var training_yard_ui: TrainingYardUI
 # Exploration Map UI (created dynamically)
 var exploration_map_ui: ExplorationMapUI
 
+# Scientist Management UI (created dynamically)
+var scientist_management_ui: Control
+
 # === PET SYSTEM STATE ===
 var pet_ui_setup_complete: bool = false  # Track if pet UI is already set up
 var walking_pet_character: Node = null  # Reference to the walking pet character
@@ -151,9 +155,10 @@ func _ready():
 	# Connect scientist manager signals
 	if scientist_manager:
 		scientist_manager.scientist_hired.connect(_on_scientist_hired)
-		scientist_manager.scientist_fired.connect(_on_scientist_fired)
+		scientist_manager.scientist_upgraded.connect(_on_scientist_upgraded)
 		scientist_manager.scientist_action_performed.connect(_on_scientist_action)
-		scientist_manager.insufficient_gold_for_scientist.connect(_on_insufficient_gold_for_scientist)
+		scientist_manager.insufficient_gold_for_hire.connect(_on_insufficient_gold_for_hire)
+		scientist_manager.insufficient_gold_for_upgrade.connect(_on_insufficient_gold_for_upgrade)
 
 	# Connect exploration manager signals
 	if ExplorationManager and ExplorationManager.instance:
@@ -179,6 +184,7 @@ func _ready():
 	manage_defenses_button.pressed.connect(_on_manage_defenses_pressed)
 	manage_training_button.pressed.connect(_on_manage_training_pressed)
 	exploration_map_button.pressed.connect(_on_exploration_map_pressed)
+	manage_scientists_button.pressed.connect(_on_manage_scientists_pressed)
 	dragon_grounds_button.pressed.connect(_on_dragon_grounds_pressed)
 	view_collection_button.pressed.connect(_on_view_collection_pressed)
 	watch_battle_button.pressed.connect(_on_watch_battle_pressed)
@@ -206,6 +212,9 @@ func _ready():
 
 	# Create Exploration Map UI
 	_setup_exploration_map_ui()
+
+	# Create Scientist Management UI
+	_setup_scientist_management_ui()
 
 	# Connect Dragon Grounds modal
 	if dragon_grounds_modal:
@@ -309,6 +318,9 @@ func _process(_delta):
 	"""Continuously update the wave timer"""
 	if DefenseManager and DefenseManager.instance:
 		_update_defense_display()
+
+	# Update Training Grounds button state
+	_update_training_button_state()
 func _input(event):
 	"""Handle ESC key to show save & exit popup"""
 	if event is InputEventKey and event.pressed and event.keycode == KEY_ESCAPE:
@@ -326,6 +338,8 @@ func _input(event):
 		if training_yard_ui and training_yard_ui.visible:
 			return
 		if exploration_map_ui and exploration_map_ui.visible:
+			return
+		if scientist_management_ui and scientist_management_ui.visible:
 			return
 		if save_exit_popup and save_exit_popup.visible:
 			return
@@ -815,6 +829,22 @@ func _update_collection_display():
 	else:
 		collection_progress.text = "0/125"
 
+func _update_training_button_state():
+	"""Update Training Grounds button based on Trainer hire status"""
+	if not manage_training_button:
+		return
+
+	if ScientistManager and ScientistManager.instance:
+		var trainer_hired = ScientistManager.instance.is_scientist_hired(Scientist.Type.TRAINER)
+		manage_training_button.disabled = not trainer_hired
+
+		if trainer_hired:
+			manage_training_button.text = "TRAINING GROUNDS"
+			manage_training_button.tooltip_text = ""
+		else:
+			manage_training_button.text = "TRAINING GROUNDS (LOCKED)"
+			manage_training_button.tooltip_text = "Hire the Trainer scientist to unlock"
+
 # === SIGNAL HANDLERS ===
 
 func _on_gold_changed(new_amount: int, delta: int):
@@ -873,7 +903,7 @@ func _on_view_inventory_pressed():
 
 # === SCIENTIST MANAGEMENT ===
 
-func _on_scientist_hire_requested(scientist_type: ScientistManager.ScientistType):
+func _on_scientist_hire_requested(scientist_type: Scientist.Type):
 	"""Show hire modal when scientist panel is clicked"""
 	print("[FactoryManager] Hire requested for type: %s" % scientist_type)
 	print("[FactoryManager] hire_modal is: %s" % hire_modal)
@@ -882,51 +912,54 @@ func _on_scientist_hire_requested(scientist_type: ScientistManager.ScientistType
 	else:
 		print("[FactoryManager] ERROR: hire_modal is null!")
 
-func _on_scientist_fire_requested(scientist_type: ScientistManager.ScientistType):
-	"""Show confirmation dialog when fire button is clicked"""
-	var scientist_name = ScientistManager.instance.get_scientist_name(scientist_type)
-
-	var dialog = ConfirmationDialog.new()
-	dialog.always_on_top = true
-	add_child(dialog)
-	dialog.title = "Fire " + scientist_name + "?"
-	dialog.dialog_text = "Are you sure you want to fire " + scientist_name + "?\n\nNo refund will be given.\nOngoing costs will stop."
-
-	dialog.confirmed.connect(func():
-		ScientistManager.instance.fire_scientist(scientist_type)
-		dialog.queue_free()
-	)
-
-	dialog.canceled.connect(func():
-		dialog.queue_free()
-	)
-
-	dialog.popup_centered()
+func _on_scientist_fire_requested(scientist_type: Scientist.Type):
+	"""Old system - scientists can't be fired in tier-based system"""
+	# NOTE: In the new tier-based system, scientists cannot be fired.
+	# They can only be upgraded. If you can't afford salaries, scientists
+	# continue working but you receive a warning via the salary_failed signal.
+	print("[FactoryManager] Fire requested but not supported in tier system")
+	pass
 
 
-func _on_scientist_hired(type: ScientistManager.ScientistType):
+func _on_scientist_hired(type: Scientist.Type):
 	print("[FactoryManager] Scientist hired: %s" % type)
 	_update_gold_display(TreasureVault.get_total_gold())
 
-func _on_scientist_fired(type: ScientistManager.ScientistType):
-	print("[FactoryManager] Scientist fired: %s" % type)
+func _on_scientist_upgraded(type: Scientist.Type, new_tier: int):
+	print("[FactoryManager] Scientist upgraded: %s to Tier %d" % [type, new_tier])
+	_update_gold_display(TreasureVault.get_total_gold())
 
-func _on_scientist_action(type: ScientistManager.ScientistType, action_description: String):
+func _on_scientist_action(type: Scientist.Type, action_description: String):
 	print("[FactoryManager] Scientist action: %s - %s" % [type, action_description])
 	# Update UI when scientists do things
 	_update_dragons_list()
 	_update_parts_display()
 
-func _on_insufficient_gold_for_scientist(type: ScientistManager.ScientistType):
-	var info = scientist_manager.get_scientist_info(type)
-	print("[FactoryManager] Insufficient gold for %s!" % info["name"])
+func _on_insufficient_gold_for_hire(type: Scientist.Type):
+	var scientist = scientist_manager._get_scientist(type)
+	var scientist_name = scientist.get_tier_name()
+	print("[FactoryManager] Insufficient gold to hire %s!" % scientist_name)
 
 	# Show warning dialog
 	var dialog = AcceptDialog.new()
 	dialog.always_on_top = true
 	add_child(dialog)
 	dialog.title = "Insufficient Gold"
-	dialog.dialog_text = "Not enough gold to pay %s!\nScientist has been auto-fired." % info["name"]
+	dialog.dialog_text = "Not enough gold to hire %s!\nCost: %d gold" % [scientist_name, scientist.get_upgrade_cost()]
+	dialog.confirmed.connect(func(): dialog.queue_free())
+	dialog.popup_centered()
+
+func _on_insufficient_gold_for_upgrade(type: Scientist.Type):
+	var scientist = scientist_manager._get_scientist(type)
+	var scientist_name = scientist.get_tier_name()
+	print("[FactoryManager] Insufficient gold to upgrade %s!" % scientist_name)
+
+	# Show warning dialog
+	var dialog = AcceptDialog.new()
+	dialog.always_on_top = true
+	add_child(dialog)
+	dialog.title = "Insufficient Gold"
+	dialog.dialog_text = "Not enough gold to upgrade %s!\nCost: %d gold" % [scientist_name, scientist.get_upgrade_cost()]
 	dialog.confirmed.connect(func(): dialog.queue_free())
 	dialog.popup_centered()
 
@@ -1187,6 +1220,19 @@ func _on_manage_training_pressed():
 	"""Called when the Manage Training button is pressed"""
 	print("[FactoryManager] Manage Training button pressed")
 
+	# Check if Trainer scientist is hired
+	if ScientistManager and ScientistManager.instance:
+		if not ScientistManager.instance.is_scientist_hired(Scientist.Type.TRAINER):
+			# Show error dialog
+			var dialog = AcceptDialog.new()
+			dialog.always_on_top = true
+			add_child(dialog)
+			dialog.title = "Trainer Required"
+			dialog.dialog_text = "You must hire the Trainer scientist to unlock the Training Yard!\n\nHire the Trainer from the Scientist Management screen."
+			dialog.confirmed.connect(func(): dialog.queue_free())
+			dialog.popup_centered()
+			return
+
 	# Hide factory UI, show training yard UI
 	$MarginContainer.visible = false
 	inventory_panel.visible = false
@@ -1269,6 +1315,61 @@ func _on_exploration_map_back_pressed():
 
 	# Refresh factory UI to show updated dragons
 	_update_dragons_list()
+
+# === SCIENTIST MANAGEMENT UI ===
+
+func _setup_scientist_management_ui():
+	"""Create and setup the scientist management UI"""
+	var ScientistManagementUIScene = preload("res://scenes/ui/scientist_management_ui.tscn")
+	scientist_management_ui = ScientistManagementUIScene.instantiate()
+	add_child(scientist_management_ui)
+
+	# Hide by default
+	scientist_management_ui.visible = false
+
+	# Set z-index to appear above everything
+	scientist_management_ui.z_index = 100
+	scientist_management_ui.z_as_relative = false
+
+	# Connect back button signal
+	scientist_management_ui.back_to_factory_requested.connect(_on_scientist_management_back_pressed)
+
+	print("[FactoryManager] Scientist Management UI created")
+
+func _on_manage_scientists_pressed():
+	"""Called when the Manage Scientists button is pressed"""
+	print("[FactoryManager] Manage Scientists button pressed")
+
+	# Hide factory UI, show scientist management UI
+	$MarginContainer.visible = false
+	inventory_panel.visible = false
+	part_selector.visible = false
+	dragon_tooltip.visible = false
+	dragon_details_modal.visible = false
+	if defense_towers_ui:
+		defense_towers_ui.visible = false
+	if training_yard_ui:
+		training_yard_ui.visible = false
+	if exploration_map_ui:
+		exploration_map_ui.visible = false
+
+	# Hide walking pet dragon
+	if walking_pet_character:
+		walking_pet_character.visible = false
+
+	scientist_management_ui.visible = true
+
+func _on_scientist_management_back_pressed():
+	"""Called when back button is pressed in scientist management UI"""
+	print("[FactoryManager] Returning from Scientist Management UI")
+
+	# Show factory UI, hide scientist management UI
+	$MarginContainer.visible = true
+	scientist_management_ui.visible = false
+
+	# Show walking pet dragon
+	if walking_pet_character:
+		walking_pet_character.visible = true
 
 # === DRAGON GROUNDS MODAL ===
 

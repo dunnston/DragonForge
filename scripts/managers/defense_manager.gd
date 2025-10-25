@@ -603,9 +603,16 @@ func _complete_wave(victory: bool, rewards: Dictionary):
 	else:
 		cumulative_rewards["waves_lost"] += 1
 
+	# Pay scientist salaries after each wave (victory or defeat)
+	if ScientistManager and ScientistManager.instance:
+		var salary_paid = ScientistManager.instance.pay_salaries()
+		if not salary_paid:
+			print("[DefenseManager] ⚠️ WARNING: Failed to pay scientist salaries!")
+		# Note: pay_salaries() returns false if insufficient funds
+
 	# Note: Dragon death and tower destruction is now handled in end_combat()
 	# after the battle animation finishes
-	
+
 	reset_wave_timer()
 	wave_completed.emit(victory, rewards)
 	

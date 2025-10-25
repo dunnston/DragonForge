@@ -196,7 +196,7 @@ func _update_trainer_status():
 		return
 
 	var was_assigned = trainer_assigned
-	trainer_assigned = scientist_manager.is_scientist_hired(ScientistManager.ScientistType.TRAINER)
+	trainer_assigned = scientist_manager.is_scientist_hired(Scientist.Type.TRAINER)
 
 	if was_assigned != trainer_assigned:
 		print("[TrainingManager] Trainer status changed: %s" % ("HIRED" if trainer_assigned else "NOT HIRED"))

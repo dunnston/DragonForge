@@ -52,7 +52,7 @@ func _ready():
 
 	if ScientistManager and ScientistManager.instance:
 		ScientistManager.instance.scientist_hired.connect(_on_scientist_changed)
-		ScientistManager.instance.scientist_fired.connect(_on_scientist_changed)
+		ScientistManager.instance.scientist_upgraded.connect(func(t, tier): _on_scientist_changed(t))
 
 	# Connect buttons
 	back_button.pressed.connect(_on_back_pressed)
@@ -115,7 +115,7 @@ func _update_header():
 	# Check if trainer is hired
 	var trainer_hired = false
 	if ScientistManager and ScientistManager.instance:
-		trainer_hired = ScientistManager.instance.is_scientist_hired(ScientistManager.ScientistType.TRAINER)
+		trainer_hired = ScientistManager.instance.is_scientist_hired(Scientist.Type.TRAINER)
 		training_manager.set_trainer_assigned(trainer_hired)
 
 	# Update trainer status display

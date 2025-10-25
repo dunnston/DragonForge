@@ -1,0 +1,135 @@
+[gd_scene load_steps=3 format=3 uid="uid://dhw8y4m5xpvnb"]
+
+[ext_resource type="Script" path="res://scripts/ui/scientist_management_ui.gd" id="1_management_ui"]
+[ext_resource type="PackedScene" uid="uid://c8xvq7y1nmqkp" path="res://scenes/ui/scientist_card.tscn" id="2_scientist_card"]
+
+[node name="ScientistManagementUI" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_management_ui")
+
+[node name="DarkOverlay" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0, 0, 0, 0.8)
+
+[node name="CenterContainer" type="CenterContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="PanelContainer" type="PanelContainer" parent="CenterContainer"]
+custom_minimum_size = Vector2(1000, 550)
+layout_mode = 2
+size_flags_vertical = 4
+
+[node name="MarginContainer" type="MarginContainer" parent="CenterContainer/PanelContainer"]
+layout_mode = 2
+theme_override_constants/margin_left = 20
+theme_override_constants/margin_top = 20
+theme_override_constants/margin_right = 20
+theme_override_constants/margin_bottom = 20
+
+[node name="VBoxContainer" type="VBoxContainer" parent="CenterContainer/PanelContainer/MarginContainer"]
+layout_mode = 2
+theme_override_constants/separation = 15
+
+[node name="HeaderContainer" type="HBoxContainer" parent="CenterContainer/PanelContainer/MarginContainer/VBoxContainer"]
+layout_mode = 2
+
+[node name="TitleLabel" type="Label" parent="CenterContainer/PanelContainer/MarginContainer/VBoxContainer/HeaderContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "SCIENTIST MANAGEMENT"
+horizontal_alignment = 1
+
+[node name="CloseButton" type="Button" parent="CenterContainer/PanelContainer/MarginContainer/VBoxContainer/HeaderContainer"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(100, 40)
+layout_mode = 2
+text = "CLOSE"
+
+[node name="HSeparator" type="HSeparator" parent="CenterContainer/PanelContainer/MarginContainer/VBoxContainer"]
+layout_mode = 2
+
+[node name="ScrollContainer" type="ScrollContainer" parent="CenterContainer/PanelContainer/MarginContainer/VBoxContainer"]
+layout_mode = 2
+size_flags_vertical = 3
+horizontal_scroll_mode = 0
+
+[node name="CardsContainer" type="HBoxContainer" parent="CenterContainer/PanelContainer/MarginContainer/VBoxContainer/ScrollContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 15
+
+[node name="StitcherCard" parent="CenterContainer/PanelContainer/MarginContainer/VBoxContainer/ScrollContainer/CardsContainer" instance=ExtResource("2_scientist_card")]
+unique_name_in_owner = true
+layout_mode = 2
+scientist_type = 0
+
+[node name="CaretakerCard" parent="CenterContainer/PanelContainer/MarginContainer/VBoxContainer/ScrollContainer/CardsContainer" instance=ExtResource("2_scientist_card")]
+unique_name_in_owner = true
+layout_mode = 2
+scientist_type = 1
+
+[node name="TrainerCard" parent="CenterContainer/PanelContainer/MarginContainer/VBoxContainer/ScrollContainer/CardsContainer" instance=ExtResource("2_scientist_card")]
+unique_name_in_owner = true
+layout_mode = 2
+scientist_type = 2
+
+[node name="HSeparator2" type="HSeparator" parent="CenterContainer/PanelContainer/MarginContainer/VBoxContainer"]
+layout_mode = 2
+
+[node name="FooterPanel" type="PanelContainer" parent="CenterContainer/PanelContainer/MarginContainer/VBoxContainer"]
+layout_mode = 2
+
+[node name="MarginContainer" type="MarginContainer" parent="CenterContainer/PanelContainer/MarginContainer/VBoxContainer/FooterPanel"]
+layout_mode = 2
+theme_override_constants/margin_left = 15
+theme_override_constants/margin_top = 10
+theme_override_constants/margin_right = 15
+theme_override_constants/margin_bottom = 10
+
+[node name="VBoxContainer" type="VBoxContainer" parent="CenterContainer/PanelContainer/MarginContainer/VBoxContainer/FooterPanel/MarginContainer"]
+layout_mode = 2
+theme_override_constants/separation = 5
+
+[node name="HBoxContainer" type="HBoxContainer" parent="CenterContainer/PanelContainer/MarginContainer/VBoxContainer/FooterPanel/MarginContainer/VBoxContainer"]
+layout_mode = 2
+
+[node name="TotalSalaryLabel" type="Label" parent="CenterContainer/PanelContainer/MarginContainer/VBoxContainer/FooterPanel/MarginContainer/VBoxContainer/HBoxContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Total Salaries: 142 gold/wave"
+
+[node name="NextPaymentLabel" type="Label" parent="CenterContainer/PanelContainer/MarginContainer/VBoxContainer/FooterPanel/MarginContainer/VBoxContainer/HBoxContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Next Payment: Wave 48 (in 3:15)"
+horizontal_alignment = 1
+
+[node name="TreasuryLabel" type="Label" parent="CenterContainer/PanelContainer/MarginContainer/VBoxContainer/FooterPanel/MarginContainer/VBoxContainer/HBoxContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Treasury: 2,847 gold"
+horizontal_alignment = 2
+
+[node name="WavesAffordableLabel" type="Label" parent="CenterContainer/PanelContainer/MarginContainer/VBoxContainer/FooterPanel/MarginContainer/VBoxContainer"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Can afford: 20 waves"
+horizontal_alignment = 1

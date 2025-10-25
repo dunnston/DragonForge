@@ -6,10 +6,10 @@ extends PanelContainer
 ## - Progress bar showing work progress
 ## - Fire button to dismiss scientist
 
-signal hire_requested(scientist_type: ScientistManager.ScientistType)
-signal fire_requested(scientist_type: ScientistManager.ScientistType)
+signal hire_requested(scientist_type: Scientist.Type)
+signal fire_requested(scientist_type: Scientist.Type)
 
-@export var scientist_type: ScientistManager.ScientistType = ScientistManager.ScientistType.STITCHER
+@export var scientist_type: Scientist.Type = Scientist.Type.STITCHER
 
 @onready var scientist_button: Button = %ScientistButton
 @onready var placeholder_bg: ColorRect = %PlaceholderBG
@@ -35,7 +35,6 @@ func _ready():
 
 	if ScientistManager.instance:
 		ScientistManager.instance.scientist_hired.connect(_on_scientist_hired)
-		ScientistManager.instance.scientist_fired.connect(_on_scientist_fired)
 		ScientistManager.instance.scientist_action_performed.connect(_on_scientist_action)
 
 	_update_visual_state()
@@ -48,11 +47,11 @@ func _load_scientist_image():
 	# Map scientist type to filename (without needing ScientistManager)
 	var scientist_name = ""
 	match scientist_type:
-		ScientistManager.ScientistType.STITCHER:
+		Scientist.Type.STITCHER:
 			scientist_name = "sticher"  # Note: typo in actual filename
-		ScientistManager.ScientistType.CARETAKER:
+		Scientist.Type.CARETAKER:
 			scientist_name = "caretaker"
-		ScientistManager.ScientistType.TRAINER:
+		Scientist.Type.TRAINER:
 			scientist_name = "trainer"
 
 	if scientist_name == "":
@@ -84,7 +83,7 @@ func _update_visual_state():
 
 		# Update status
 		var ongoing_cost = ScientistManager.instance.get_scientist_ongoing_cost(scientist_type)
-		status_label.text = "Active (-" + str(ongoing_cost) + " gold/min)"
+		status_label.text = "Active (-" + str(ongoing_cost) + " gold/wave)"
 		status_label.add_theme_color_override("font_color", Color(0.2, 1, 0.2))
 
 		# Show progress container
@@ -93,13 +92,13 @@ func _update_visual_state():
 
 		# Set work timer duration based on scientist type
 		match scientist_type:
-			ScientistManager.ScientistType.STITCHER:
+			Scientist.Type.STITCHER:
 				work_timer_duration = 60.0
 				progress_label.text = "Creating dragon..."
-			ScientistManager.ScientistType.CARETAKER:
+			Scientist.Type.CARETAKER:
 				work_timer_duration = 30.0
 				progress_label.text = "Caring for dragons..."
-			ScientistManager.ScientistType.TRAINER:
+			Scientist.Type.TRAINER:
 				work_timer_duration = 30.0
 				progress_label.text = "Training dragons..."
 	else:
@@ -125,11 +124,11 @@ func _update_progress_bar():
 	var timer: Timer = null
 
 	match scientist_type:
-		ScientistManager.ScientistType.STITCHER:
+		Scientist.Type.STITCHER:
 			timer = ScientistManager.instance.get_stitcher_work_timer()
-		ScientistManager.ScientistType.CARETAKER:
+		Scientist.Type.CARETAKER:
 			timer = ScientistManager.instance.get_caretaker_work_timer()
-		ScientistManager.ScientistType.TRAINER:
+		Scientist.Type.TRAINER:
 			timer = ScientistManager.instance.get_trainer_work_timer()
 
 	if timer:
@@ -141,7 +140,7 @@ func _update_progress_bar():
 		# Debug removed to stop spam - progress bar is updating correctly!
 	else:
 		# Timer not found - try to debug why
-		if scientist_type == ScientistManager.ScientistType.STITCHER:
+		if scientist_type == Scientist.Type.STITCHER:
 			print("[ScientistPanel] WARNING: Stitcher timer is null!")
 
 func _on_scientist_button_pressed():
@@ -159,15 +158,11 @@ func _on_fire_button_pressed():
 	get_viewport().set_input_as_handled()
 	fire_requested.emit(scientist_type)
 
-func _on_scientist_hired(type: ScientistManager.ScientistType):
+func _on_scientist_hired(type: Scientist.Type):
 	if type == scientist_type:
 		_update_visual_state()
 
-func _on_scientist_fired(type: ScientistManager.ScientistType):
-	if type == scientist_type:
-		_update_visual_state()
-
-func _on_scientist_action(type: ScientistManager.ScientistType, action_description: String):
+func _on_scientist_action(type: Scientist.Type, action_description: String):
 	if type == scientist_type:
 		# Reset progress bar when action completes
 		progress_bar.value = 0.0

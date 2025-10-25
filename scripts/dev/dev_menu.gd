@@ -894,6 +894,29 @@ func _add_defense_debug_section():
 	_update_wave_info_label(wave_info)
 	items_container.add_child(wave_info)
 
+	# Force Wave Completion buttons
+	var force_wave_label = Label.new()
+	force_wave_label.text = "Force Wave Completion (for scientist upgrades):"
+	force_wave_label.add_theme_font_size_override("font_size", 12)
+	force_wave_label.add_theme_color_override("font_color", Color(0.5, 1, 0.5, 1))
+	items_container.add_child(force_wave_label)
+
+	var force_wave_hbox1 = HBoxContainer.new()
+	_add_button_to_hbox(force_wave_hbox1, "+1 Wave", _force_complete_wave)
+	_add_button_to_hbox(force_wave_hbox1, "+10 Waves", func(): _add_waves(10))
+	_add_button_to_hbox(force_wave_hbox1, "+25 Waves", func(): _add_waves(25))
+	items_container.add_child(force_wave_hbox1)
+
+	var force_wave_hbox2 = HBoxContainer.new()
+	_add_button_to_hbox(force_wave_hbox2, "Set to Wave 25", func(): _set_wave_number(25))
+	_add_button_to_hbox(force_wave_hbox2, "Set to Wave 50", func(): _set_wave_number(50))
+	items_container.add_child(force_wave_hbox2)
+
+	var force_wave_hbox3 = HBoxContainer.new()
+	_add_button_to_hbox(force_wave_hbox3, "Set to Wave 100", func(): _set_wave_number(100))
+	_add_button_to_hbox(force_wave_hbox3, "Set to Wave 200", func(): _set_wave_number(200))
+	items_container.add_child(force_wave_hbox3)
+
 func _update_wave_info_label(label: Label):
 	"""Update wave info display"""
 	if not DefenseManager or not DefenseManager.instance:
@@ -936,6 +959,60 @@ func _trigger_wave_in_100s():
 		DefenseManager.instance.time_until_next_wave = 100.0
 		DefenseManager.instance.has_shown_scout_warning = false  # Reset to allow scout warning
 		print("[DevMenu] ✓ Wave timer set to 100 seconds - scout warning will appear at 90s!")
+
+		# Update wave info
+		var label = items_container.get_node_or_null("WaveInfoLabel")
+		if label:
+			_update_wave_info_label(label)
+	else:
+		print("[DevMenu] ❌ DefenseManager not available!")
+
+func _force_complete_wave():
+	"""Force complete the current wave and increment wave number"""
+	print("[DevMenu] ⚔️ FORCE COMPLETE WAVE button pressed!")
+
+	if DefenseManager and DefenseManager.instance:
+		# Increment wave number
+		DefenseManager.instance.wave_number += 1
+		print("[DevMenu] ✓ Wave completed! Now on Wave %d" % DefenseManager.instance.wave_number)
+
+		# Reset timer to 3 minutes (180 seconds)
+		DefenseManager.instance.time_until_next_wave = 180.0
+		DefenseManager.instance.has_shown_scout_warning = false
+
+		# Update wave info
+		var label = items_container.get_node_or_null("WaveInfoLabel")
+		if label:
+			_update_wave_info_label(label)
+	else:
+		print("[DevMenu] ❌ DefenseManager not available!")
+
+func _add_waves(count: int):
+	"""Add multiple waves to the wave counter"""
+	print("[DevMenu] 📈 Adding %d waves!" % count)
+
+	if DefenseManager and DefenseManager.instance:
+		DefenseManager.instance.wave_number += count
+		print("[DevMenu] ✓ Added %d waves! Now on Wave %d" % [count, DefenseManager.instance.wave_number])
+
+		# Update wave info
+		var label = items_container.get_node_or_null("WaveInfoLabel")
+		if label:
+			_update_wave_info_label(label)
+	else:
+		print("[DevMenu] ❌ DefenseManager not available!")
+
+func _set_wave_number(wave_num: int):
+	"""Set wave number to a specific value"""
+	print("[DevMenu] 🎯 Setting wave number to %d!" % wave_num)
+
+	if DefenseManager and DefenseManager.instance:
+		DefenseManager.instance.wave_number = wave_num
+		print("[DevMenu] ✓ Wave number set to %d!" % wave_num)
+
+		# Reset timer
+		DefenseManager.instance.time_until_next_wave = DefenseManager.instance.WAVE_INTERVAL
+		DefenseManager.instance.has_shown_scout_warning = false
 
 		# Update wave info
 		var label = items_container.get_node_or_null("WaveInfoLabel")
