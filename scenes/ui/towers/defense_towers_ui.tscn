@@ -37,6 +37,12 @@ custom_minimum_size = Vector2(120, 50)
 layout_mode = 2
 text = "← BACK"
 
+[node name="BattleLogButton" type="Button" parent="MarginContainer/VBox/HeaderPanel/HeaderHBox"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(150, 50)
+layout_mode = 2
+text = "📜 BATTLE LOG"
+
 [node name="Spacer" type="Control" parent="MarginContainer/VBox/HeaderPanel/HeaderHBox"]
 layout_mode = 2
 size_flags_horizontal = 3
@@ -50,6 +56,38 @@ horizontal_alignment = 1
 [node name="Spacer2" type="Control" parent="MarginContainer/VBox/HeaderPanel/HeaderHBox"]
 custom_minimum_size = Vector2(120, 0)
 layout_mode = 2
+
+[node name="BattleNotificationPanel" type="PanelContainer" parent="MarginContainer/VBox"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+
+[node name="MarginContainer" type="MarginContainer" parent="MarginContainer/VBox/BattleNotificationPanel"]
+layout_mode = 2
+theme_override_constants/margin_left = 15
+theme_override_constants/margin_top = 10
+theme_override_constants/margin_right = 15
+theme_override_constants/margin_bottom = 10
+
+[node name="HBox" type="HBoxContainer" parent="MarginContainer/VBox/BattleNotificationPanel/MarginContainer"]
+layout_mode = 2
+theme_override_constants/separation = 20
+
+[node name="BattleLabel" type="Label" parent="MarginContainer/VBox/BattleNotificationPanel/MarginContainer/HBox"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 20
+text = "⚔ BATTLE IN PROGRESS ⚔"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="ScoutButton" type="Button" parent="MarginContainer/VBox/BattleNotificationPanel/MarginContainer/HBox"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(180, 50)
+layout_mode = 2
+theme_override_font_sizes/font_size = 16
+text = "SCOUT ENEMIES"
 
 [node name="ScrollContainer" type="ScrollContainer" parent="MarginContainer/VBox"]
 layout_mode = 2

@@ -553,6 +553,31 @@ theme_override_font_sizes/font_size = 11
 text = "Defenders: 0/3"
 horizontal_alignment = 1
 
+[node name="BattleNotificationPanel" type="PanelContainer" parent="MarginContainer/MainVBox/BottomBar/DefensePanel/VBox"]
+unique_name_in_owner = true
+visible = false
+custom_minimum_size = Vector2(0, 80)
+layout_mode = 2
+
+[node name="BattleNotificationVBox" type="VBoxContainer" parent="MarginContainer/MainVBox/BottomBar/DefensePanel/VBox/BattleNotificationPanel"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="BattleLabel" type="Label" parent="MarginContainer/MainVBox/BottomBar/DefensePanel/VBox/BattleNotificationPanel/BattleNotificationVBox"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.3, 0.3, 1)
+theme_override_font_sizes/font_size = 16
+text = "⚔ BATTLE STARTING ⚔"
+horizontal_alignment = 1
+
+[node name="WatchBattleButton" type="Button" parent="MarginContainer/MainVBox/BottomBar/DefensePanel/VBox/BattleNotificationPanel/BattleNotificationVBox"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 35)
+layout_mode = 2
+theme_override_font_sizes/font_size = 14
+text = "WATCH BATTLE"
+
 [node name="ExplorationPanel" type="PanelContainer" parent="MarginContainer/MainVBox/BottomBar"]
 layout_mode = 2
 size_flags_horizontal = 3

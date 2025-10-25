@@ -50,6 +50,9 @@ var scientist_manager: ScientistManager
 @onready var wave_label: Label = $MarginContainer/MainVBox/BottomBar/DefensePanel/VBox/HBox/WaveLabel
 @onready var timer_label: Label = $MarginContainer/MainVBox/BottomBar/DefensePanel/VBox/TimerLabel
 @onready var defenders_label: Label = $MarginContainer/MainVBox/BottomBar/DefensePanel/VBox/DefendersLabel
+@onready var battle_notification_panel: PanelContainer = %BattleNotificationPanel
+@onready var battle_label: Label = %BattleLabel
+@onready var watch_battle_button: Button = %WatchBattleButton
 @onready var active_missions_label: Label = $MarginContainer/MainVBox/BottomBar/ExplorationPanel/VBox/ActiveLabel
 @onready var collection_progress: Label = $MarginContainer/MainVBox/BottomBar/CollectionPanel/VBox/ProgressLabel
 @onready var view_collection_button: Button = $MarginContainer/MainVBox/BottomBar/CollectionPanel/VBox/ViewButton
@@ -57,6 +60,14 @@ var scientist_manager: ScientistManager
 # === DEFENSE SLOTS (created dynamically) ===
 var defense_slot_container: HBoxContainer
 var defense_slots: Array[Label] = []
+
+# === BATTLE ARENA ===
+var battle_arena: Control = null  # Reference to the battle arena UI
+
+# === SCOUT NOTIFICATION ===
+var scouted_enemies: Array = []  # Enemies for the incoming wave
+var scouted_wave_number: int = 0  # Wave number for scouting
+var enemy_scout_screen: Control = null  # Reference to the enemy scout screen
 
 # === UI PANELS ===
 @onready var inventory_panel: Control = $InventoryPanel
@@ -153,6 +164,9 @@ func _ready():
 	if DefenseManager and DefenseManager.instance:
 		DefenseManager.instance.dragon_assigned_to_defense.connect(_on_dragon_assigned_to_defense)
 		DefenseManager.instance.dragon_removed_from_defense.connect(_on_dragon_removed_from_defense)
+		DefenseManager.instance.wave_incoming_scout.connect(_on_wave_incoming_scout)
+		DefenseManager.instance.wave_started.connect(_on_wave_started)
+		DefenseManager.instance.wave_completed.connect(_on_wave_completed)
 
 	# Connect defense tower manager signals
 	if DefenseTowerManager and DefenseTowerManager.instance:
@@ -167,6 +181,22 @@ func _ready():
 	exploration_map_button.pressed.connect(_on_exploration_map_pressed)
 	dragon_grounds_button.pressed.connect(_on_dragon_grounds_pressed)
 	view_collection_button.pressed.connect(_on_view_collection_pressed)
+	watch_battle_button.pressed.connect(_on_watch_battle_pressed)
+
+	# Debug: Check if battle notification panel exists
+	if battle_notification_panel:
+		print("[FactoryManager] Battle notification panel found!")
+		# Add a red background to make it stand out
+		var style_box = StyleBoxFlat.new()
+		style_box.bg_color = Color(0.4, 0.1, 0.1, 0.9)  # Dark red background
+		style_box.border_width_left = 3
+		style_box.border_width_right = 3
+		style_box.border_width_top = 3
+		style_box.border_width_bottom = 3
+		style_box.border_color = Color(1, 0.3, 0.3, 1)  # Bright red border
+		battle_notification_panel.add_theme_stylebox_override("panel", style_box)
+	else:
+		print("[FactoryManager] ERROR: Battle notification panel NOT FOUND!")
 
 	# Create Defense Towers UI
 	_setup_defense_towers_ui()
@@ -745,8 +775,31 @@ func _update_defense_display():
 	var max_capacity = DefenseTowerManager.instance.get_defense_capacity() if DefenseTowerManager and DefenseTowerManager.instance else 3
 	defenders_label.text = "Defenders: %d/%d" % [defending_dragons.size(), max_capacity]
 
-	# Update defense slots
-	_update_defense_slots(defending_dragons)
+	# Show battle notification if in combat OR during scout period
+	var is_scouting = scouted_enemies.size() > 0
+
+	if DefenseManager.instance.is_in_combat or is_scouting:
+		# Hide defense slots, show battle notification
+		if DefenseManager.instance.is_in_combat:
+			print("[FactoryManager] BATTLE ACTIVE - Showing notification panel")
+		elif is_scouting:
+			print("[FactoryManager] SCOUT PERIOD - Showing notification panel")
+
+		if defense_slot_container:
+			defense_slot_container.visible = false
+		if battle_notification_panel:
+			battle_notification_panel.visible = true
+			print("[FactoryManager] Battle notification panel set to visible")
+		else:
+			print("[FactoryManager] WARNING: battle_notification_panel is null!")
+	else:
+		# Show defense slots, hide battle notification
+		if defense_slot_container:
+			defense_slot_container.visible = true
+		if battle_notification_panel:
+			battle_notification_panel.visible = false
+		# Update defense slots
+		_update_defense_slots(defending_dragons)
 
 func _update_exploration_display():
 	if ExplorationManager and ExplorationManager.instance:
@@ -1387,3 +1440,155 @@ func _on_tower_capacity_changed(new_capacity: int):
 	"""Called when defense tower capacity changes"""
 	print("[FactoryManager] Defense capacity changed to: %d" % new_capacity)
 	_update_defense_display()  # Update to show new capacity
+
+# === BATTLE NOTIFICATION SYSTEM ===
+
+func _on_wave_incoming_scout(wave_num: int, enemies: Array, time_remaining: float):
+	"""Called 90 seconds before wave starts - allows player to scout enemies"""
+	print("[FactoryManager] ===== WAVE %d INCOMING (%.0fs) - SCOUT AVAILABLE =====" % [wave_num, time_remaining])
+	print("[FactoryManager] Detected %d enemies for scouting" % enemies.size())
+
+	# Store enemy data for scout screen
+	scouted_enemies = enemies
+	scouted_wave_number = wave_num
+
+	# Update label to show scout notification
+	if battle_label:
+		battle_label.text = "⚠ WAVE %d INCOMING! ⚠" % wave_num
+
+	# Change button text to "SCOUT ENEMIES"
+	if watch_battle_button:
+		watch_battle_button.text = "SCOUT ENEMIES"
+
+	_update_defense_display()  # Show notification
+
+func _on_wave_started(wave_number: int, enemies: Array):
+	"""Called when a battle wave starts"""
+	print("[FactoryManager] ===== WAVE %d STARTED! =====" % wave_number)
+	print("[FactoryManager] Enemies: %d" % enemies.size())
+	print("[FactoryManager] is_in_combat: %s" % DefenseManager.instance.is_in_combat)
+
+	# Clear scout data
+	scouted_enemies.clear()
+
+	# Update label to show battle is starting
+	if battle_label:
+		battle_label.text = "⚔ WAVE %d INCOMING! ⚔" % wave_number
+
+	# Reset button text to "WATCH BATTLE"
+	if watch_battle_button:
+		watch_battle_button.text = "WATCH BATTLE"
+
+	_update_defense_display()  # Show battle notification
+
+	# After 3 seconds, update to "IN PROGRESS"
+	await get_tree().create_timer(3.0).timeout
+	if battle_label and DefenseManager.instance and DefenseManager.instance.is_in_combat:
+		battle_label.text = "⚔ BATTLE IN PROGRESS ⚔"
+
+func _on_wave_completed(victory: bool, rewards: Dictionary):
+	"""Called when a battle wave completes"""
+	print("[FactoryManager] Wave completed! Victory: %s" % victory)
+	_update_defense_display()  # Hide battle notification
+
+func _on_watch_battle_pressed():
+	"""Called when the Watch Battle button is pressed"""
+	print("[FactoryManager] Watch Battle button pressed!")
+
+	# Check if we're in scout mode (button says "SCOUT ENEMIES")
+	if watch_battle_button and watch_battle_button.text == "SCOUT ENEMIES":
+		print("[FactoryManager] Opening enemy scout screen...")
+		_open_enemy_scout_screen()
+		return
+
+	# Otherwise, open battle arena
+	# Check if battle arena already exists
+	if battle_arena and is_instance_valid(battle_arena):
+		print("[FactoryManager] Battle arena already open")
+		battle_arena.visible = true
+		return
+
+	# Load and create the battle arena scene
+	var battle_arena_scene = load("res://scenes/idle_defense/battle_arena.tscn")
+	if not battle_arena_scene:
+		print("[FactoryManager] ERROR: Could not load battle arena scene!")
+		return
+
+	battle_arena = battle_arena_scene.instantiate()
+	battle_arena.name = "BattleArena"
+
+	# Set z-index to appear above everything else
+	battle_arena.z_index = 150
+	battle_arena.z_as_relative = false
+
+	# Add to scene tree
+	add_child(battle_arena)
+
+	# Connect signals
+	if battle_arena.has_signal("battle_animation_complete"):
+		battle_arena.battle_animation_complete.connect(_on_battle_animation_complete)
+	if battle_arena.has_signal("back_button_pressed"):
+		battle_arena.back_button_pressed.connect(_on_battle_arena_closed)
+	if battle_arena.has_signal("battle_result_determined"):
+		battle_arena.battle_result_determined.connect(_on_battle_result_determined)
+
+	print("[FactoryManager] Battle arena opened!")
+
+func _on_battle_animation_complete():
+	"""Called when battle animation finishes"""
+	print("[FactoryManager] Battle animation complete - keeping arena open for player to read")
+
+	# End combat state in DefenseManager
+	if DefenseManager and DefenseManager.instance:
+		DefenseManager.instance.end_combat()
+
+func _on_battle_result_determined(victory: bool):
+	"""Called when visual combat determines the winner"""
+	print("[FactoryManager] Battle result determined: Victory=%s" % victory)
+
+	# Pass result to DefenseManager
+	if DefenseManager and DefenseManager.instance:
+		DefenseManager.instance.on_visual_combat_result(victory)
+
+func _on_battle_arena_closed():
+	"""Called when player clicks back button in battle arena"""
+	print("[FactoryManager] Player closed battle arena")
+
+	# Remove the battle arena
+	if battle_arena and is_instance_valid(battle_arena):
+		battle_arena.queue_free()
+		battle_arena = null
+
+func _open_enemy_scout_screen():
+	"""Open the enemy scout screen to preview incoming wave"""
+	# Check if scout screen already exists and is visible
+	if enemy_scout_screen and is_instance_valid(enemy_scout_screen):
+		print("[FactoryManager] Enemy scout screen already open, updating...")
+		if enemy_scout_screen.has_method("show_scout_info"):
+			var time_remaining = DefenseManager.instance.time_until_next_wave if DefenseManager and DefenseManager.instance else 90.0
+			enemy_scout_screen.show_scout_info(scouted_wave_number, scouted_enemies, time_remaining)
+		enemy_scout_screen.visible = true
+		return
+
+	# Load and create the enemy scout screen scene
+	var scout_scene = load("res://scenes/idle_defense/enemy_scout_screen.tscn")
+	if not scout_scene:
+		print("[FactoryManager] ERROR: Could not load enemy scout screen scene!")
+		return
+
+	enemy_scout_screen = scout_scene.instantiate()
+	enemy_scout_screen.name = "EnemyScoutScreen"
+
+	# Set z-index to appear above everything else
+	enemy_scout_screen.z_index = 150
+	enemy_scout_screen.z_as_relative = false
+
+	# Add to scene tree
+	add_child(enemy_scout_screen)
+
+	# Show scout info with current data
+	if enemy_scout_screen.has_method("show_scout_info"):
+		var time_remaining = DefenseManager.instance.time_until_next_wave if DefenseManager and DefenseManager.instance else 90.0
+		enemy_scout_screen.show_scout_info(scouted_wave_number, scouted_enemies, time_remaining)
+
+	print("[FactoryManager] Enemy scout screen opened!")

@@ -4,10 +4,11 @@ class_name BattleArena
 # Visual battle arena for tower defense combat
 # Shows knights attacking and dragons defending
 
-@onready var battlefield = $MarginContainer/VBox/BattlefieldContainer
-@onready var knights_container = $MarginContainer/VBox/BattlefieldContainer/KnightsContainer
-@onready var dragons_container = $MarginContainer/VBox/BattlefieldContainer/DragonsContainer
-@onready var combat_log = $MarginContainer/VBox/CombatLog
+@onready var battlefield = $MarginContainer/VBox/MainContent/BattlefieldContainer
+@onready var knights_container = $MarginContainer/VBox/MainContent/BattlefieldContainer/KnightsContainer
+@onready var dragons_container = $MarginContainer/VBox/MainContent/BattlefieldContainer/DragonsContainer
+@onready var combat_log = $MarginContainer/VBox/MainContent/CombatLogPanel/ScrollContainer/CombatLog
+@onready var back_button: Button = %BackButton
 
 # Preload dragon visual scene
 const DragonVisualScene = preload("res://assets/Icons/dragons/dragon-base.tscn")
@@ -18,14 +19,45 @@ var knight_data: Array = []
 var dragon_data: Array[Dragon] = []
 var is_in_combat: bool = false
 
+# Battle tracking
+var battle_start_time: float = 0.0
+var dragon_damage_tracker: Dictionary = {}  # {dragon_id: {dealt: int, taken: int}}
+
 signal battle_animation_complete
 signal battle_result_determined(victory: bool)
+signal back_button_pressed
 
 func _ready():
 	# Connect to defense manager
 	if DefenseManager.instance:
 		DefenseManager.instance.wave_started.connect(_on_wave_started)
 		DefenseManager.instance.wave_completed.connect(_on_wave_completed)
+
+		# Check if battle is already in progress when we open the viewer
+		if DefenseManager.instance.is_in_combat:
+			print("[BattleArena] Battle already in progress! Setting up visuals...")
+			var enemies = DefenseManager.instance.current_wave_enemies
+			print("[BattleArena] Found %d enemies in current_wave_enemies" % enemies.size())
+			if enemies and enemies.size() > 0:
+				# Manually trigger battle setup since we missed the signal
+				print("[BattleArena] Manually triggering wave setup for wave %d" % DefenseManager.instance.wave_number)
+				_on_wave_started(DefenseManager.instance.wave_number, enemies)
+			else:
+				print("[BattleArena] ERROR: No enemies found in current_wave_enemies!")
+
+	# Connect back button
+	if back_button:
+		back_button.pressed.connect(_on_back_button_pressed)
+
+func _on_back_button_pressed():
+	"""Called when the back button is pressed"""
+	print("[BattleArena] Back button pressed")
+
+	# Clear battlefield before closing
+	_clear_battlefield()
+
+	back_button_pressed.emit()
+	# Note: Parent is responsible for hiding or destroying this node
 
 func _on_wave_started(wave_number: int, enemies: Array):
 	"""Start visual combat when wave begins"""
@@ -65,7 +97,7 @@ func _on_wave_started(wave_number: int, enemies: Array):
 func _spawn_knight(enemy_data: Dictionary, index: int):
 	"""Spawn a knight unit on the LEFT side of battlefield"""
 	var knight = Panel.new()
-	knight.custom_minimum_size = Vector2(400, 400)  # Increased from 80x100 to match dragons
+	knight.custom_minimum_size = Vector2(220, 280)
 	knight.name = "Knight_%d" % index
 	
 	# Add a visible background to the Panel
@@ -87,20 +119,20 @@ func _spawn_knight(enemy_data: Dictionary, index: int):
 	
 	# Knight sprite/icon
 	var sprite = TextureRect.new()
-	sprite.custom_minimum_size = Vector2(400, 400)  # Increased from 64x64
+	sprite.custom_minimum_size = Vector2(160, 160)
 	sprite.expand_mode = TextureRect.EXPAND_FIT_WIDTH_PROPORTIONAL
 	sprite.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-	
+
 	# Load texture based on enemy type
 	var enemy_texture: Texture2D
 	var enemy_label = "Knight"
-	
+
 	if enemy_data.get("is_wizard", false):
 		enemy_texture = load("res://assets/Icons/units/wizard.png")
 		enemy_label = "Wizard"
 	else:
 		enemy_texture = load("res://assets/Icons/units/knight.png")
-	
+
 	if enemy_texture:
 		sprite.texture = enemy_texture
 		vbox.add_child(sprite)
@@ -109,16 +141,43 @@ func _spawn_knight(enemy_data: Dictionary, index: int):
 		# Fallback: colored panel
 		var fallback = ColorRect.new()
 		fallback.color = Color(0.7, 0.7, 0.7, 1)
-		fallback.custom_minimum_size = Vector2(200, 200)
+		fallback.custom_minimum_size = Vector2(130, 130)
 		vbox.add_child(fallback)
 		print("[BattleArena] %s texture FAILED to load - using fallback" % enemy_label)
-	
-	# Stats label
+
+	# Health bar
+	var health_bar = ProgressBar.new()
+	health_bar.name = "HealthBar"
+	health_bar.custom_minimum_size = Vector2(130, 18)
+	health_bar.max_value = enemy_data.get("health", 50)
+	health_bar.value = enemy_data.get("health", 50)
+	health_bar.show_percentage = false
+
+	# Red health bar style
+	var health_style = StyleBoxFlat.new()
+	health_style.bg_color = Color(0.8, 0.2, 0.2, 1)  # Red
+	health_bar.add_theme_stylebox_override("fill", health_style)
+
+	var health_bg = StyleBoxFlat.new()
+	health_bg.bg_color = Color(0.2, 0.2, 0.2, 1)  # Dark gray
+	health_bar.add_theme_stylebox_override("background", health_bg)
+
+	vbox.add_child(health_bar)
+
+	# HP text label above bar
+	var hp_label = Label.new()
+	hp_label.name = "HPLabel"
+	hp_label.text = "%d / %d HP" % [enemy_data.get("health", 50), enemy_data.get("health", 50)]
+	hp_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	hp_label.add_theme_font_size_override("font_size", 14)
+	vbox.add_child(hp_label)
+
+	# Stats label (ATK only now)
 	var stats = Label.new()
 	stats.name = "StatsLabel"
-	stats.text = "HP: %d\nATK: %d" % [enemy_data.get("health", 50), enemy_data.get("attack", 10)]
+	stats.text = "ATK: %d" % enemy_data.get("attack", 10)
 	stats.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	stats.add_theme_font_size_override("font_size", 20)
+	stats.add_theme_font_size_override("font_size", 13)
 	vbox.add_child(stats)
 	
 	# Type label
@@ -138,7 +197,7 @@ func _spawn_knight(enemy_data: Dictionary, index: int):
 		type_label.add_theme_color_override("font_color", Color(1, 1, 1))
 	
 	type_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	type_label.add_theme_font_size_override("font_size", 20)
+	type_label.add_theme_font_size_override("font_size", 15)
 	vbox.add_child(type_label)
 	
 	# Add to knights container (LEFT side)
@@ -158,7 +217,7 @@ func _spawn_knight(enemy_data: Dictionary, index: int):
 func _spawn_dragon(dragon: Dragon, index: int):
 	"""Spawn a dragon visual on the RIGHT side of battlefield"""
 	var dragon_panel = Panel.new()
-	dragon_panel.custom_minimum_size = Vector2(300, 300)  # BIGGER panel to fit entire dragon!
+	dragon_panel.custom_minimum_size = Vector2(220, 280)
 	dragon_panel.name = "Dragon_%d" % index
 	
 	# Add a visible background to the Panel
@@ -183,14 +242,14 @@ func _spawn_dragon(dragon: Dragon, index: int):
 	if dragon_visual_instance:
 		# Create a SubViewport to properly render Node2D inside Control
 		var viewport = SubViewport.new()
-		viewport.size = Vector2i(400, 400)  # Viewport size
+		viewport.size = Vector2i(220, 220)  # Viewport size
 		viewport.transparent_bg = true
 		viewport.add_child(dragon_visual_instance)
-		
+
 		# Position dragon in center of viewport
-		dragon_visual_instance.position = Vector2(150, 110)
-		dragon_visual_instance.scale = Vector2(.27,.27)
-		
+		dragon_visual_instance.position = Vector2(110, 80)
+		dragon_visual_instance.scale = Vector2(.20,.20)
+
 		# Set dragon colors from parts
 		if dragon.head_part and dragon.body_part and dragon.tail_part:
 			dragon_visual_instance.set_dragon_colors(
@@ -198,10 +257,10 @@ func _spawn_dragon(dragon: Dragon, index: int):
 				dragon.body_part.element,
 				dragon.tail_part.element
 			)
-		
+
 		# Create SubViewportContainer to display it - fits in panel
 		var viewport_container = SubViewportContainer.new()
-		viewport_container.custom_minimum_size = Vector2(200, 200)  # Fits nicely in 300x300 panel
+		viewport_container.custom_minimum_size = Vector2(140, 140)
 		viewport_container.stretch = true
 		viewport_container.add_child(viewport)
 		
@@ -211,16 +270,43 @@ func _spawn_dragon(dragon: Dragon, index: int):
 	var name_label = Label.new()
 	name_label.text = dragon.dragon_name
 	name_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	name_label.add_theme_font_size_override("font_size", 20)
+	name_label.add_theme_font_size_override("font_size", 15)
 	name_label.add_theme_color_override("font_color", Color(0.8, 1, 0.8))
 	vbox.add_child(name_label)
-	
-	# Stats
+
+	# Health bar
+	var health_bar = ProgressBar.new()
+	health_bar.name = "HealthBar"
+	health_bar.custom_minimum_size = Vector2(130, 18)
+	health_bar.max_value = dragon.get_health()
+	health_bar.value = dragon.current_health
+	health_bar.show_percentage = false
+
+	# Green health bar style
+	var health_style = StyleBoxFlat.new()
+	health_style.bg_color = Color(0.2, 0.8, 0.2, 1)  # Green
+	health_bar.add_theme_stylebox_override("fill", health_style)
+
+	var health_bg = StyleBoxFlat.new()
+	health_bg.bg_color = Color(0.2, 0.2, 0.2, 1)  # Dark gray
+	health_bar.add_theme_stylebox_override("background", health_bg)
+
+	vbox.add_child(health_bar)
+
+	# HP text label above bar
+	var hp_label = Label.new()
+	hp_label.name = "HPLabel"
+	hp_label.text = "%d / %d HP" % [dragon.current_health, dragon.get_health()]
+	hp_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	hp_label.add_theme_font_size_override("font_size", 14)
+	vbox.add_child(hp_label)
+
+	# Stats (ATK only now)
 	var stats = Label.new()
 	stats.name = "StatsLabel"
-	stats.text = "HP: %d/%d\nATK: %d" % [dragon.current_health, dragon.get_health(), dragon.get_attack()]
+	stats.text = "ATK: %d" % dragon.get_attack()
 	stats.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	stats.add_theme_font_size_override("font_size", 20)
+	stats.add_theme_font_size_override("font_size", 13)
 	vbox.add_child(stats)
 	
 	# Add to dragons container (RIGHT side)
@@ -234,35 +320,51 @@ func _spawn_dragon(dragon: Dragon, index: int):
 	active_dragons.append(dragon_panel)
 
 func _animate_battle():
-	"""Animate the battle sequence with actual HP-based combat"""
+	"""Animate the battle sequence with actual HP-based combat - TURN BASED"""
+	# Start battle tracking
+	battle_start_time = Time.get_ticks_msec() / 1000.0
+	dragon_damage_tracker.clear()
+
+	# Initialize damage tracking for each dragon
+	for dragon in dragon_data:
+		dragon_damage_tracker[dragon.dragon_id] = {"dealt": 0, "taken": 0}
+
 	if combat_log:
 		combat_log.text = "[center][b]⚔ BATTLE BEGINS! ⚔[/b][/center]\n\n"
-	
+
 	var round_num = 1
-	
+
 	# Fight until one side has no units with HP > 0
 	while _has_living_knights() and _has_living_dragons():
-		await get_tree().create_timer(.2).timeout  # Longer pause between rounds
-		
+		# === ROUND START ===
+		await get_tree().create_timer(1.5).timeout  # Pause between rounds
+
 		if combat_log:
-			combat_log.text += "[color=yellow]--- Round %d ---[/color]\n" % round_num
-		
-		# Knights attack first
+			combat_log.text += "\n[center][color=yellow]━━━ ROUND %d ━━━[/color][/center]\n\n" % round_num
+
+		# === KNIGHTS TURN ===
 		if _has_living_knights():
-			await _combat_round_attacks(true)
-		
-		await get_tree().create_timer(.5).timeout  # Longer pause after knight attacks
-		
+			if combat_log:
+				combat_log.text += "[color=orange][b]⚔ KNIGHTS' TURN[/b][/color]\n"
+
+			await get_tree().create_timer(1.0).timeout  # Delay before knights attack
+			await _combat_round_attacks(true)  # Knights attack
+			await get_tree().create_timer(1.5).timeout  # Pause to see damage
+
 		# Check if dragons survived
 		if not _has_living_dragons():
 			break
-		
-		# Dragons counter-attack
-		await _combat_round_attacks(false)
-		
-		await get_tree().create_timer(.5).timeout  # Longer pause after dragon attacks
+
+		# === DRAGONS TURN ===
+		if combat_log:
+			combat_log.text += "\n[color=lightblue][b]🐉 DRAGONS' TURN[/b][/color]\n"
+
+		await get_tree().create_timer(1.0).timeout  # Delay before dragons attack
+		await _combat_round_attacks(false)  # Dragons counter-attack
+		await get_tree().create_timer(1.5).timeout  # Pause to see damage
+
 		round_num += 1
-		
+
 		# Safety limit to prevent infinite loops
 		if round_num > 50:
 			if combat_log:
@@ -271,18 +373,43 @@ func _animate_battle():
 	
 	# Determine winner based on actual HP-based combat
 	var victory = _has_living_dragons()
-	
+
+	# Calculate battle duration
+	var battle_duration = (Time.get_ticks_msec() / 1000.0) - battle_start_time
+
+	# Send battle data to BattleLogManager
+	if BattleLogManager:
+		BattleLogManager.update_combat_log(combat_log.text if combat_log else "")
+		BattleLogManager.update_round_count(round_num - 1)
+		BattleLogManager.update_battle_duration(battle_duration)
+
+		# Update defender stats
+		for dragon in dragon_data:
+			var damage_data = dragon_damage_tracker.get(dragon.dragon_id, {"dealt": 0, "taken": 0})
+			BattleLogManager.update_defender_stats(
+				dragon.dragon_id,
+				0,  # XP will be added by DefenseManager
+				damage_data["taken"],
+				damage_data["dealt"],
+				dragon.current_health > 0
+			)
+
+		# Mark killed enemies
+		for i in range(knight_data.size()):
+			if knight_data[i].get("health", 0) <= 0:
+				BattleLogManager.mark_enemy_killed(i)
+
 	# Report result to DefenseManager FIRST
 	print("[BattleArena] Battle determined! Victory: %s" % victory)
 	battle_result_determined.emit(victory)
-	
+
 	if combat_log:
 		combat_log.text += "\n"
 		if victory:
 			combat_log.text += "[center][b][color=green]🐉 DRAGONS VICTORIOUS! 🐉[/color][/b][/center]\n"
 		else:
 			combat_log.text += "[center][b][color=red]⚔ KNIGHTS VICTORIOUS! ⚔[/color][/b][/center]\n"
-	
+
 	# Fade out defeated units
 	if victory:
 		print("[BattleArena] Dragons won - fading out knights")
@@ -290,10 +417,10 @@ func _animate_battle():
 	else:
 		print("[BattleArena] Knights won - fading out dragons")
 		_fade_out_units(active_dragons)
-	
+
 	# Wait before finishing (brief pause to show result)
 	await get_tree().create_timer(0.5).timeout
-	
+
 	print("[BattleArena] Battle animation complete!")
 	battle_animation_complete.emit()
 
@@ -360,10 +487,14 @@ func _combat_round_attacks(knights_attacking: bool):
 			
 			# Deal damage
 			target_dragon.current_health = max(0, target_dragon.current_health - damage)
-			
+
+			# Track damage taken by dragon
+			if dragon_damage_tracker.has(target_dragon.dragon_id):
+				dragon_damage_tracker[target_dragon.dragon_id]["taken"] += damage
+
 			# Show damage text on target
 			_show_damage_text(target_panel, damage, false)
-			
+
 			# Update dragon HP display
 			_update_dragon_hp(target_idx)
 			
@@ -440,10 +571,14 @@ func _combat_round_attacks(knights_attacking: bool):
 			
 			# Deal damage
 			target_knight["health"] = max(0, target_knight.get("health", 0) - damage)
-			
+
+			# Track damage dealt by dragon
+			if dragon_damage_tracker.has(dragon.dragon_id):
+				dragon_damage_tracker[dragon.dragon_id]["dealt"] += damage
+
 			# Show damage text on target
 			_show_damage_text(target_panel, damage, true)
-			
+
 			# Update knight HP display
 			_update_knight_hp(target_idx)
 			
@@ -461,56 +596,70 @@ func _combat_round_attacks(knights_attacking: bool):
 					var enemy_label = "Wizard" if target_knight.get("type") == "wizard" else "Knight"
 					combat_log.text += "[color=red]💀 %s %d has fallen![/color]\n" % [enemy_label, target_idx]
 	
-	await get_tree().create_timer(1.0).timeout  # Longer pause after each attack
+	await get_tree().create_timer(0.5).timeout  # Pause after each individual attack
 
 func _show_damage_text(unit: Control, damage: int, is_knight: bool):
 	"""Show floating damage text above a unit"""
 	var damage_label = Label.new()
 	damage_label.text = "-%d" % damage
-	damage_label.add_theme_font_size_override("font_size", 24)
+	damage_label.add_theme_font_size_override("font_size", 28)
 	damage_label.add_theme_color_override("font_color", Color(1, 0.2, 0.2, 1))
-	
-	# Add directly to the unit so it moves with it
-	unit.add_child(damage_label)
-	
-	# Add random horizontal offset to prevent overlapping when multiple attacks hit same target
-	var horizontal_offset = randf_range(-100, 100)
-	var vertical_offset = 0
-	
-	# Position at top center of the unit with randomized offset
-	damage_label.position = Vector2(unit.size.x / 2 - 20 + horizontal_offset, -10 + vertical_offset)
-	damage_label.z_index = 100
-	
-	# Animate damage text floating up and fading
-	var tween = create_tween()
-	tween.set_parallel(true)
-	tween.tween_property(damage_label, "position:y", damage_label.position.y - 60, 0.8)
-	tween.tween_property(damage_label, "modulate:a", 0.0, 0.8)
-	tween.finished.connect(func(): damage_label.queue_free())
+
+	# Add to the battlefield container (not the unit) so it renders on top
+	var battlefield_container = unit.get_parent()
+	if battlefield_container:
+		battlefield_container.add_child(damage_label)
+
+		# Position above the unit (absolute position)
+		var horizontal_offset = randf_range(-50, 50)
+		damage_label.global_position = unit.global_position + Vector2(unit.size.x / 2 + horizontal_offset, -20)
+
+		# High z-index to ensure it's on top of everything
+		damage_label.z_index = 200
+		damage_label.z_as_relative = false
+
+		# Animate damage text floating up and fading
+		var tween = create_tween()
+		tween.set_parallel(true)
+		tween.tween_property(damage_label, "global_position:y", damage_label.global_position.y - 80, 1.0)
+		tween.tween_property(damage_label, "modulate:a", 0.0, 1.0)
+		tween.finished.connect(func(): damage_label.queue_free())
 
 func _update_knight_hp(knight_idx: int):
 	"""Update the HP display on a knight panel"""
 	if knight_idx >= active_knights.size():
 		return
-	
+
 	var knight_panel = active_knights[knight_idx]
 	var knight = knight_data[knight_idx]
-	var stats_label = knight_panel.find_child("StatsLabel", true, false)
-	
-	if stats_label:
-		stats_label.text = "HP: %d\nATK: %d" % [knight.get("health", 0), knight.get("attack", 10)]
+
+	# Update health bar
+	var health_bar = knight_panel.find_child("HealthBar", true, false)
+	if health_bar:
+		health_bar.value = knight.get("health", 0)
+
+	# Update HP label
+	var hp_label = knight_panel.find_child("HPLabel", true, false)
+	if hp_label:
+		hp_label.text = "%d / %d HP" % [knight.get("health", 0), health_bar.max_value if health_bar else 100]
 
 func _update_dragon_hp(dragon_idx: int):
 	"""Update the HP display on a dragon panel"""
 	if dragon_idx >= active_dragons.size():
 		return
-	
+
 	var dragon_panel = active_dragons[dragon_idx]
 	var dragon = dragon_data[dragon_idx]
-	var stats_label = dragon_panel.find_child("StatsLabel", true, false)
-	
-	if stats_label:
-		stats_label.text = "HP: %d/%d\nATK: %d" % [dragon.current_health, dragon.get_health(), dragon.get_attack()]
+
+	# Update health bar
+	var health_bar = dragon_panel.find_child("HealthBar", true, false)
+	if health_bar:
+		health_bar.value = dragon.current_health
+
+	# Update HP label
+	var hp_label = dragon_panel.find_child("HPLabel", true, false)
+	if hp_label:
+		hp_label.text = "%d / %d HP" % [dragon.current_health, dragon.get_health()]
 
 func _mark_unit_dead(unit_panel: Control):
 	"""Mark a unit as dead by graying it out"""
@@ -541,13 +690,11 @@ func _shake_units(units: Array, move_right: bool = false):
 func _on_wave_completed(victory: bool, rewards: Dictionary):
 	"""Called AFTER battle animation and stat changes - just cleanup"""
 	is_in_combat = false
-	
+
 	print("[BattleArena] Wave completed callback received - battle already shown")
-	
+
 	# Battle results were already shown in _animate_battle()
-	# Just clean up the battlefield after a brief delay
-	await get_tree().create_timer(0.3).timeout
-	_clear_battlefield()
+	# Don't clear battlefield - let player read results and close manually
 
 func _fade_out_units(units: Array):
 	"""Fade out units"""

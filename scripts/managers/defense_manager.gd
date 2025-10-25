@@ -6,7 +6,7 @@ extends Node
 static var instance: DefenseManager
 
 # === WAVE CONFIG ===
-const BASE_WAVE_INTERVAL: float = 20.0  # 20 seconds between waves (after first wave)
+const BASE_WAVE_INTERVAL: float = 180.0  # 3 minutes between waves (after first wave)
 const FIRST_WAVE_GRACE_PERIOD: float = 360.0  # 6 minutes for new players to set up
 
 # === STATE ===
@@ -24,6 +24,11 @@ var pending_stat_changes: Array[Dictionary] = []
 var pending_wave_victory: bool = false
 var pending_wave_rewards: Dictionary = {}
 var pending_wave_enemies: Array = []  # Store enemies for reward calculation
+var current_wave_enemies: Array = []  # Current battle enemies (for mid-battle viewers)
+
+# Store scouted enemies for preview (generated at 90 seconds)
+var scouted_wave_enemies: Array = []
+var has_shown_scout_warning: bool = false
 
 # === CUMULATIVE REWARDS (since last UI open) ===
 var cumulative_rewards: Dictionary = {
@@ -36,6 +41,7 @@ var cumulative_rewards: Dictionary = {
 
 # === SIGNALS ===
 signal wave_incoming(time_remaining: float)
+signal wave_incoming_scout(wave_number: int, enemies: Array, time_remaining: float)  # For 90-second warning with enemy data
 signal wave_started(wave_number: int, enemies: Array)
 signal wave_completed(victory: bool, rewards: Dictionary)
 signal dragon_damaged(dragon: Dragon, damage: int)
@@ -78,7 +84,14 @@ func _update_wave_timer():
 
 	time_until_next_wave -= frequency_multiplier
 
-	# Emit warning signals
+	# Emit scout warning at 90 seconds with enemy preview
+	if time_until_next_wave <= 90 and not has_shown_scout_warning:
+		has_shown_scout_warning = true
+		scouted_wave_enemies = _generate_wave(wave_number)
+		wave_incoming_scout.emit(wave_number, scouted_wave_enemies, time_until_next_wave)
+		print("[DefenseManager] SCOUT WARNING: Wave %d incoming in 90 seconds! %d enemies detected." % [wave_number, scouted_wave_enemies.size()])
+
+	# Emit warning signals (for other systems)
 	if time_until_next_wave <= 30 and int(time_until_next_wave) % 10 == 0:
 		wave_incoming.emit(time_until_next_wave)
 		print("[DefenseManager] WARNING: Wave incoming in %.0f seconds!" % time_until_next_wave)
@@ -88,6 +101,10 @@ func _update_wave_timer():
 		_start_wave()
 
 func reset_wave_timer():
+	# Reset scout warning flag for next wave
+	has_shown_scout_warning = false
+	scouted_wave_enemies.clear()
+
 	# After first wave, use normal interval
 	if is_first_wave:
 		is_first_wave = false
@@ -278,11 +295,25 @@ func remove_dragon_from_defense(dragon: Dragon) -> bool:
 func _start_wave():
 	is_in_combat = true
 
-	# Generate enemies based on wave number and vault value
-	var enemies = _generate_wave(wave_number)
+	# Use pre-scouted enemies if available, otherwise generate new ones
+	var enemies: Array
+	if scouted_wave_enemies.size() > 0:
+		enemies = scouted_wave_enemies
+		print("[DefenseManager] Using pre-scouted enemies for wave %d" % wave_number)
+	else:
+		enemies = _generate_wave(wave_number)
+		print("[DefenseManager] Generating enemies for wave %d (no scout data)" % wave_number)
 
 	print("[DefenseManager] COMBAT: WAVE %d - %d enemies attacking!" % [wave_number, enemies.size()])
+
+	# Store enemies for mid-battle viewers
+	current_wave_enemies = enemies
+
+	# Give players 3 seconds to see notification and click "WATCH BATTLE"
+	print("[DefenseManager] Battle notification shown - waiting 3 seconds before combat starts...")
 	wave_started.emit(wave_number, enemies)
+	await get_tree().create_timer(3.0).timeout
+	print("[DefenseManager] Starting combat now!")
 
 	# Get all defending dragons
 	var defending_dragons = get_defending_dragons()
@@ -312,17 +343,33 @@ func on_visual_combat_result(victory: bool):
 		_apply_rewards(rewards)
 		wave_number += 1
 		print("[DefenseManager] ✅ VICTORY! Wave %d complete. Rewards: %d gold, %d meat 🍖" % [wave_number - 1, rewards.get("gold", 0), rewards.get("meat", 0)])
-		
+
+		# Add tower damage info to rewards (5 damage per tower on victory)
+		var active_towers = DefenseTowerManager.instance.get_active_towers() if DefenseTowerManager and DefenseTowerManager.instance else 0
+		rewards["tower_damage"] = active_towers * 5  # SMALL_DAMAGE constant from DefenseTowerManager
+		rewards["towers_destroyed"] = 0
+
 		# Store for after animation
 		pending_wave_victory = true
 		pending_wave_rewards = rewards
 	else:
-		_apply_raid_loss()
+		var stolen = _apply_raid_loss()
 		print("[DefenseManager] ❌ DEFEAT! Raiders stole from your vault!")
-		
-		# Store for after animation
+
+		# Calculate tower damage (20 damage per tower on defeat)
+		var active_towers = DefenseTowerManager.instance.get_active_towers() if DefenseTowerManager and DefenseTowerManager.instance else 0
+		var tower_damage = active_towers * 20  # LARGE_DAMAGE constant from DefenseTowerManager
+
+		# Store for after animation - include stolen amounts and tower damage
 		pending_wave_victory = false
-		pending_wave_rewards = {}
+		pending_wave_rewards = {
+			"gold": 0,
+			"meat": 0,
+			"vault_gold_stolen": stolen.get("gold", 0),
+			"vault_parts_stolen": stolen.get("parts", []),
+			"tower_damage": tower_damage,
+			"towers_destroyed": 0  # Will be calculated in end_combat if any tower health reaches 0
+		}
 
 func _generate_wave(wave_num: int) -> Array:
 	var enemies: Array = []
@@ -520,9 +567,9 @@ func _apply_rewards(rewards: Dictionary):
 	cumulative_rewards["gold"] += rewards.get("gold", 0)
 	cumulative_rewards["meat"] += rewards.get("meat", 0)
 
-func _apply_raid_loss():
+func _apply_raid_loss() -> Dictionary:
 	if not TreasureVault.instance:
-		return
+		return {}
 
 	# Calculate loss percentage (higher waves = bigger losses, but capped at 30%)
 	var loss_percentage = min(0.30, 0.15 + (wave_number * 0.01))
@@ -531,6 +578,7 @@ func _apply_raid_loss():
 	var stolen = TreasureVault.instance.apply_raid_loss(loss_percentage)
 
 	print("[DefenseManager] [STOLEN] Raiders stole %d gold and parts!" % stolen.get("gold", 0))
+	return stolen
 
 func _apply_auto_loss():
 	"""When player has no defenders, lose a fixed amount"""
@@ -569,6 +617,7 @@ func _complete_wave(victory: bool, rewards: Dictionary):
 func end_combat():
 	"""Called when battle animation finishes - resumes wave timer and applies stat changes"""
 	is_in_combat = false
+	current_wave_enemies.clear()  # Clear battle data
 	print("[DefenseManager] Combat ended, applying stat changes to dragons...")
 	
 	# Apply all pending stat changes now that animation is done
@@ -606,11 +655,16 @@ func end_combat():
 	
 	pending_stat_changes.clear()
 	print("[DefenseManager] Wave timer resumed")
-	
+
+	# Apply tower damage based on wave result
+	if DefenseTowerManager and DefenseTowerManager.instance:
+		DefenseTowerManager.instance.apply_wave_damage(pending_wave_victory)
+		print("[DefenseManager] Applied tower damage - Victory: %s" % pending_wave_victory)
+
 	# Refresh all UIs on next frame to ensure dragon data is fully updated
 	await get_tree().process_frame
 	_refresh_all_dragon_uis()
-	
+
 	# NOW complete the wave after animation and stat changes
 	_complete_wave(pending_wave_victory, pending_wave_rewards)
 

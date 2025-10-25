@@ -32,12 +32,22 @@ func _ready():
 	is_ready = true
 
 	repair_button.pressed.connect(_on_repair_pressed)
-	
+
 	if rebuild_button:
 		rebuild_button.pressed.connect(_on_rebuild_pressed)
 
 	if remove_dragon_button:
 		remove_dragon_button.pressed.connect(_on_remove_dragon_pressed)
+
+	# Style repair and rebuild buttons
+	_style_action_button(repair_button, Color(0.2, 0.6, 0.3))  # Green for repair
+	_style_action_button(rebuild_button, Color(0.5, 0.4, 0.2))  # Orange for rebuild
+
+	# Add hover effects
+	repair_button.mouse_entered.connect(_on_button_hover.bind(repair_button, true))
+	repair_button.mouse_exited.connect(_on_button_hover.bind(repair_button, false))
+	rebuild_button.mouse_entered.connect(_on_button_hover.bind(rebuild_button, true))
+	rebuild_button.mouse_exited.connect(_on_button_hover.bind(rebuild_button, false))
 
 	# Make card clickable
 	gui_input.connect(_on_gui_input)
@@ -93,7 +103,7 @@ func _update_display():
 	if tower.needs_repair() and not tower.is_destroyed():
 		repair_button.visible = true
 		var repair_cost = DefenseTowerManager.instance.get_tower_repair_cost(tower)
-		repair_cost_label.text = "%dg" % repair_cost
+		repair_cost_label.text = "REPAIR: %dg" % repair_cost
 
 		# Check if player can afford
 		if TreasureVault.instance.get_total_gold() < repair_cost:
@@ -104,13 +114,13 @@ func _update_display():
 			repair_button.modulate = Color(1, 1, 1)
 	else:
 		repair_button.visible = false
-	
+
 	# Show/hide rebuild button (only for destroyed towers)
 	if rebuild_button:
 		if tower.is_destroyed():
 			rebuild_button.visible = true
-			rebuild_cost_label.text = "%dg" % DefenseTowerManager.REBUILD_COST
-			
+			rebuild_cost_label.text = "REBUILD: %dg" % DefenseTowerManager.REBUILD_COST
+
 			# Check if player can afford
 			if TreasureVault.instance.get_total_gold() < DefenseTowerManager.REBUILD_COST:
 				rebuild_button.disabled = true
@@ -225,3 +235,100 @@ func _unassign_dragon():
 # Public method to refresh display
 func refresh():
 	_update_display()
+
+func _style_action_button(button: Button, base_color: Color):
+	"""Apply consistent styling to repair/rebuild buttons"""
+	if not button:
+		return
+
+	# Create normal state style
+	var style_normal = StyleBoxFlat.new()
+	style_normal.bg_color = base_color
+	style_normal.border_width_left = 2
+	style_normal.border_width_right = 2
+	style_normal.border_width_top = 2
+	style_normal.border_width_bottom = 2
+	style_normal.border_color = base_color.lightened(0.2)
+	style_normal.corner_radius_top_left = 4
+	style_normal.corner_radius_top_right = 4
+	style_normal.corner_radius_bottom_left = 4
+	style_normal.corner_radius_bottom_right = 4
+
+	# Create hover state style (brighter)
+	var style_hover = StyleBoxFlat.new()
+	style_hover.bg_color = base_color.lightened(0.2)
+	style_hover.border_width_left = 2
+	style_hover.border_width_right = 2
+	style_hover.border_width_top = 2
+	style_hover.border_width_bottom = 2
+	style_hover.border_color = base_color.lightened(0.4)
+	style_hover.corner_radius_top_left = 4
+	style_hover.corner_radius_top_right = 4
+	style_hover.corner_radius_bottom_left = 4
+	style_hover.corner_radius_bottom_right = 4
+
+	# Create pressed state style (darker)
+	var style_pressed = StyleBoxFlat.new()
+	style_pressed.bg_color = base_color.darkened(0.2)
+	style_pressed.border_width_left = 2
+	style_pressed.border_width_right = 2
+	style_pressed.border_width_top = 2
+	style_pressed.border_width_bottom = 2
+	style_pressed.border_color = base_color
+	style_pressed.corner_radius_top_left = 4
+	style_pressed.corner_radius_top_right = 4
+	style_pressed.corner_radius_bottom_left = 4
+	style_pressed.corner_radius_bottom_right = 4
+
+	# Create disabled state style (grayed out)
+	var style_disabled = StyleBoxFlat.new()
+	style_disabled.bg_color = Color(0.3, 0.3, 0.3, 0.5)
+	style_disabled.border_width_left = 2
+	style_disabled.border_width_right = 2
+	style_disabled.border_width_top = 2
+	style_disabled.border_width_bottom = 2
+	style_disabled.border_color = Color(0.4, 0.4, 0.4)
+	style_disabled.corner_radius_top_left = 4
+	style_disabled.corner_radius_top_right = 4
+	style_disabled.corner_radius_bottom_left = 4
+	style_disabled.corner_radius_bottom_right = 4
+
+	# Apply styles to button
+	button.add_theme_stylebox_override("normal", style_normal)
+	button.add_theme_stylebox_override("hover", style_hover)
+	button.add_theme_stylebox_override("pressed", style_pressed)
+	button.add_theme_stylebox_override("disabled", style_disabled)
+
+	# Set minimum height for better clickability
+	button.custom_minimum_size = Vector2(0, 35)
+
+	# Make cursor show it's clickable
+	button.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
+
+	# Style the cost label inside the button
+	var label = button.get_node_or_null("CostLabel")
+	if label:
+		label.add_theme_font_size_override("font_size", 14)
+		label.add_theme_color_override("font_color", Color.WHITE)
+		# Add slight shadow for better readability
+		label.add_theme_color_override("font_shadow_color", Color(0, 0, 0, 0.5))
+		label.add_theme_constant_override("shadow_offset_x", 1)
+		label.add_theme_constant_override("shadow_offset_y", 1)
+
+func _on_button_hover(button: Button, is_hovering: bool):
+	"""Add extra visual feedback on button hover"""
+	if not button or button.disabled:
+		return
+
+	if is_hovering:
+		# Scale up slightly
+		var tween = create_tween()
+		tween.set_ease(Tween.EASE_OUT)
+		tween.set_trans(Tween.TRANS_CUBIC)
+		tween.tween_property(button, "scale", Vector2(1.05, 1.05), 0.15)
+	else:
+		# Reset scale
+		var tween = create_tween()
+		tween.set_ease(Tween.EASE_OUT)
+		tween.set_trans(Tween.TRANS_CUBIC)
+		tween.tween_property(button, "scale", Vector2(1.0, 1.0), 0.15)

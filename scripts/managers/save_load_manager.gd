@@ -170,6 +170,14 @@ func save_game() -> bool:
 		print("[SaveLoadManager] WARNING: DragonNameManager not found, skipping")
 		save_data["dragon_name_manager"] = {}
 
+	# Serialize BattleLogManager
+	if BattleLogManager:
+		save_data["battle_log_manager"] = BattleLogManager.to_dict()
+		print("[SaveLoadManager] ✓ Saved BattleLogManager (%d battles)" % BattleLogManager.get_total_battles())
+	else:
+		print("[SaveLoadManager] WARNING: BattleLogManager not found, skipping")
+		save_data["battle_log_manager"] = {}
+
 	# Convert to JSON
 	var json_string = JSON.stringify(save_data, "\t")
 
@@ -337,6 +345,13 @@ func load_game() -> bool:
 		print("[SaveLoadManager] ✓ Loaded DragonNameManager (%d available, %d used)" % [DragonNameManager.instance.get_available_count(), DragonNameManager.instance.get_used_count()])
 	else:
 		print("[SaveLoadManager] WARNING: DragonNameManager not found or no data, skipping")
+
+	# Load BattleLogManager
+	if save_data.has("battle_log_manager") and BattleLogManager:
+		BattleLogManager.from_dict(save_data["battle_log_manager"])
+		print("[SaveLoadManager] ✓ Loaded BattleLogManager (%d battles)" % BattleLogManager.get_total_battles())
+	else:
+		print("[SaveLoadManager] WARNING: BattleLogManager not found or no data, skipping")
 
 	# Refresh UI to show loaded dragons and scientists
 	_refresh_ui()

@@ -8,20 +8,31 @@ const BuildCardScene = preload("res://scenes/ui/towers/build_card.tscn")
 const LockedCardScene = preload("res://scenes/ui/towers/locked_card.tscn")
 const DragonPickerModalScene = preload("res://scenes/ui/dragon_picker_modal.tscn")
 const BattleArenaScene = preload("res://scenes/idle_defense/battle_arena.tscn")
+const BattleLogUIScene = preload("res://scenes/ui/battle_log_ui.tscn")
 
 @onready var back_button = $MarginContainer/VBox/HeaderPanel/HeaderHBox/BackButton
+@onready var battle_log_button: Button = %BattleLogButton
 @onready var tower_container = $MarginContainer/VBox/ScrollContainer/TowerContainer
 @onready var repair_all_button = $MarginContainer/VBox/FooterPanel/HBox/RepairAllButton
 @onready var stats_label = $MarginContainer/VBox/FooterPanel/HBox/StatsLabel
+@onready var battle_notification_panel: PanelContainer = %BattleNotificationPanel
+@onready var battle_label: Label = %BattleLabel
+@onready var scout_button: Button = %ScoutButton
 
 var wave_timer_label: Label  # Created dynamically
 var dragon_picker_modal: DragonPickerModal
 var dragon_factory: DragonFactory  # Reference to factory
 var battle_arena: Control  # Battle visualization
+var enemy_scout_screen: Control  # Enemy scout screen
 
 # Store last wave results to show after animation
 var last_wave_victory: bool = false
 var last_wave_rewards: Dictionary = {}
+var current_wave_number: int = 0  # Track which wave we've shown popup for
+
+# Store scouted enemies for preview
+var scouted_enemies: Array = []
+var scouted_wave_number: int = 0
 
 signal back_to_factory_requested
 
@@ -50,6 +61,7 @@ func _ready():
 	if DefenseManager and DefenseManager.instance:
 		DefenseManager.instance.dragon_assigned_to_defense.connect(_on_dragon_assigned)
 		DefenseManager.instance.dragon_removed_from_defense.connect(_on_dragon_removed)
+		DefenseManager.instance.wave_incoming_scout.connect(_on_wave_incoming_scout)
 		DefenseManager.instance.wave_started.connect(_on_wave_started)
 		DefenseManager.instance.wave_completed.connect(_on_wave_completed)
 
@@ -58,7 +70,20 @@ func _ready():
 
 	# Connect buttons
 	back_button.pressed.connect(_on_back_pressed)
+	battle_log_button.pressed.connect(_on_battle_log_pressed)
 	repair_all_button.pressed.connect(_on_repair_all_pressed)
+	scout_button.pressed.connect(_on_scout_button_pressed)
+
+	# Style the battle notification panel
+	if battle_notification_panel:
+		var style_box = StyleBoxFlat.new()
+		style_box.bg_color = Color(0.4, 0.1, 0.1, 0.9)  # Dark red background
+		style_box.border_width_left = 3
+		style_box.border_width_right = 3
+		style_box.border_width_top = 3
+		style_box.border_width_bottom = 3
+		style_box.border_color = Color(1, 0.3, 0.3, 1)  # Bright red border
+		battle_notification_panel.add_theme_stylebox_override("panel", style_box)
 
 	# Create dragon picker modal
 	dragon_picker_modal = DragonPickerModalScene.instantiate()
@@ -74,6 +99,7 @@ func _ready():
 	battle_arena.visible = false
 	battle_arena.battle_animation_complete.connect(_on_battle_animation_complete)
 	battle_arena.battle_result_determined.connect(_on_battle_result_determined)
+	battle_arena.back_button_pressed.connect(_on_battle_arena_back_pressed)
 
 	# Update every second to keep UI fresh
 	var timer = Timer.new()
@@ -122,6 +148,7 @@ func _update_ui():
 	"""Update both footer stats and wave timer"""
 	_update_footer()
 	_update_wave_timer()
+	_update_battle_notification()
 
 func _update_wave_timer():
 	"""Update the wave timer display"""
@@ -145,12 +172,18 @@ func _update_wave_timer():
 	elif DefenseManager.instance.is_in_combat:
 		wave_timer_label.text = "⚔ COMBAT! ⚔"
 		wave_timer_label.add_theme_color_override("font_color", Color(1, 0.2, 0.2, 1))  # Red
+	# Check if in scout period
+	elif scouted_enemies.size() > 0:
+		var minutes = int(time_remaining / 60)
+		var seconds = int(time_remaining) % 60
+		wave_timer_label.text = "⚠ WAVE INCOMING: %d:%02d ⚠" % [minutes, seconds]
+		wave_timer_label.add_theme_color_override("font_color", Color(1, 0.6, 0.2, 1))  # Orange - warning!
 	else:
 		# Format time as MM:SS
 		var minutes = int(time_remaining / 60)
 		var seconds = int(time_remaining) % 60
 		wave_timer_label.text = "Next Wave: %d:%02d" % [minutes, seconds]
-		
+
 		# Color based on urgency
 		if time_remaining <= 10:
 			wave_timer_label.add_theme_color_override("font_color", Color(1, 0.2, 0.2, 1))  # Red - urgent!
@@ -331,8 +364,17 @@ func _on_dragon_removed(dragon):
 	_refresh_tower_cards()
 	_update_footer()
 
+func _on_wave_incoming_scout(wave_num: int, enemies: Array, time_remaining: float):
+	"""Called 90 seconds before wave - store scout data"""
+	print("[DefenseTowersUI] ===== WAVE %d INCOMING (%.0fs) - SCOUT AVAILABLE =====" % [wave_num, time_remaining])
+	scouted_enemies = enemies
+	scouted_wave_number = wave_num
+
 func _on_wave_started(wave_number: int, enemies: Array):
 	"""Show battle arena when wave starts"""
+	# Clear scout data when battle starts
+	scouted_enemies.clear()
+
 	if battle_arena:
 		battle_arena.visible = true
 
@@ -340,23 +382,25 @@ func _on_wave_completed(victory: bool, rewards: Dictionary):
 	# Update UI immediately when wave completes
 	_refresh_tower_cards()
 	_update_ui()
-	
+
 	# Store results to show after animation completes
 	last_wave_victory = victory
 	last_wave_rewards = rewards
-	
+
 	print("[DefenseTowersUI] Stored wave results - Victory: %s, Gold: %d" % [victory, rewards.get("gold", 0)])
-	
+
 	# Update factory manager to refresh dragon list and gold
 	_update_factory_manager()
-	
-	# Show popup NOW with the fresh results
-	_show_wave_rewards_popup(victory, rewards)
-	
-	# Hide battle arena after brief delay
-	if battle_arena:
-		await get_tree().create_timer(0.5).timeout
-		battle_arena.visible = false
+
+	# Only show popup once per wave (prevent duplicate from multiple signal emissions)
+	if DefenseManager.instance and DefenseManager.instance.wave_number != current_wave_number:
+		current_wave_number = DefenseManager.instance.wave_number
+		_show_wave_rewards_popup(victory, rewards)
+		print("[DefenseTowersUI] Showing wave popup for wave %d" % current_wave_number)
+	else:
+		print("[DefenseTowersUI] Skipping duplicate popup for wave %d" % current_wave_number)
+
+	# Battle arena stays open for player to read results and close manually via back button
 
 func _on_battle_result_determined(victory: bool):
 	"""Called when visual combat determines the winner"""
@@ -369,10 +413,87 @@ func _on_battle_result_determined(victory: bool):
 func _on_battle_animation_complete():
 	"""Called when battle animation finishes"""
 	print("[DefenseTowersUI] Battle animation complete")
-	
+
 	# Resume wave timer by ending combat state (which triggers _complete_wave)
 	if DefenseManager and DefenseManager.instance:
 		DefenseManager.instance.end_combat()
+
+func _on_battle_arena_back_pressed():
+	"""Called when player clicks back button in battle arena"""
+	print("[DefenseTowersUI] Player closed battle arena")
+	if battle_arena:
+		battle_arena.visible = false
+
+func _update_battle_notification():
+	"""Update battle notification panel visibility and text"""
+	if not battle_notification_panel or not DefenseManager or not DefenseManager.instance:
+		return
+
+	var is_scouting = scouted_enemies.size() > 0
+	var is_in_combat = DefenseManager.instance.is_in_combat
+
+	# Show notification if in combat or scouting
+	if is_in_combat or is_scouting:
+		battle_notification_panel.visible = true
+
+		if is_scouting:
+			# Scout mode
+			battle_label.text = "⚠ WAVE %d INCOMING! ⚠" % scouted_wave_number
+			scout_button.text = "SCOUT ENEMIES"
+		elif is_in_combat:
+			# Combat mode
+			battle_label.text = "⚔ BATTLE IN PROGRESS ⚔"
+			scout_button.text = "WATCH BATTLE"
+	else:
+		battle_notification_panel.visible = false
+
+func _on_scout_button_pressed():
+	"""Handle scout/watch battle button click"""
+	print("[DefenseTowersUI] Scout button pressed!")
+
+	# Check if we're in scout mode
+	if scout_button.text == "SCOUT ENEMIES":
+		print("[DefenseTowersUI] Opening enemy scout screen...")
+		_open_enemy_scout_screen()
+	else:
+		# Watch battle mode - show battle arena
+		print("[DefenseTowersUI] Opening battle arena...")
+		if battle_arena:
+			battle_arena.visible = true
+
+func _open_enemy_scout_screen():
+	"""Open the enemy scout screen to preview incoming wave"""
+	# Check if scout screen already exists and is visible
+	if enemy_scout_screen and is_instance_valid(enemy_scout_screen):
+		print("[DefenseTowersUI] Enemy scout screen already open, updating...")
+		if enemy_scout_screen.has_method("show_scout_info"):
+			var time_remaining = DefenseManager.instance.time_until_next_wave if DefenseManager and DefenseManager.instance else 90.0
+			enemy_scout_screen.show_scout_info(scouted_wave_number, scouted_enemies, time_remaining)
+		enemy_scout_screen.visible = true
+		return
+
+	# Load and create the enemy scout screen scene
+	var scout_scene = load("res://scenes/idle_defense/enemy_scout_screen.tscn")
+	if not scout_scene:
+		print("[DefenseTowersUI] ERROR: Could not load enemy scout screen scene!")
+		return
+
+	enemy_scout_screen = scout_scene.instantiate()
+	enemy_scout_screen.name = "EnemyScoutScreen"
+
+	# Set z-index to appear above everything else
+	enemy_scout_screen.z_index = 150
+	enemy_scout_screen.z_as_relative = false
+
+	# Add to scene tree
+	add_child(enemy_scout_screen)
+
+	# Show scout info with current data
+	if enemy_scout_screen.has_method("show_scout_info"):
+		var time_remaining = DefenseManager.instance.time_until_next_wave if DefenseManager and DefenseManager.instance else 90.0
+		enemy_scout_screen.show_scout_info(scouted_wave_number, scouted_enemies, time_remaining)
+
+	print("[DefenseTowersUI] Enemy scout screen opened!")
 
 func _update_factory_manager():
 	"""Update factory manager UI to refresh dragons and gold after combat"""
@@ -426,6 +547,12 @@ func _on_back_pressed():
 	back_to_factory_requested.emit()
 	# Or handle directly:
 	visible = false
+
+func _on_battle_log_pressed():
+	"""Open the battle log UI to view battle history"""
+	var battle_log_ui = BattleLogUIScene.instantiate()
+	add_child(battle_log_ui)
+	battle_log_ui.closed.connect(func(): battle_log_ui.queue_free())
 
 func _show_wave_rewards_popup(victory: bool, rewards: Dictionary):
 	"""Show a popup with rewards from the just-completed wave"""

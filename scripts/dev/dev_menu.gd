@@ -42,8 +42,16 @@ func toggle_menu():
 		_refresh_dragon_selector()
 		# Refresh save info
 		_refresh_save_info()
+		# Refresh gold display
+		_refresh_gold_display()
 	else:
 		hide()
+
+func _refresh_gold_display():
+	"""Refresh the gold label"""
+	var label = items_container.get_node_or_null("GoldLabel")
+	if label:
+		_update_gold_label(label)
 
 func _refresh_dragon_selector():
 	"""Refresh the dragon selector dropdown"""
@@ -78,8 +86,23 @@ func _populate_items():
 
 	_add_separator()
 
+	# Add section: Resources (Gold & Parts)
+	_add_resources_section()
+
+	_add_separator()
+
+	# Add section: Dragon Creation
+	_add_dragon_creation_section()
+
+	_add_separator()
+
 	# Add section: Dragon Debug Controls
 	_add_dragon_debug_section()
+
+	_add_separator()
+
+	# Add section: Defense Debug Controls
+	_add_defense_debug_section()
 
 	_add_separator()
 
@@ -363,6 +386,183 @@ func _on_auto_save_toggled(enabled: bool):
 
 	SaveLoadManager.instance.set_auto_save_enabled(enabled)
 	print("[DevMenu] Auto-save %s" % ("enabled" if enabled else "disabled"))
+
+# === RESOURCES SECTION ===
+
+func _add_resources_section():
+	"""Add resource controls (gold and parts)"""
+	_add_section_label("RESOURCES")
+
+	# Gold controls
+	var gold_label = Label.new()
+	gold_label.name = "GoldLabel"
+	gold_label.add_theme_font_size_override("font_size", 12)
+	gold_label.add_theme_color_override("font_color", Color(1, 0.84, 0, 1))  # Gold color
+	_update_gold_label(gold_label)
+	items_container.add_child(gold_label)
+
+	var gold_hbox = HBoxContainer.new()
+	_add_button_to_hbox(gold_hbox, "+100 Gold", func(): _add_gold(100))
+	_add_button_to_hbox(gold_hbox, "+1000 Gold", func(): _add_gold(1000))
+	_add_button_to_hbox(gold_hbox, "+10000 Gold", func(): _add_gold(10000))
+	items_container.add_child(gold_hbox)
+
+	# Dragon Parts controls
+	var parts_label = Label.new()
+	parts_label.text = "Dragon Parts:"
+	parts_label.add_theme_font_size_override("font_size", 12)
+	items_container.add_child(parts_label)
+
+	var parts_hbox = HBoxContainer.new()
+	_add_button_to_hbox(parts_hbox, "+10 All Parts", _add_all_parts_10)
+	_add_button_to_hbox(parts_hbox, "+50 All Parts", _add_all_parts_50)
+	items_container.add_child(parts_hbox)
+
+func _update_gold_label(label: Label):
+	"""Update the gold display"""
+	var current_gold = 0
+	if TreasureVault and TreasureVault.instance:
+		current_gold = TreasureVault.instance.gold
+	label.text = "Gold: %d" % current_gold
+
+func _add_gold(amount: int):
+	"""Add gold to the player"""
+	if not TreasureVault or not TreasureVault.instance:
+		print("[DevMenu] TreasureVault not available!")
+		return
+
+	TreasureVault.instance.add_gold(amount)
+	print("[DevMenu] Added %d gold (Total: %d)" % [amount, TreasureVault.instance.gold])
+
+	# Update gold label
+	var label = items_container.get_node_or_null("GoldLabel")
+	if label:
+		_update_gold_label(label)
+
+func _add_all_parts_10():
+	"""Add 10 of each dragon part"""
+	_add_all_parts(10)
+
+func _add_all_parts_50():
+	"""Add 50 of each dragon part"""
+	_add_all_parts(50)
+
+func _add_all_parts(amount: int):
+	"""Add a specific amount of each dragon part"""
+	if not InventoryManager or not InventoryManager.instance:
+		print("[DevMenu] InventoryManager not available!")
+		return
+
+	var part_ids = [
+		"fire_head", "fire_body", "fire_tail",
+		"ice_head", "ice_body", "ice_tail",
+		"lightning_head", "lightning_body", "lightning_tail",
+		"nature_head", "nature_body", "nature_tail",
+		"shadow_head", "shadow_body", "shadow_tail"
+	]
+
+	for part_id in part_ids:
+		InventoryManager.instance.add_item_by_id(part_id, amount)
+
+	print("[DevMenu] Added %d of each dragon part type" % amount)
+
+# === DRAGON CREATION SECTION ===
+
+func _add_dragon_creation_section():
+	"""Add dragon creation controls"""
+	_add_section_label("DRAGON CREATION")
+
+	# Quick create buttons
+	var quick_create_hbox = HBoxContainer.new()
+	_add_button_to_hbox(quick_create_hbox, "Create Random Dragon", _create_random_dragon)
+	_add_button_to_hbox(quick_create_hbox, "Create Pure Fire", func(): _create_pure_dragon(DragonPart.Element.FIRE))
+	items_container.add_child(quick_create_hbox)
+
+	var quick_create_hbox2 = HBoxContainer.new()
+	_add_button_to_hbox(quick_create_hbox2, "Create Pure Ice", func(): _create_pure_dragon(DragonPart.Element.ICE))
+	_add_button_to_hbox(quick_create_hbox2, "Create Pure Lightning", func(): _create_pure_dragon(DragonPart.Element.LIGHTNING))
+	items_container.add_child(quick_create_hbox2)
+
+	var quick_create_hbox3 = HBoxContainer.new()
+	_add_button_to_hbox(quick_create_hbox3, "Create Pure Nature", func(): _create_pure_dragon(DragonPart.Element.NATURE))
+	_add_button_to_hbox(quick_create_hbox3, "Create Pure Shadow", func(): _create_pure_dragon(DragonPart.Element.SHADOW))
+	items_container.add_child(quick_create_hbox3)
+
+	# Create 5 random dragons button
+	var batch_btn = Button.new()
+	batch_btn.text = "🐉 Create 5 Random Dragons"
+	batch_btn.pressed.connect(_create_5_random_dragons)
+	batch_btn.add_theme_color_override("font_color", Color(0.5, 1, 0.5, 1))
+	items_container.add_child(batch_btn)
+
+func _get_dragon_factory() -> DragonFactory:
+	"""Get the DragonFactory from the factory manager"""
+	var factory_manager_nodes = get_tree().get_nodes_in_group("factory_manager")
+	if factory_manager_nodes.is_empty():
+		return null
+
+	var factory_manager = factory_manager_nodes[0]
+	if factory_manager.has_method("get") and factory_manager.get("factory"):
+		return factory_manager.get("factory")
+
+	return null
+
+func _create_random_dragon():
+	"""Create a dragon with random parts"""
+	var factory = _get_dragon_factory()
+	if not factory:
+		print("[DevMenu] DragonFactory not available!")
+		return
+
+	var elements = [
+		DragonPart.Element.FIRE,
+		DragonPart.Element.ICE,
+		DragonPart.Element.LIGHTNING,
+		DragonPart.Element.NATURE,
+		DragonPart.Element.SHADOW
+	]
+
+	var head = elements.pick_random()
+	var body = elements.pick_random()
+	var tail = elements.pick_random()
+
+	# Get DragonPart objects from PartLibrary
+	var head_part = PartLibrary.instance.get_part_by_element_and_type(head, DragonPart.PartType.HEAD)
+	var body_part = PartLibrary.instance.get_part_by_element_and_type(body, DragonPart.PartType.BODY)
+	var tail_part = PartLibrary.instance.get_part_by_element_and_type(tail, DragonPart.PartType.TAIL)
+
+	var dragon = factory.create_dragon(head_part, body_part, tail_part)
+	if dragon:
+		print("[DevMenu] Created random dragon: %s" % dragon.dragon_name)
+		_refresh_dragon_selector()
+	else:
+		print("[DevMenu] Failed to create dragon!")
+
+func _create_pure_dragon(element: DragonPart.Element):
+	"""Create a pure elemental dragon (all parts same element)"""
+	var factory = _get_dragon_factory()
+	if not factory:
+		print("[DevMenu] DragonFactory not available!")
+		return
+
+	# Get DragonPart objects from PartLibrary
+	var head_part = PartLibrary.instance.get_part_by_element_and_type(element, DragonPart.PartType.HEAD)
+	var body_part = PartLibrary.instance.get_part_by_element_and_type(element, DragonPart.PartType.BODY)
+	var tail_part = PartLibrary.instance.get_part_by_element_and_type(element, DragonPart.PartType.TAIL)
+
+	var dragon = factory.create_dragon(head_part, body_part, tail_part)
+	if dragon:
+		var element_name = DragonPart.Element.keys()[element]
+		print("[DevMenu] Created pure %s dragon: %s" % [element_name, dragon.dragon_name])
+		_refresh_dragon_selector()
+	else:
+		print("[DevMenu] Failed to create dragon!")
+
+func _create_5_random_dragons():
+	"""Create 5 random dragons at once"""
+	for i in 5:
+		_create_random_dragon()
+	print("[DevMenu] Created 5 random dragons!")
 
 # === DRAGON DEBUG SECTION ===
 
@@ -660,3 +860,86 @@ func _set_pet_affection(value: int):
 			print("[DevMenu] No pet dragon found!")
 	else:
 		print("[DevMenu] PetDragonManager not found!")
+
+# === DEFENSE DEBUG SECTION ===
+
+func _add_defense_debug_section():
+	"""Add defense debugging controls"""
+	_add_section_label("DEFENSE DEBUG")
+
+	# Trigger Wave buttons
+	var trigger_wave_hbox = HBoxContainer.new()
+
+	var trigger_wave_10s_btn = Button.new()
+	trigger_wave_10s_btn.text = "⚔ WAVE IN 10s"
+	trigger_wave_10s_btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	trigger_wave_10s_btn.pressed.connect(_trigger_wave_in_10s)
+	trigger_wave_10s_btn.add_theme_color_override("font_color", Color(1, 0.3, 0.3, 1))
+	trigger_wave_hbox.add_child(trigger_wave_10s_btn)
+
+	var trigger_wave_100s_btn = Button.new()
+	trigger_wave_100s_btn.text = "🔍 WAVE IN 100s"
+	trigger_wave_100s_btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	trigger_wave_100s_btn.pressed.connect(_trigger_wave_in_100s)
+	trigger_wave_100s_btn.add_theme_color_override("font_color", Color(1, 0.7, 0.3, 1))
+	trigger_wave_hbox.add_child(trigger_wave_100s_btn)
+
+	items_container.add_child(trigger_wave_hbox)
+
+	# Wave info label
+	var wave_info = Label.new()
+	wave_info.name = "WaveInfoLabel"
+	wave_info.add_theme_font_size_override("font_size", 11)
+	wave_info.add_theme_color_override("font_color", Color(0.7, 0.7, 0.7, 1))
+	_update_wave_info_label(wave_info)
+	items_container.add_child(wave_info)
+
+func _update_wave_info_label(label: Label):
+	"""Update wave info display"""
+	if not DefenseManager or not DefenseManager.instance:
+		label.text = "DefenseManager not available"
+		return
+
+	var time_remaining = DefenseManager.instance.time_until_next_wave
+	var minutes = int(time_remaining / 60)
+	var seconds = int(time_remaining) % 60
+	var in_combat = DefenseManager.instance.is_in_combat
+
+	label.text = "Wave %d | Next: %d:%02d %s" % [
+		DefenseManager.instance.wave_number,
+		minutes,
+		seconds,
+		"(IN COMBAT)" if in_combat else ""
+	]
+
+func _trigger_wave_in_10s():
+	"""Set the next wave to trigger in 10 seconds"""
+	print("[DevMenu] 🗡️ TRIGGER WAVE IN 10s button pressed!")
+
+	if DefenseManager and DefenseManager.instance:
+		DefenseManager.instance.time_until_next_wave = 10.0
+		DefenseManager.instance.has_shown_scout_warning = true  # Skip scout since we're testing quick wave
+		print("[DevMenu] ✓ Wave timer set to 10 seconds - battle will start in 10s!")
+
+		# Update wave info
+		var label = items_container.get_node_or_null("WaveInfoLabel")
+		if label:
+			_update_wave_info_label(label)
+	else:
+		print("[DevMenu] ❌ DefenseManager not available!")
+
+func _trigger_wave_in_100s():
+	"""Set the next wave to trigger in 100 seconds (10s before scout warning)"""
+	print("[DevMenu] 🔍 TRIGGER WAVE IN 100s button pressed!")
+
+	if DefenseManager and DefenseManager.instance:
+		DefenseManager.instance.time_until_next_wave = 100.0
+		DefenseManager.instance.has_shown_scout_warning = false  # Reset to allow scout warning
+		print("[DevMenu] ✓ Wave timer set to 100 seconds - scout warning will appear at 90s!")
+
+		# Update wave info
+		var label = items_container.get_node_or_null("WaveInfoLabel")
+		if label:
+			_update_wave_info_label(label)
+	else:
+		print("[DevMenu] ❌ DefenseManager not available!")
