@@ -33,17 +33,12 @@ func _ready():
 		DefenseManager.instance.wave_started.connect(_on_wave_started)
 		DefenseManager.instance.wave_completed.connect(_on_wave_completed)
 
-		# Check if battle is already in progress when we open the viewer
-		if DefenseManager.instance.is_in_combat:
-			print("[BattleArena] Battle already in progress! Setting up visuals...")
-			var enemies = DefenseManager.instance.current_wave_enemies
-			print("[BattleArena] Found %d enemies in current_wave_enemies" % enemies.size())
-			if enemies and enemies.size() > 0:
-				# Manually trigger battle setup since we missed the signal
-				print("[BattleArena] Manually triggering wave setup for wave %d" % DefenseManager.instance.wave_number)
-				_on_wave_started(DefenseManager.instance.wave_number, enemies)
-			else:
-				print("[BattleArena] ERROR: No enemies found in current_wave_enemies!")
+		# Check if we have enemy data to display (battle in progress OR recently completed)
+		var enemies = DefenseManager.instance.current_wave_enemies
+		if enemies and enemies.size() > 0:
+			# Manually trigger battle setup since we missed the signal
+			print("[BattleArena] Showing battle for wave %d (%d enemies)" % [DefenseManager.instance.wave_number, enemies.size()])
+			_on_wave_started(DefenseManager.instance.wave_number, enemies)
 
 	# Connect back button
 	if back_button:

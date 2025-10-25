@@ -295,6 +295,9 @@ func remove_dragon_from_defense(dragon: Dragon) -> bool:
 func _start_wave():
 	is_in_combat = true
 
+	# Clear previous wave's enemy data before starting new wave
+	current_wave_enemies.clear()
+
 	# Use pre-scouted enemies if available, otherwise generate new ones
 	var enemies: Array
 	if scouted_wave_enemies.size() > 0:
@@ -306,7 +309,7 @@ func _start_wave():
 
 	print("[DefenseManager] COMBAT: WAVE %d - %d enemies attacking!" % [wave_number, enemies.size()])
 
-	# Store enemies for mid-battle viewers
+	# Store enemies for mid-battle viewers (and late viewers after battle ends)
 	current_wave_enemies = enemies
 
 	# Give players 3 seconds to see notification and click "WATCH BATTLE"
@@ -617,7 +620,8 @@ func _complete_wave(victory: bool, rewards: Dictionary):
 func end_combat():
 	"""Called when battle animation finishes - resumes wave timer and applies stat changes"""
 	is_in_combat = false
-	current_wave_enemies.clear()  # Clear battle data
+	# DON'T clear current_wave_enemies here - keep it so late viewers can still see the battle
+	# It will be cleared when the next wave starts
 	print("[DefenseManager] Combat ended, applying stat changes to dragons...")
 	
 	# Apply all pending stat changes now that animation is done
