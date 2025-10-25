@@ -301,7 +301,7 @@ func _start_wave():
 	# Use pre-scouted enemies if available, otherwise generate new ones
 	var enemies: Array
 	if scouted_wave_enemies.size() > 0:
-		enemies = scouted_wave_enemies
+		enemies = scouted_wave_enemies.duplicate(true)  # Deep copy to avoid reference issues
 		print("[DefenseManager] Using pre-scouted enemies for wave %d" % wave_number)
 	else:
 		enemies = _generate_wave(wave_number)
