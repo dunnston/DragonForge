@@ -105,6 +105,11 @@ func create_pet_dragon(head: DragonPart, body: DragonPart, tail: DragonPart) -> 
 		"The day we met and began our journey together."
 	)
 
+	# Register with DragonStateManager for proper fatigue/hunger/happiness updates
+	if DragonStateManager and DragonStateManager.instance:
+		DragonStateManager.instance.register_dragon(pet_dragon)
+		print("[PetDragonManager] Registered pet with DragonStateManager for proper life systems")
+
 	print("[PetDragonManager] ✓ Created pet dragon: %s (Personality: %s)" % [
 		pet_dragon.dragon_name,
 		pet_dragon.get_personality_name()
@@ -476,6 +481,11 @@ func from_dict(data: Dictionary) -> void:
 	# The pet will already be set by DragonFactory when it loads the dragon with is_pet=true
 
 	if pet_dragon:
+		# Register with DragonStateManager for proper fatigue/hunger/happiness updates
+		if DragonStateManager and DragonStateManager.instance:
+			DragonStateManager.instance.register_dragon(pet_dragon)
+			print("[PetDragonManager] Registered restored pet with DragonStateManager")
+
 		print("[PetDragonManager] ✓ Pet dragon already restored by DragonFactory: %s (Level %d, Affection %d)" % [
 			pet_dragon.dragon_name,
 			pet_dragon.level,
@@ -487,6 +497,11 @@ func from_dict(data: Dictionary) -> void:
 			push_warning("[PetDragonManager] DragonFactory didn't restore pet, loading manually...")
 			pet_dragon = PetDragon.new()
 			pet_dragon.from_dict(data["pet_dragon"])
+
+			# Register with DragonStateManager
+			if DragonStateManager and DragonStateManager.instance:
+				DragonStateManager.instance.register_dragon(pet_dragon)
+				print("[PetDragonManager] Registered manually loaded pet with DragonStateManager")
 
 			print("[PetDragonManager] ✓ Loaded pet dragon: %s (Level %d, Affection %d)" % [
 				pet_dragon.dragon_name,

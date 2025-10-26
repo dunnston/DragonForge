@@ -454,8 +454,21 @@ func get_fatigue_resistance() -> float:
 	return max(0.5, resistance)  # Cap at 50% resistance
 
 func update_life_systems() -> void:
-	"""Override to add affection decay checking"""
-	super.update_life_systems()
+	"""Override to use DragonStateManager's proper fatigue system instead of the legacy one"""
+	var current_time = Time.get_unix_time_from_system()
+
+	# Update hunger level linearly (1% per minute) - this part is fine
+	var time_since_fed = current_time - last_fed_time
+	hunger_level = min(1.0, time_since_fed * HUNGER_RATE)
+
+	# DO NOT use the legacy fatigue calculation from super.update_life_systems()
+	# DragonStateManager handles fatigue properly with correct recovery rates
+	# The legacy calculation would give instant recovery which breaks game balance
+
+	# Recalculate stats with new status effects
+	calculate_stats()
+
+	# Add affection decay checking
 	update_affection_decay()
 
 func take_damage(amount: int) -> void:

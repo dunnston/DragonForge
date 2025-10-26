@@ -487,7 +487,8 @@ func _update_buttons():
 		gift_button.text = "🎁 GIVE GIFT (%dg, +5 Affection)" % gift_cost
 
 	# Exploration destination buttons
-	var can_explore = pet.current_state == Dragon.DragonState.IDLE and pet.hunger_level < 0.8 and pet.fatigue_level < 0.8
+	# Match ExplorationManager requirements: fatigue must be <= 0.5 (50% rested)
+	var can_explore = pet.current_state == Dragon.DragonState.IDLE and pet.hunger_level < 0.8 and pet.fatigue_level <= 0.5
 
 	if caves_button:
 		var unlocked = pet.can_explore_destination("volcanic_caves")
@@ -495,13 +496,14 @@ func _update_buttons():
 		if not unlocked:
 			caves_button.text = "🔒 Volcanic Caves (Locked)"
 		elif not can_explore:
-			# Show reason why can't explore
+			# Show reason why can't explore with clear messaging
 			if pet.current_state != Dragon.DragonState.IDLE:
 				caves_button.text = "🌋 Volcanic Caves (Busy)"
+			elif pet.fatigue_level > 0.5:
+				var energy_percent = int((1.0 - pet.fatigue_level) * 100)
+				caves_button.text = "🌋 Volcanic Caves (Too Tired: %d%% energy)" % energy_percent
 			elif pet.hunger_level >= 0.8:
-				caves_button.text = "🌋 Volcanic Caves (Hungry)"
-			elif pet.fatigue_level >= 0.8:
-				caves_button.text = "🌋 Volcanic Caves (Tired)"
+				caves_button.text = "🌋 Volcanic Caves (Too Hungry)"
 			else:
 				caves_button.text = "🌋 Volcanic Caves (Easy)"
 		else:
@@ -515,10 +517,11 @@ func _update_buttons():
 		elif not can_explore:
 			if pet.current_state != Dragon.DragonState.IDLE:
 				forest_button.text = "🌲 Ancient Forest (Busy)"
+			elif pet.fatigue_level > 0.5:
+				var energy_percent = int((1.0 - pet.fatigue_level) * 100)
+				forest_button.text = "🌲 Ancient Forest (Too Tired: %d%% energy)" % energy_percent
 			elif pet.hunger_level >= 0.8:
-				forest_button.text = "🌲 Ancient Forest (Hungry)"
-			elif pet.fatigue_level >= 0.8:
-				forest_button.text = "🌲 Ancient Forest (Tired)"
+				forest_button.text = "🌲 Ancient Forest (Too Hungry)"
 			else:
 				forest_button.text = "🌲 Ancient Forest (Medium)"
 		else:
@@ -532,10 +535,11 @@ func _update_buttons():
 		elif not can_explore:
 			if pet.current_state != Dragon.DragonState.IDLE:
 				tundra_button.text = "❄️ Frozen Tundra (Busy)"
+			elif pet.fatigue_level > 0.5:
+				var energy_percent = int((1.0 - pet.fatigue_level) * 100)
+				tundra_button.text = "❄️ Frozen Tundra (Too Tired: %d%% energy)" % energy_percent
 			elif pet.hunger_level >= 0.8:
-				tundra_button.text = "❄️ Frozen Tundra (Hungry)"
-			elif pet.fatigue_level >= 0.8:
-				tundra_button.text = "❄️ Frozen Tundra (Tired)"
+				tundra_button.text = "❄️ Frozen Tundra (Too Hungry)"
 			else:
 				tundra_button.text = "❄️ Frozen Tundra (Hard)"
 		else:
@@ -549,10 +553,11 @@ func _update_buttons():
 		elif not can_explore:
 			if pet.current_state != Dragon.DragonState.IDLE:
 				peak_button.text = "⚡ Thunder Peak (Busy)"
+			elif pet.fatigue_level > 0.5:
+				var energy_percent = int((1.0 - pet.fatigue_level) * 100)
+				peak_button.text = "⚡ Thunder Peak (Too Tired: %d%% energy)" % energy_percent
 			elif pet.hunger_level >= 0.8:
-				peak_button.text = "⚡ Thunder Peak (Hungry)"
-			elif pet.fatigue_level >= 0.8:
-				peak_button.text = "⚡ Thunder Peak (Tired)"
+				peak_button.text = "⚡ Thunder Peak (Too Hungry)"
 			else:
 				peak_button.text = "⚡ Thunder Peak (Very Hard)"
 		else:
@@ -848,11 +853,17 @@ func _on_recall_pressed():
 	if not pet or not ExplorationManager or not ExplorationManager.instance:
 		return
 
-	# TODO: Implement recall functionality in ExplorationManager
-	# For now, just show a message
-	if dialogue_label:
-		dialogue_label.text = "\"Recall not yet implemented!\""
-	print("[PetInteractionUI] Recall functionality not yet implemented")
+	# Recall the pet with 50% rewards
+	if ExplorationManager.instance.recall_exploration(pet):
+		print("[PetInteractionUI] ✅ Pet recalled successfully!")
+		if dialogue_label:
+			dialogue_label.text = "\"I'm back! Sorry I couldn't bring more...\""
+
+		_update_display()
+	else:
+		print("[PetInteractionUI] ❌ Failed to recall pet!")
+		if dialogue_label:
+			dialogue_label.text = "\"I can't come back right now...\""
 
 func _on_close_pressed():
 	"""Close the popup"""

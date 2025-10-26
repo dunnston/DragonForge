@@ -226,7 +226,7 @@ unique_name_in_owner = true
 custom_minimum_size = Vector2(0, 35)
 layout_mode = 2
 theme_override_font_sizes/font_size = 12
-text = "🔙 RECALL EARLY (Forfeit 50% of rewards)"
+text = "🔙 RECALL EARLY (50% rewards, +200% fatigue!)"
 
 [node name="ExplorationButtons" type="GridContainer" parent="CenterContainer/PanelContainer/MarginContainer/ScrollContainer/MainVBox/ExplorationSection/VBox"]
 unique_name_in_owner = true

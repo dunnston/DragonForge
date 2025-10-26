@@ -187,6 +187,126 @@ func cancel_exploration(dragon: Dragon) -> bool:
 	print("[ExplorationManager] %s exploration cancelled" % dragon.dragon_name)
 	return true
 
+func recall_exploration(dragon: Dragon) -> bool:
+	"""
+	Recall dragon early from exploration with 50% of rewards.
+	Returns true if successful, false if dragon is not exploring.
+	"""
+	if not dragon or not active_explorations.has(dragon.dragon_id):
+		print("[ExplorationManager] Cannot recall - dragon is not exploring")
+		return false
+
+	var exploration = active_explorations[dragon.dragon_id]
+	var duration_minutes = exploration["duration_minutes"]
+	var destination = exploration.get("destination", "unknown")
+
+	# Calculate full rewards first
+	var rewards = _calculate_rewards(dragon, duration_minutes, destination)
+
+	# Apply 50% penalty to all rewards
+	rewards["gold"] = int(rewards["gold"] * 0.5)
+	rewards["xp"] = int(rewards["xp"] * 0.5)
+
+	# 50% chance to lose each part
+	var reduced_parts = []
+	for part in rewards["parts"]:
+		if randf() < 0.5:
+			reduced_parts.append(part)
+	rewards["parts"] = reduced_parts
+
+	# 50% reduction to item drops
+	for item_id in rewards["items"].keys():
+		var count = rewards["items"][item_id]
+		rewards["items"][item_id] = max(1, int(count * 0.5))  # At least 1 if any
+
+	# Apply pet bonuses if this is a pet dragon
+	if dragon is PetDragon and PetDragonManager and PetDragonManager.instance:
+		# Apply personality bonuses
+		var gold_bonus = dragon.get_personality_bonus("gold")
+		rewards["gold"] = int(rewards["gold"] * gold_bonus)
+
+		var parts_bonus = dragon.get_personality_bonus("parts")
+		if parts_bonus > 1.0 and randf() < (parts_bonus - 1.0):
+			# Curious dragons have chance for extra part
+			if not rewards["parts"].is_empty():
+				rewards["parts"].append(rewards["parts"].pick_random())
+
+		# Apply affection bonuses (scales all rewards)
+		var affection_bonus = dragon.get_affection_bonus()
+		rewards["gold"] = int(rewards["gold"] * affection_bonus)
+		rewards["xp"] = int(rewards["xp"] * affection_bonus)
+
+		# Notify PetDragonManager about expedition completion (recalled)
+		PetDragonManager.instance.on_pet_expedition_complete(destination, rewards)
+
+		print("[ExplorationManager] Pet bonuses applied to recall rewards: Gold x%.2f, Affection x%.2f" % [gold_bonus, affection_bonus])
+
+	# Apply rewards to vault and inventory
+	_apply_rewards(rewards)
+
+	# Apply XP to dragon
+	if rewards["xp"] > 0 and DragonStateManager and DragonStateManager.instance:
+		DragonStateManager.instance.gain_experience(dragon, rewards["xp"])
+
+	# Apply INCREASED fatigue costs to discourage abuse (150% of normal fatigue)
+	# This prevents exploiting recall to farm items faster
+	var base_fatigue = 0.0
+	match duration_minutes:
+		1: base_fatigue = 0.05
+		5: base_fatigue = 0.10
+		10: base_fatigue = 0.15
+		15: base_fatigue = 0.25
+
+	# Apply 300% fatigue penalty for early recall (3x normal fatigue)
+	# This strongly discourages spam-recalling to farm items
+	# At 2% fatigue recovery per minute idle, this makes recall much less efficient
+	var recall_fatigue_multiplier = 3.0
+
+	# Apply fatigue resistance if this is a pet dragon
+	var fatigue_multiplier = 1.0
+	if dragon is PetDragon:
+		fatigue_multiplier = dragon.get_fatigue_resistance()
+
+	# Apply fatigue with recall penalty and resistance
+	var final_fatigue = base_fatigue * recall_fatigue_multiplier * fatigue_multiplier
+	dragon.fatigue_level = min(1.0, dragon.fatigue_level + final_fatigue)
+
+	# Apply normal hunger (50% of full duration)
+	var reduced_duration = duration_minutes * 0.5
+	var hunger_increase = reduced_duration / 15.0
+	dragon.hunger_level = min(1.0, dragon.hunger_level + (hunger_increase * 0.3))
+
+	# No damage from recall (they came back safely)
+
+	# Recalculate stats with new hunger/fatigue
+	dragon.calculate_stats()
+
+	print("[ExplorationManager] Applied recall costs: +%.1f%% fatigue (300%% penalty), +%.1f%% hunger" % [
+		final_fatigue * 100,
+		hunger_increase * 0.3 * 100
+	])
+
+	# Return dragon to idle
+	if DragonStateManager and DragonStateManager.instance:
+		DragonStateManager.instance.set_dragon_state(dragon, Dragon.DragonState.IDLE)
+	else:
+		dragon.current_state = Dragon.DragonState.IDLE
+
+	# Remove from active explorations
+	active_explorations.erase(dragon.dragon_id)
+
+	# Emit completion signal with recall flag
+	exploration_completed.emit(dragon, destination, rewards)
+
+	# Play notification sound
+	if AudioManager and AudioManager.instance:
+		AudioManager.instance.play_notification()
+
+	print("[ExplorationManager] %s recalled early from exploration! (50%% rewards)" % dragon.dragon_name)
+	print("[ExplorationManager] Recall rewards: %dg, %d XP, %d parts" % [rewards["gold"], rewards["xp"], rewards["parts"].size()])
+
+	return true
+
 func get_exploration_progress(dragon: Dragon) -> float:
 	"""Get exploration completion percentage (0.0 to 1.0)"""
 	if not dragon or not active_explorations.has(dragon.dragon_id):
