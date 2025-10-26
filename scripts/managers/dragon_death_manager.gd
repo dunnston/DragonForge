@@ -35,6 +35,7 @@ signal freezer_unlocked(level: int)
 signal freezer_upgraded(new_level: int, new_capacity: int)
 signal part_frozen(part: DragonPart, slot_index: int)
 signal part_unfrozen(part: DragonPart)
+signal freezer_data_loaded()  # Emitted when freezer data is loaded from save
 
 # ═══════════════════════════════════════════════════════════
 # STATE
@@ -144,11 +145,7 @@ func handle_dragon_death(dragon: Dragon, death_cause: String):
 	})
 	print("📋 [DragonDeathManager] Death queued for summary notification")
 
-	# Show summary after a short delay (allows multiple deaths to batch)
-	await get_tree().create_timer(2.0).timeout
-	if not pending_deaths.is_empty():
-		_show_death_summary()
-
+	# Don't show popup during battle - let the battle arena trigger it after battle ends
 	print("✅ [DragonDeathManager] handle_dragon_death() complete\n")
 
 func _roll_part_recovery(death_cause: String) -> int:
@@ -344,6 +341,15 @@ func _show_single_dragon_death_popup(death_data: Dictionary):
 	else:
 		print("   ❌ NotificationQueueManager not available!\n")
 
+func has_pending_deaths() -> bool:
+	"""Check if there are any pending deaths to report"""
+	return not pending_deaths.is_empty()
+
+func show_death_summary_if_needed():
+	"""Public function to show death summary - called after battle ends"""
+	if not pending_deaths.is_empty() or not recently_decayed_parts.is_empty():
+		_show_death_summary()
+
 func _show_death_summary():
 	"""Show consolidated notification for multiple deaths and decayed parts"""
 	if pending_deaths.is_empty() and recently_decayed_parts.is_empty():
@@ -362,131 +368,26 @@ func _show_death_summary():
 		return
 
 	# Otherwise, show consolidated summary for multiple events
-
-	# Create summary popup dynamically
-	var popup = Control.new()
-	popup.name = "DeathSummaryPopup"
-	popup.set_anchors_preset(Control.PRESET_FULL_RECT)
+	
+	# Load the new scrollable laboratory report popup
+	var popup_scene = load("res://scenes/ui/laboratory_report_popup.tscn")
+	if not popup_scene:
+		print("❌ [DragonDeathManager] Laboratory report popup scene not found!")
+		return
+	
+	var popup = popup_scene.instantiate()
+	if not popup:
+		print("❌ [DragonDeathManager] Failed to instantiate laboratory report popup!")
+		return
+	
+	# Add to scene tree first so @onready variables are initialized
 	popup.z_index = 1000
-
-	# Dark overlay
-	var overlay = ColorRect.new()
-	overlay.set_anchors_preset(Control.PRESET_FULL_RECT)
-	overlay.color = Color(0, 0, 0, 0.8)
-	popup.add_child(overlay)
-
-	# Center container
-	var center = CenterContainer.new()
-	center.set_anchors_preset(Control.PRESET_FULL_RECT)
-	popup.add_child(center)
-
-	# Panel
-	var panel = PanelContainer.new()
-	panel.custom_minimum_size = Vector2(600, 400)
-	center.add_child(panel)
-
-	# Main VBox
-	var margin = MarginContainer.new()
-	margin.add_theme_constant_override("margin_left", 20)
-	margin.add_theme_constant_override("margin_top", 20)
-	margin.add_theme_constant_override("margin_right", 20)
-	margin.add_theme_constant_override("margin_bottom", 20)
-	panel.add_child(margin)
-
-	var vbox = VBoxContainer.new()
-	vbox.add_theme_constant_override("separation", 15)
-	margin.add_child(vbox)
-
-	# Title
-	var title = Label.new()
-	if pending_deaths.size() > 0:
-		title.text = "💀 LABORATORY REPORT 💀"
-	else:
-		title.text = "⚠️ DECAY ALERT ⚠️"
-	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	title.add_theme_font_size_override("font_size", 24)
-	title.add_theme_color_override("font_color", Color(1, 0.3, 0.3))
-	vbox.add_child(title)
-
-	# Separator
-	var sep1 = HSeparator.new()
-	vbox.add_child(sep1)
-
-	# Deaths section
-	if not pending_deaths.is_empty():
-		var deaths_label = Label.new()
-		deaths_label.text = "DRAGONS LOST: %d" % pending_deaths.size()
-		deaths_label.add_theme_font_size_override("font_size", 18)
-		deaths_label.add_theme_color_override("font_color", Color(1, 0.6, 0.6))
-		vbox.add_child(deaths_label)
-
-		# List each death
-		for death in pending_deaths:
-			var death_line = Label.new()
-			death_line.text = "  • %s (Lv %d) - %s" % [
-				death["dragon_name"],
-				death["dragon_level"],
-				_format_death_cause(death["cause"])
-			]
-			death_line.add_theme_font_size_override("font_size", 14)
-			vbox.add_child(death_line)
-
-		# Parts recovered
-		var total_recovered = 0
-		for death in pending_deaths:
-			total_recovered += death["recovered_parts"].size()
-
-		var recovered_label = Label.new()
-		recovered_label.text = "\nPARTS RECOVERED: %d" % total_recovered
-		recovered_label.add_theme_font_size_override("font_size", 16)
-		recovered_label.add_theme_color_override("font_color", Color(0.6, 1, 0.6))
-		vbox.add_child(recovered_label)
-
-		# List recovered parts
-		for death in pending_deaths:
-			for part in death["recovered_parts"]:
-				var part_line = Label.new()
-				part_line.text = "  ✓ %s (Decays in 24h)" % part.get_display_name()
-				part_line.add_theme_font_size_override("font_size", 12)
-				part_line.add_theme_color_override("font_color", Color(0.8, 1, 0.8))
-				vbox.add_child(part_line)
-
-	# Decay section
-	if not recently_decayed_parts.is_empty():
-		var sep2 = HSeparator.new()
-		vbox.add_child(sep2)
-
-		var decay_label = Label.new()
-		decay_label.text = "PARTS LOST TO DECAY: %d" % recently_decayed_parts.size()
-		decay_label.add_theme_font_size_override("font_size", 16)
-		decay_label.add_theme_color_override("font_color", Color(0.8, 0.8, 0.8))
-		vbox.add_child(decay_label)
-
-		# List decayed parts
-		for part in recently_decayed_parts:
-			var decay_line = Label.new()
-			decay_line.text = "  ✗ %s crumbled to dust" % part.get_display_name()
-			decay_line.add_theme_font_size_override("font_size", 12)
-			decay_line.add_theme_color_override("font_color", Color(0.6, 0.6, 0.6))
-			vbox.add_child(decay_line)
-
-	# Spacer
-	var spacer = Control.new()
-	spacer.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	vbox.add_child(spacer)
-
-	# Close button
-	var close_btn = Button.new()
-	close_btn.text = "CONTINUE"
-	close_btn.custom_minimum_size = Vector2(200, 50)
-	close_btn.add_theme_font_size_override("font_size", 16)
-	close_btn.pressed.connect(func(): popup.queue_free())
-	vbox.add_child(close_btn)
-
-	# Add to scene and show
 	get_tree().root.add_child(popup)
-	popup.show()
-
+	popup.move_to_front()
+	
+	# Setup popup with death and decay data (after _ready() is called)
+	popup.setup(pending_deaths, recently_decayed_parts)
+	
 	# Clear pending notifications
 	pending_deaths.clear()
 	recently_decayed_parts.clear()
@@ -799,6 +700,9 @@ func load_from_dict(data: Dictionary):
 		pending_deaths.size(),
 		recently_decayed_parts.size()
 	])
+	
+	# Emit signal so UI can refresh
+	freezer_data_loaded.emit()
 
 func _serialize_parts(parts: Array[DragonPart]) -> Array:
 	"""Convert parts array to saveable format"""
@@ -841,6 +745,13 @@ func _deserialize_single_part(part_data: Dictionary) -> DragonPart:
 	part.health_bonus = part_data.get("health_bonus", 0)
 	part.speed_bonus = part_data.get("speed_bonus", 0)
 	part.defense_bonus = part_data.get("defense_bonus", 0)
+	
+	# Get the icon_path from PartLibrary based on element and type
+	if PartLibrary and PartLibrary.instance:
+		var library_part = PartLibrary.instance.get_part_by_element_and_type(part.element, part.part_type)
+		if library_part:
+			part.icon_path = library_part.icon_path
+	
 	return part
 
 func _serialize_freezer_slots() -> Array:
@@ -876,6 +787,12 @@ func _deserialize_freezer_slots(data: Array):
 		part.health_bonus = slot_data.get("health_bonus", 0)
 		part.speed_bonus = slot_data.get("speed_bonus", 0)
 		part.defense_bonus = slot_data.get("defense_bonus", 0)
+
+		# Get the icon_path from PartLibrary based on element and type
+		if PartLibrary and PartLibrary.instance:
+			var library_part = PartLibrary.instance.get_part_by_element_and_type(part.element, part.part_type)
+			if library_part:
+				part.icon_path = library_part.icon_path
 
 		var slot_index = slot_data.get("slot", -1)
 		if slot_index >= 0 and slot_index < freezer_slots.size():

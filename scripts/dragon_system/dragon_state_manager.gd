@@ -223,6 +223,8 @@ func _check_level_up(dragon: Dragon):
 		if dragon.experience >= exp_needed:
 			dragon.level += 1
 			dragon.calculate_stats()  # Recalculate with new level
+			dragon.current_health = dragon.total_health  # Fully heal on level up
+			dragon_health_changed.emit(dragon, dragon.current_health, dragon.total_health)
 			print("[LEVEL UP] %s reached level %d!" % [dragon.dragon_name, dragon.level])
 			dragon_level_up.emit(dragon, dragon.level)
 		else:
@@ -295,6 +297,15 @@ func start_training(dragon: Dragon) -> bool:
 
 func start_resting(dragon: Dragon) -> bool:
 	"""Start resting a dragon (convenience wrapper)"""
+	# If dragon is currently defending, remove them from defense first
+	if dragon and dragon.current_state == Dragon.DragonState.DEFENDING:
+		if DefenseManager and DefenseManager.instance:
+			var removed = DefenseManager.instance.remove_dragon_from_defense(dragon)
+			if removed:
+				print("[DragonStateManager] Removed %s from defense to start resting" % dragon.dragon_name)
+			else:
+				print("[DragonStateManager] WARNING: Failed to remove %s from defense" % dragon.dragon_name)
+	
 	return set_dragon_state(dragon, Dragon.DragonState.RESTING)
 
 func _get_state_name(state: int) -> String:
@@ -437,6 +448,11 @@ func use_knight_meat_on_dragon(dragon: Dragon) -> bool:
 
 			print("[DragonStateManager] %s ate knight meat! Hunger: %.0f%% -> %.0f%%, Fatigue: %.0f%% -> %.0f%%" %
 				[dragon.dragon_name, old_hunger * 100, dragon.hunger_level * 100, old_fatigue * 100, dragon.fatigue_level * 100])
+			
+			# Check if dragon should be removed from defense due to increased fatigue
+			if DefenseManager and DefenseManager.instance:
+				DefenseManager.instance.check_and_remove_invalid_defenders()
+			
 			return true
 		else:
 			print("[DragonStateManager] No knight meat available!")

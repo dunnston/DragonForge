@@ -100,8 +100,20 @@ static func from_dict(data: Dictionary) -> BattleRecord:
 	record.victory = data.get("victory", false)
 	record.round_count = data.get("round_count", 0)
 	record.duration_seconds = data.get("duration_seconds", 0.0)
-	record.defenders = data.get("defenders", [])
-	record.enemies = data.get("enemies", [])
+	
+	# Convert arrays to properly typed arrays
+	var defenders_data = data.get("defenders", [])
+	record.defenders.clear()
+	for defender in defenders_data:
+		if defender is Dictionary:
+			record.defenders.append(defender)
+	
+	var enemies_data = data.get("enemies", [])
+	record.enemies.clear()
+	for enemy in enemies_data:
+		if enemy is Dictionary:
+			record.enemies.append(enemy)
+	
 	record.rewards_gold = data.get("rewards_gold", 0)
 	record.rewards_meat = data.get("rewards_meat", 0)
 	record.vault_gold_stolen = data.get("vault_gold_stolen", 0)

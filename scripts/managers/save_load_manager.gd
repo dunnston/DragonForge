@@ -404,9 +404,21 @@ func _refresh_ui():
 		var factory_manager = factory_managers[0]
 		if factory_manager.has_method("force_update"):
 			factory_manager.force_update()
-			print("[SaveLoadManager] ✓ UI refreshed")
+			print("[SaveLoadManager] ✓ FactoryManager UI refreshed")
 	else:
 		print("[SaveLoadManager] WARNING: FactoryManager not found, UI not refreshed")
+	
+	# Find DefenseTowersUI and rebuild tower cards (needed when tower count changes)
+	var tower_uis = get_tree().get_nodes_in_group("defense_towers_ui")
+	if tower_uis.size() > 0:
+		for tower_ui in tower_uis:
+			if tower_ui.has_method("_populate_towers"):
+				tower_ui._populate_towers()
+				print("[SaveLoadManager] ✓ DefenseTowersUI rebuilt")
+			if tower_ui.has_method("_update_footer"):
+				tower_ui._update_footer()
+	else:
+		print("[SaveLoadManager] WARNING: DefenseTowersUI not found, tower UI not refreshed")
 
 func has_save_file() -> bool:
 	"""Check if a save file exists"""

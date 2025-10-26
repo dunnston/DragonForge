@@ -29,50 +29,58 @@ offset_left = 2.0
 offset_right = 2.0
 grow_horizontal = 2
 grow_vertical = 2
-theme_override_constants/margin_left = 20
-theme_override_constants/margin_top = 20
-theme_override_constants/margin_right = 20
-theme_override_constants/margin_bottom = 20
+theme_override_constants/margin_left = 10
+theme_override_constants/margin_top = 10
+theme_override_constants/margin_right = 10
+theme_override_constants/margin_bottom = 10
 
 [node name="VBox" type="VBoxContainer" parent="MarginContainer"]
 layout_mode = 2
-theme_override_constants/separation = 10
+theme_override_constants/separation = 5
 
 [node name="Title" type="Label" parent="MarginContainer/VBox"]
 layout_mode = 2
 theme_override_colors/font_color = Color(1, 0.2, 0.2, 1)
-theme_override_font_sizes/font_size = 24
+theme_override_font_sizes/font_size = 20
 text = "⚔ BATTLE IN PROGRESS ⚔"
 horizontal_alignment = 1
 
 [node name="MainContent" type="HBoxContainer" parent="MarginContainer/VBox"]
 layout_mode = 2
 size_flags_vertical = 3
-theme_override_constants/separation = 10
+theme_override_constants/separation = 5
 
 [node name="BattlefieldContainer" type="HBoxContainer" parent="MarginContainer/VBox/MainContent"]
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
-theme_override_constants/separation = 15
-alignment = 1
-
-[node name="KnightsContainer" type="HBoxContainer" parent="MarginContainer/VBox/MainContent/BattlefieldContainer"]
-custom_minimum_size = Vector2(250, 200)
-layout_mode = 2
-size_flags_horizontal = 3
 theme_override_constants/separation = 8
 alignment = 1
 
-[node name="DragonsContainer" type="HBoxContainer" parent="MarginContainer/VBox/MainContent/BattlefieldContainer"]
-custom_minimum_size = Vector2(250, 200)
+[node name="KnightsCenter" type="CenterContainer" parent="MarginContainer/VBox/MainContent/BattlefieldContainer"]
 layout_mode = 2
 size_flags_horizontal = 3
-theme_override_constants/separation = 8
-alignment = 1
+size_flags_vertical = 3
+
+[node name="KnightsContainer" type="GridContainer" parent="MarginContainer/VBox/MainContent/BattlefieldContainer/KnightsCenter"]
+layout_mode = 2
+theme_override_constants/h_separation = 5
+theme_override_constants/v_separation = 5
+columns = 5
+
+[node name="DragonsCenter" type="CenterContainer" parent="MarginContainer/VBox/MainContent/BattlefieldContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="DragonsContainer" type="GridContainer" parent="MarginContainer/VBox/MainContent/BattlefieldContainer/DragonsCenter"]
+layout_mode = 2
+theme_override_constants/h_separation = 5
+theme_override_constants/v_separation = 5
+columns = 5
 
 [node name="CombatLogPanel" type="PanelContainer" parent="MarginContainer/VBox/MainContent"]
-custom_minimum_size = Vector2(350, 0)
+custom_minimum_size = Vector2(220, 0)
 layout_mode = 2
 size_flags_vertical = 3
 
@@ -87,15 +95,15 @@ layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
 theme_override_colors/default_color = Color(1, 1, 1, 1)
-theme_override_font_sizes/normal_font_size = 16
+theme_override_font_sizes/normal_font_size = 13
 bbcode_enabled = true
 text = "Waiting for battle..."
 fit_content = true
 
 [node name="BackButton" type="Button" parent="MarginContainer/VBox"]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(200, 50)
+custom_minimum_size = Vector2(160, 40)
 layout_mode = 2
 size_flags_horizontal = 4
-theme_override_font_sizes/font_size = 18
+theme_override_font_sizes/font_size = 15
 text = "BACK TO FACTORY"

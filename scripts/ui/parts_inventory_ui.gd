@@ -49,6 +49,7 @@ func _ready():
 	death_manager.part_unfrozen.connect(_on_part_unfrozen)
 	death_manager.freezer_unlocked.connect(_on_freezer_unlocked)
 	death_manager.freezer_upgraded.connect(_on_freezer_upgraded)
+	death_manager.freezer_data_loaded.connect(_on_freezer_data_loaded)
 
 	# Initial display
 	_refresh_display()
@@ -72,7 +73,19 @@ func _display_recovered_parts():
 
 	var parts = death_manager.recovered_parts
 
-	if parts.is_empty():
+	# Filter to only show parts that still exist in inventory
+	var available_parts: Array[DragonPart] = []
+	for part in parts:
+		var item_id = _convert_part_to_item_id(part)
+		if not item_id.is_empty() and InventoryManager and InventoryManager.instance:
+			if InventoryManager.instance.has_item(item_id, 1):
+				available_parts.append(part)
+			else:
+				# Part was consumed but not removed from recovered_parts array
+				# Remove it from the array to keep things in sync
+				death_manager.recovered_parts.erase(part)
+
+	if available_parts.is_empty():
 		var label = Label.new()
 		label.text = "No recovered parts"
 		label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -81,7 +94,7 @@ func _display_recovered_parts():
 		return
 
 	# Sort by time remaining (most urgent first)
-	var sorted_parts = parts.duplicate()
+	var sorted_parts = available_parts.duplicate()
 	sorted_parts.sort_custom(func(a, b): return a.get_time_until_decay() < b.get_time_until_decay())
 
 	# Create card for each part
@@ -323,6 +336,9 @@ func _on_use_part_clicked(part: DragonPart):
 			)
 			print("[PartsInventoryUI] Slotted %s into TAIL slot" % part.get_display_name())
 
+	# Update the animate button state (enables it if all parts are selected)
+	factory_manager._check_can_create_dragon()
+
 	# Close this UI
 	queue_free()
 
@@ -380,6 +396,9 @@ func _cleanup_signals():
 	if death_manager.freezer_upgraded.is_connected(_on_freezer_upgraded):
 		death_manager.freezer_upgraded.disconnect(_on_freezer_upgraded)
 
+	if death_manager.freezer_data_loaded.is_connected(_on_freezer_data_loaded):
+		death_manager.freezer_data_loaded.disconnect(_on_freezer_data_loaded)
+
 # ═══════════════════════════════════════════════════════════
 # SIGNAL HANDLERS
 # ═══════════════════════════════════════════════════════════
@@ -407,6 +426,10 @@ func _on_freezer_unlocked(level: int):
 
 func _on_freezer_upgraded(new_level: int, new_capacity: int):
 	"""Handle freezer upgrade event"""
+	_refresh_display()
+
+func _on_freezer_data_loaded():
+	"""Handle freezer data loaded event (from save game)"""
 	_refresh_display()
 
 # ═══════════════════════════════════════════════════════════

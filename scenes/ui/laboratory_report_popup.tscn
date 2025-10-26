@@ -1,0 +1,80 @@
+[gd_scene load_steps=3 format=3 uid="uid://bcbg8olxi3pr5"]
+
+[ext_resource type="Theme" uid="uid://bo8g4sssf0ihw" path="res://themes/game_theme.tres" id="1_theme"]
+[ext_resource type="Script" path="res://scripts/ui/laboratory_report_popup.gd" id="2_script"]
+
+[node name="LaboratoryReportPopup" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme = ExtResource("1_theme")
+script = ExtResource("2_script")
+
+[node name="Overlay" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0, 0, 0, 0.85)
+
+[node name="CenterContainer" type="CenterContainer" parent="Overlay"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="PopupPanel" type="PanelContainer" parent="Overlay/CenterContainer"]
+custom_minimum_size = Vector2(700, 500)
+layout_mode = 2
+
+[node name="MarginContainer" type="MarginContainer" parent="Overlay/CenterContainer/PopupPanel"]
+layout_mode = 2
+theme_override_constants/margin_left = 25
+theme_override_constants/margin_top = 25
+theme_override_constants/margin_right = 25
+theme_override_constants/margin_bottom = 25
+
+[node name="VBox" type="VBoxContainer" parent="Overlay/CenterContainer/PopupPanel/MarginContainer"]
+layout_mode = 2
+theme_override_constants/separation = 15
+
+[node name="TitleLabel" type="Label" parent="Overlay/CenterContainer/PopupPanel/MarginContainer/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.3, 0.3, 1)
+theme_override_font_sizes/font_size = 28
+text = "💀 LABORATORY REPORT 💀"
+horizontal_alignment = 1
+
+[node name="Separator1" type="HSeparator" parent="Overlay/CenterContainer/PopupPanel/MarginContainer/VBox"]
+layout_mode = 2
+
+[node name="ScrollContainer" type="ScrollContainer" parent="Overlay/CenterContainer/PopupPanel/MarginContainer/VBox"]
+custom_minimum_size = Vector2(0, 300)
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="ContentVBox" type="VBoxContainer" parent="Overlay/CenterContainer/PopupPanel/MarginContainer/VBox/ScrollContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme_override_constants/separation = 10
+
+[node name="Spacer" type="Control" parent="Overlay/CenterContainer/PopupPanel/MarginContainer/VBox"]
+custom_minimum_size = Vector2(0, 10)
+layout_mode = 2
+
+[node name="ContinueButton" type="Button" parent="Overlay/CenterContainer/PopupPanel/MarginContainer/VBox"]
+custom_minimum_size = Vector2(200, 50)
+layout_mode = 2
+size_flags_horizontal = 4
+theme_override_font_sizes/font_size = 18
+text = "CONTINUE"
+

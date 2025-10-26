@@ -5,8 +5,8 @@ class_name BattleArena
 # Shows knights attacking and dragons defending
 
 @onready var battlefield = $MarginContainer/VBox/MainContent/BattlefieldContainer
-@onready var knights_container = $MarginContainer/VBox/MainContent/BattlefieldContainer/KnightsContainer
-@onready var dragons_container = $MarginContainer/VBox/MainContent/BattlefieldContainer/DragonsContainer
+@onready var knights_container: GridContainer = $MarginContainer/VBox/MainContent/BattlefieldContainer/KnightsCenter/KnightsContainer
+@onready var dragons_container: GridContainer = $MarginContainer/VBox/MainContent/BattlefieldContainer/DragonsCenter/DragonsContainer
 @onready var combat_log = $MarginContainer/VBox/MainContent/CombatLogPanel/ScrollContainer/CombatLog
 @onready var back_button: Button = %BackButton
 
@@ -71,17 +71,30 @@ func _on_wave_started(wave_number: int, enemies: Array):
 	if dragons_container:
 		print("[BattleArena] Dragons container size: %s, visible: %s" % [dragons_container.size, dragons_container.visible])
 	
+	# Set grid columns based on unit count for optimal layout
+	_update_grid_columns(knights_container, enemies.size())
+	_update_grid_columns(dragons_container, dragon_data.size())
+	
+	# Calculate dynamic card sizes based on available space
+	var knight_card_size = await _calculate_card_size(knights_container, enemies.size())
+	var dragon_card_size = await _calculate_card_size(dragons_container, dragon_data.size())
+	
+	# Make dragons 20% larger than knights
+	dragon_card_size = dragon_card_size * 1.2
+	
+	print("[BattleArena] Knight card size: %s, Dragon card size: %s" % [knight_card_size, dragon_card_size])
+	
 	# Spawn knights on LEFT side
 	for i in enemies.size():
 		var enemy = enemies[i]
 		print("[BattleArena] Spawning knight %d" % i)
-		_spawn_knight(enemy, i)
+		_spawn_knight(enemy, i, knight_card_size)
 	
 	# Spawn defending dragons on RIGHT side
 	for i in dragon_data.size():
 		var dragon = dragon_data[i]
 		print("[BattleArena] Spawning dragon %d: %s" % [i, dragon.dragon_name])
-		_spawn_dragon(dragon, i)
+		_spawn_dragon(dragon, i, dragon_card_size)
 	
 	print("[BattleArena] Active knights: %d, Active dragons: %d" % [active_knights.size(), active_dragons.size()])
 	
@@ -89,10 +102,66 @@ func _on_wave_started(wave_number: int, enemies: Array):
 	await get_tree().create_timer(1.5).timeout
 	_animate_battle()
 
-func _spawn_knight(enemy_data: Dictionary, index: int):
+func _update_grid_columns(container: GridContainer, unit_count: int):
+	"""Update grid container columns based on unit count for optimal layout"""
+	if not container or unit_count == 0:
+		return
+	
+	# Calculate columns to create 2-3 rows maximum
+	if unit_count <= 2:
+		# 1 row
+		container.columns = unit_count
+	elif unit_count <= 6:
+		# 2 rows
+		container.columns = ceili(unit_count / 2.0)
+	else:
+		# 3 rows for 11+ units
+		container.columns = ceili(unit_count / 3.0)
+	
+	print("[BattleArena] Set grid columns to %d for %d units" % [container.columns, unit_count])
+
+func _calculate_card_size(container: GridContainer, unit_count: int) -> Vector2:
+	"""Calculate optimal card size based on available space and unit count"""
+	if not container or unit_count == 0:
+		return Vector2(200, 280)  # Default size
+	
+	# Wait a frame to ensure container has proper size
+	await get_tree().process_frame
+	
+	# Get the actual available size from the CenterContainer's parent (battlefield container)
+	# Container hierarchy: GridContainer -> CenterContainer -> BattlefieldContainer
+	var center_container = container.get_parent()
+	var available_size = center_container.size if center_container else Vector2(800, 600)
+	
+	# Account for the combat log taking up space
+	var usable_width = available_size.x * 0.52  # Each side gets 52% of total width (more space for cards)
+	var usable_height = available_size.y * 0.92  # 92% of height (leaving space for margins)
+	
+	# Calculate rows
+	var columns = container.columns
+	var rows = ceili(float(unit_count) / float(columns))
+	
+	# Calculate maximum card size that fits
+	var h_separation = container.get_theme_constant("h_separation")
+	var v_separation = container.get_theme_constant("v_separation")
+	
+	var card_width = (usable_width - (columns - 1) * h_separation) / columns
+	var card_height = (usable_height - (rows - 1) * v_separation) / rows
+	
+	# Clamp to reasonable min/max values (smaller minimum for crowded scenes)
+	card_width = clamp(card_width, 70, 220)
+	card_height = clamp(card_height, 100, 300)
+	
+	# Maintain aspect ratio (roughly 1:1.5 for more vertical space)
+	var target_height = card_width * 1.5
+	card_height = min(card_height, target_height)
+	
+	return Vector2(card_width, card_height)
+
+func _spawn_knight(enemy_data: Dictionary, index: int, card_size: Vector2 = Vector2(180, 260)):
 	"""Spawn a knight unit on the LEFT side of battlefield"""
 	var knight = Panel.new()
-	knight.custom_minimum_size = Vector2(220, 280)
+	knight.custom_minimum_size = card_size
 	knight.name = "Knight_%d" % index
 	
 	# Add a visible background to the Panel
@@ -110,11 +179,15 @@ func _spawn_knight(enemy_data: Dictionary, index: int):
 	var vbox = VBoxContainer.new()
 	knight.add_child(vbox)
 	vbox.set_anchors_preset(Control.PRESET_FULL_RECT)
-	vbox.add_theme_constant_override("separation", 5)
+	vbox.add_theme_constant_override("separation", 4)
+	
+	# Scale factors based on card size
+	var scale_factor = card_size.x / 180.0  # Base size is 180
 	
 	# Knight sprite/icon
 	var sprite = TextureRect.new()
-	sprite.custom_minimum_size = Vector2(160, 160)
+	var sprite_size = max(50, card_size.x * 0.7)
+	sprite.custom_minimum_size = Vector2(sprite_size, sprite_size)
 	sprite.expand_mode = TextureRect.EXPAND_FIT_WIDTH_PROPORTIONAL
 	sprite.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 
@@ -136,14 +209,15 @@ func _spawn_knight(enemy_data: Dictionary, index: int):
 		# Fallback: colored panel
 		var fallback = ColorRect.new()
 		fallback.color = Color(0.7, 0.7, 0.7, 1)
-		fallback.custom_minimum_size = Vector2(130, 130)
+		fallback.custom_minimum_size = Vector2(sprite_size, sprite_size)
 		vbox.add_child(fallback)
 		print("[BattleArena] %s texture FAILED to load - using fallback" % enemy_label)
 
 	# Health bar
 	var health_bar = ProgressBar.new()
 	health_bar.name = "HealthBar"
-	health_bar.custom_minimum_size = Vector2(130, 18)
+	var bar_width = max(60, card_size.x * 0.85)
+	health_bar.custom_minimum_size = Vector2(bar_width, max(10, 14 * scale_factor))
 	health_bar.max_value = enemy_data.get("health", 50)
 	health_bar.value = enemy_data.get("health", 50)
 	health_bar.show_percentage = false
@@ -159,12 +233,20 @@ func _spawn_knight(enemy_data: Dictionary, index: int):
 
 	vbox.add_child(health_bar)
 
+	# Dynamic font size based on card size
+	var font_size_hp = max(8, int(11 * scale_factor))
+	var font_size_stats = max(7, int(10 * scale_factor))
+	var font_size_type = max(8, int(11 * scale_factor))
+
 	# HP text label above bar
 	var hp_label = Label.new()
 	hp_label.name = "HPLabel"
 	hp_label.text = "%d / %d HP" % [enemy_data.get("health", 50), enemy_data.get("health", 50)]
 	hp_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	hp_label.add_theme_font_size_override("font_size", 14)
+	hp_label.add_theme_font_size_override("font_size", font_size_hp)
+	hp_label.clip_text = true
+	hp_label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+	hp_label.custom_minimum_size = Vector2(card_size.x - 10, 0)
 	vbox.add_child(hp_label)
 
 	# Stats label (ATK only now)
@@ -172,7 +254,10 @@ func _spawn_knight(enemy_data: Dictionary, index: int):
 	stats.name = "StatsLabel"
 	stats.text = "ATK: %d" % enemy_data.get("attack", 10)
 	stats.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	stats.add_theme_font_size_override("font_size", 13)
+	stats.add_theme_font_size_override("font_size", font_size_stats)
+	stats.clip_text = true
+	stats.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+	stats.custom_minimum_size = Vector2(card_size.x - 10, 0)
 	vbox.add_child(stats)
 	
 	# Type label
@@ -192,7 +277,10 @@ func _spawn_knight(enemy_data: Dictionary, index: int):
 		type_label.add_theme_color_override("font_color", Color(1, 1, 1))
 	
 	type_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	type_label.add_theme_font_size_override("font_size", 15)
+	type_label.add_theme_font_size_override("font_size", font_size_type)
+	type_label.clip_text = true
+	type_label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+	type_label.custom_minimum_size = Vector2(card_size.x - 10, 0)
 	vbox.add_child(type_label)
 	
 	# Add to knights container (LEFT side)
@@ -209,10 +297,10 @@ func _spawn_knight(enemy_data: Dictionary, index: int):
 	
 	active_knights.append(knight)
 
-func _spawn_dragon(dragon: Dragon, index: int):
+func _spawn_dragon(dragon: Dragon, index: int, card_size: Vector2 = Vector2(220, 300)):
 	"""Spawn a dragon visual on the RIGHT side of battlefield"""
 	var dragon_panel = Panel.new()
-	dragon_panel.custom_minimum_size = Vector2(220, 280)
+	dragon_panel.custom_minimum_size = card_size
 	dragon_panel.name = "Dragon_%d" % index
 	
 	# Add a visible background to the Panel
@@ -230,24 +318,30 @@ func _spawn_dragon(dragon: Dragon, index: int):
 	var vbox = VBoxContainer.new()
 	dragon_panel.add_child(vbox)
 	vbox.set_anchors_preset(Control.PRESET_FULL_RECT)
-	vbox.add_theme_constant_override("separation", 5)
+	vbox.add_theme_constant_override("separation", 4)
+	
+	# Scale factors based on card size
+	var scale_factor = card_size.x / 180.0  # Base size is 180
 	
 	# Add actual DragonVisual wrapped in SubViewport for proper rendering
 	var dragon_visual_instance = DragonVisualScene.instantiate()
 	if dragon_visual_instance:
 		# Create a SubViewport to properly render Node2D inside Control
+		var viewport_size = max(60, int(card_size.x * 0.9))
 		var viewport = SubViewport.new()
-		viewport.size = Vector2i(220, 220)  # Viewport size
+		viewport.size = Vector2i(viewport_size, viewport_size)
 		viewport.transparent_bg = true
 		viewport.add_child(dragon_visual_instance)
 
-		# Position dragon in center of viewport
-		dragon_visual_instance.position = Vector2(110, 80)
-		dragon_visual_instance.scale = Vector2(.20,.20)
+		# Position dragon in center of viewport - scaled
+		dragon_visual_instance.position = Vector2(viewport_size / 2.0, viewport_size * 0.4)
+		var dragon_scale = max(0.08, 0.13 * scale_factor)
+		dragon_visual_instance.scale = Vector2(dragon_scale, dragon_scale)
 
 		# Create SubViewportContainer to display it - fits in panel
+		var container_size = max(50, card_size.x * 0.65)
 		var viewport_container = SubViewportContainer.new()
-		viewport_container.custom_minimum_size = Vector2(140, 140)
+		viewport_container.custom_minimum_size = Vector2(container_size, container_size)
 		viewport_container.stretch = true
 		viewport_container.add_child(viewport)
 
@@ -262,18 +356,27 @@ func _spawn_dragon(dragon: Dragon, index: int):
 				dragon.tail_part.element
 			)
 	
+	# Dynamic font size based on card size
+	var font_size_name = max(8, int(11 * scale_factor))
+	var font_size_hp = max(8, int(11 * scale_factor))
+	var font_size_stats = max(7, int(10 * scale_factor))
+
 	# Dragon name
 	var name_label = Label.new()
 	name_label.text = dragon.dragon_name
 	name_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	name_label.add_theme_font_size_override("font_size", 15)
+	name_label.add_theme_font_size_override("font_size", font_size_name)
 	name_label.add_theme_color_override("font_color", Color(0.8, 1, 0.8))
+	name_label.clip_text = true
+	name_label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+	name_label.custom_minimum_size = Vector2(card_size.x - 10, 0)
 	vbox.add_child(name_label)
 
 	# Health bar
 	var health_bar = ProgressBar.new()
 	health_bar.name = "HealthBar"
-	health_bar.custom_minimum_size = Vector2(130, 18)
+	var bar_width = max(60, card_size.x * 0.85)
+	health_bar.custom_minimum_size = Vector2(bar_width, max(10, 14 * scale_factor))
 	health_bar.max_value = dragon.get_health()
 	health_bar.value = dragon.current_health
 	health_bar.show_percentage = false
@@ -294,7 +397,10 @@ func _spawn_dragon(dragon: Dragon, index: int):
 	hp_label.name = "HPLabel"
 	hp_label.text = "%d / %d HP" % [dragon.current_health, dragon.get_health()]
 	hp_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	hp_label.add_theme_font_size_override("font_size", 14)
+	hp_label.add_theme_font_size_override("font_size", font_size_hp)
+	hp_label.clip_text = true
+	hp_label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+	hp_label.custom_minimum_size = Vector2(card_size.x - 10, 0)
 	vbox.add_child(hp_label)
 
 	# Stats (ATK only now)
@@ -302,7 +408,10 @@ func _spawn_dragon(dragon: Dragon, index: int):
 	stats.name = "StatsLabel"
 	stats.text = "ATK: %d" % dragon.get_attack()
 	stats.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	stats.add_theme_font_size_override("font_size", 13)
+	stats.add_theme_font_size_override("font_size", font_size_stats)
+	stats.clip_text = true
+	stats.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+	stats.custom_minimum_size = Vector2(card_size.x - 10, 0)
 	vbox.add_child(stats)
 	
 	# Add to dragons container (RIGHT side)
@@ -419,6 +528,12 @@ func _animate_battle():
 
 	print("[BattleArena] Battle animation complete!")
 	battle_animation_complete.emit()
+	
+	# Show death summary popup if there were any deaths during battle
+	if DragonDeathManager and DragonDeathManager.instance:
+		if DragonDeathManager.instance.has_pending_deaths():
+			print("[BattleArena] Showing death summary popup after battle")
+			DragonDeathManager.instance.show_death_summary_if_needed()
 
 func _has_living_knights() -> bool:
 	"""Check if any knights are still alive"""
@@ -603,7 +718,7 @@ func _show_damage_text(unit: Control, damage: int, is_knight: bool):
 	"""Show floating damage text above a unit"""
 	var damage_label = Label.new()
 	damage_label.text = "-%d" % damage
-	damage_label.add_theme_font_size_override("font_size", 28)
+	damage_label.add_theme_font_size_override("font_size", 20)
 	damage_label.add_theme_color_override("font_color", Color(1, 0.2, 0.2, 1))
 
 	# Add to the battlefield container (not the unit) so it renders on top

@@ -140,6 +140,15 @@ func assign_dragon_to_slot(slot_id: int, dragon: Dragon) -> bool:
 		print("[TrainingManager] Dragon %s is already training!" % dragon.dragon_name)
 		return false
 
+	# If dragon is currently defending, remove them from defense first
+	if dragon.current_state == Dragon.DragonState.DEFENDING:
+		if DefenseManager and DefenseManager.instance:
+			var removed = DefenseManager.instance.remove_dragon_from_defense(dragon)
+			if removed:
+				print("[TrainingManager] Removed %s from defense to start training" % dragon.dragon_name)
+			else:
+				print("[TrainingManager] WARNING: Failed to remove %s from defense" % dragon.dragon_name)
+
 	slot.assign_dragon(dragon, trainer_assigned)
 	dragon_assigned.emit(slot_id, dragon)
 

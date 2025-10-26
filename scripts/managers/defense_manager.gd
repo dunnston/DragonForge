@@ -203,6 +203,18 @@ func assign_dragon_to_tower(dragon: Dragon, tower_index: int) -> bool:
 		print("[DefenseManager] Dragon is dead!")
 		return false
 	
+	if dragon.current_state == Dragon.DragonState.EXPLORING:
+		print("[DefenseManager] %s is currently exploring and cannot defend!" % dragon.dragon_name)
+		return false
+	
+	if dragon.current_state == Dragon.DragonState.TRAINING:
+		print("[DefenseManager] %s is currently training and cannot defend!" % dragon.dragon_name)
+		return false
+	
+	if dragon.current_state == Dragon.DragonState.RESTING:
+		print("[DefenseManager] %s is currently resting and cannot defend!" % dragon.dragon_name)
+		return false
+	
 	if dragon.fatigue_level > 0.5:
 		print("[DefenseManager] %s is too fatigued to defend (needs 50%% rest)!" % dragon.dragon_name)
 		return false
@@ -298,6 +310,68 @@ func remove_dragon_from_defense(dragon: Dragon) -> bool:
 	
 	print("[DefenseManager] Dragon not found in any tower assignment")
 	return false
+
+func check_and_remove_invalid_defenders():
+	"""
+	Check all defending dragons and remove any that are too fatigued or in invalid states.
+	Called after fatigue changes, exploration starts, etc.
+	Dragons removed due to fatigue are automatically put to rest.
+	"""
+	var dragons_to_remove: Array[Dictionary] = []  # Store both index and reason
+	
+	for tower_idx in tower_assignments.keys():
+		var dragon = tower_assignments[tower_idx]
+		var should_remove = false
+		var reason = ""
+		var auto_rest = false
+		
+		# Check if dragon is too fatigued (>50%)
+		if dragon.fatigue_level > 0.5:
+			should_remove = true
+			auto_rest = true  # Mark for automatic resting
+			reason = "too fatigued (%.0f%%)" % (dragon.fatigue_level * 100)
+		
+		# Check if dragon is exploring
+		elif dragon.current_state == Dragon.DragonState.EXPLORING:
+			should_remove = true
+			reason = "now exploring"
+		
+		# Check if dragon is dead
+		elif dragon.is_dead or dragon.current_health <= 0:
+			should_remove = true
+			reason = "dead"
+		
+		# Check if dragon is resting or training
+		elif dragon.current_state == Dragon.DragonState.TRAINING:
+			should_remove = true
+			reason = "now training"
+		elif dragon.current_state == Dragon.DragonState.RESTING:
+			should_remove = true
+			reason = "now resting"
+		
+		if should_remove:
+			dragons_to_remove.append({
+				"tower_idx": tower_idx,
+				"dragon": dragon,
+				"reason": reason,
+				"auto_rest": auto_rest
+			})
+			print("[DefenseManager] Removing %s from tower %d (%s)" % [dragon.dragon_name, tower_idx, reason])
+	
+	# Remove invalid defenders and handle auto-rest
+	for data in dragons_to_remove:
+		remove_dragon_from_tower(data["tower_idx"])
+		
+		# Automatically put fatigued dragons to rest
+		if data["auto_rest"] and DragonStateManager and DragonStateManager.instance:
+			DragonStateManager.instance.start_resting(data["dragon"])
+			print("[DefenseManager] %s automatically sent to rest due to fatigue" % data["dragon"].dragon_name)
+	
+	if dragons_to_remove.size() > 0:
+		# Refresh tower UI to show changes
+		_refresh_tower_ui()
+	
+	return dragons_to_remove.size() > 0
 
 # === WAVE GENERATION & COMBAT ===
 
@@ -722,6 +796,9 @@ func end_combat():
 	if DefenseTowerManager and DefenseTowerManager.instance:
 		DefenseTowerManager.instance.apply_wave_damage(pending_wave_victory)
 		print("[DefenseManager] Applied tower damage - Victory: %s" % pending_wave_victory)
+
+	# Check and remove any dragons that are now too fatigued or in invalid states
+	check_and_remove_invalid_defenders()
 
 	# Refresh all UIs on next frame to ensure dragon data is fully updated
 	await get_tree().process_frame

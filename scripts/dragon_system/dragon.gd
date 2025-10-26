@@ -330,6 +330,7 @@ func _check_level_up() -> void:
 	if experience >= exp_needed and level < MAX_LEVEL:
 		level += 1
 		calculate_stats()  # Recalculate stats with new level
+		current_health = total_health  # Fully heal on level up
 		level_up.emit(self, level)
 
 		# Play level up sound

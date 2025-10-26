@@ -116,6 +116,15 @@ func start_exploration(dragon: Dragon, duration_minutes: int, destination: Strin
 			AudioManager.instance.play_error()
 		return false
 
+	# If dragon is currently defending, remove them from defense first
+	if dragon.current_state == Dragon.DragonState.DEFENDING:
+		if DefenseManager and DefenseManager.instance:
+			var removed = DefenseManager.instance.remove_dragon_from_defense(dragon)
+			if removed:
+				print("[ExplorationManager] Removed %s from defense to start exploration" % dragon.dragon_name)
+			else:
+				print("[ExplorationManager] WARNING: Failed to remove %s from defense" % dragon.dragon_name)
+
 	# Validate duration
 	if duration_minutes not in [1, 5, 10, 15]:
 		print("[ExplorationManager] ERROR: Invalid duration %d (must be 1, 5, 10, or 15)" % duration_minutes)
@@ -386,6 +395,10 @@ func _complete_exploration(dragon_id: String):
 		DragonStateManager.instance.set_dragon_state(dragon, Dragon.DragonState.IDLE)
 	else:
 		dragon.current_state = Dragon.DragonState.IDLE
+
+	# Check if any defending dragons need to be removed due to fatigue changes
+	if DefenseManager and DefenseManager.instance:
+		DefenseManager.instance.check_and_remove_invalid_defenders()
 
 	# Emit completion signal
 	exploration_completed.emit(dragon, destination, rewards)

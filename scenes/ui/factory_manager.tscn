@@ -16,7 +16,7 @@
 [ext_resource type="Texture2D" uid="uid://qouho6qbi7m6" path="res://assets/ui/nature_icon.png" id="8_lkorh"]
 [ext_resource type="Texture2D" uid="uid://dkgc8dlolhupl" path="res://assets/ui/shadow_icon.png" id="9_6vuwu"]
 [ext_resource type="PackedScene" uid="uid://c3lam6n8p2q4r" path="res://scenes/ui/scientist_hire_modal.tscn" id="9_atd5s"]
-[ext_resource type="PackedScene" uid="uid://d4f6lan2p8r1q" path="res://scenes/ui/dragon_grounds_modal.tscn" id="10_drgn_grnds"]
+[ext_resource type="PackedScene" path="res://scenes/ui/dragon_grounds_modal.tscn" id="10_drgn_grnds"]
 [ext_resource type="PackedScene" uid="uid://cbxvgj8k5mamn" path="res://scenes/ui/pet/gift_notification_popup.tscn" id="11_gift_popup"]
 [ext_resource type="PackedScene" uid="uid://c4v8yxm2q5n7p" path="res://scenes/ui/save_exit_popup.tscn" id="12_save_exit"]
 

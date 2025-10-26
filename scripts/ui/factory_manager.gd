@@ -858,24 +858,31 @@ func _update_freezer_button_display():
 		return
 
 	var death_manager = DragonDeathManager.instance
-	var recovered_count = death_manager.recovered_parts.size()
+	
+	# Count only parts that actually exist in inventory
+	var recovered_count = 0
+	var critical_count = 0
+	var warning_count = 0
+	
+	for part in death_manager.recovered_parts:
+		# Check if part still exists in inventory
+		var item_id = _convert_part_to_item_id_for_check(part)
+		if not item_id.is_empty() and InventoryManager and InventoryManager.instance:
+			if InventoryManager.instance.has_item(item_id, 1):
+				recovered_count += 1
+				
+				# Check urgency
+				var urgency = part.get_decay_urgency()
+				if urgency == "critical":
+					critical_count += 1
+				elif urgency == "urgent" or urgency == "warning":
+					warning_count += 1
 
 	if recovered_count == 0:
 		# No recovered parts - normal state
 		view_freezer_button.text = "❄️ FREEZER"
 		view_freezer_button.modulate = Color.WHITE
 		return
-
-	# Check for critical parts (<1 hour decay time)
-	var critical_count = 0
-	var warning_count = 0
-
-	for part in death_manager.recovered_parts:
-		var urgency = part.get_decay_urgency()
-		if urgency == "critical":
-			critical_count += 1
-		elif urgency == "urgent" or urgency == "warning":
-			warning_count += 1
 
 	# Update button text with badge
 	if critical_count > 0:
@@ -889,6 +896,38 @@ func _update_freezer_button_display():
 	else:
 		view_freezer_button.text = "❄️ FREEZER (%d)" % recovered_count
 		view_freezer_button.modulate = Color(0.7, 1.0, 0.7)  # Green tint
+
+func _convert_part_to_item_id_for_check(part: DragonPart) -> String:
+	"""Convert a DragonPart to an inventory item_id for checking existence"""
+	if not part:
+		return ""
+
+	# Get element name (FIRE → "fire")
+	var element_name = ""
+	match part.element:
+		DragonPart.Element.FIRE:
+			element_name = "fire"
+		DragonPart.Element.ICE:
+			element_name = "ice"
+		DragonPart.Element.LIGHTNING:
+			element_name = "lightning"
+		DragonPart.Element.NATURE:
+			element_name = "nature"
+		DragonPart.Element.SHADOW:
+			element_name = "shadow"
+
+	# Get part type name (HEAD → "head")
+	var part_type_name = ""
+	match part.part_type:
+		DragonPart.PartType.HEAD:
+			part_type_name = "head"
+		DragonPart.PartType.BODY:
+			part_type_name = "body"
+		DragonPart.PartType.TAIL:
+			part_type_name = "tail"
+
+	# Add "_recovered" suffix
+	return "%s_%s_recovered" % [element_name, part_type_name]
 
 func _update_training_button_state():
 	"""Update Training Grounds button based on Trainer hire status"""
