@@ -1765,38 +1765,9 @@ func _on_watch_battle_pressed():
 		_open_enemy_scout_screen()
 		return
 
-	# Otherwise, open battle arena
-	# Check if battle arena already exists
-	if battle_arena and is_instance_valid(battle_arena):
-		print("[FactoryManager] Battle arena already open")
-		battle_arena.visible = true
-		return
-
-	# Load and create the battle arena scene
-	var battle_arena_scene = load("res://scenes/idle_defense/battle_arena.tscn")
-	if not battle_arena_scene:
-		print("[FactoryManager] ERROR: Could not load battle arena scene!")
-		return
-
-	battle_arena = battle_arena_scene.instantiate()
-	battle_arena.name = "BattleArena"
-
-	# Set z-index to appear above everything else
-	battle_arena.z_index = 150
-	battle_arena.z_as_relative = false
-
-	# Add to scene tree
-	add_child(battle_arena)
-
-	# Connect signals
-	if battle_arena.has_signal("battle_animation_complete"):
-		battle_arena.battle_animation_complete.connect(_on_battle_animation_complete)
-	if battle_arena.has_signal("back_button_pressed"):
-		battle_arena.back_button_pressed.connect(_on_battle_arena_closed)
-	if battle_arena.has_signal("battle_result_determined"):
-		battle_arena.battle_result_determined.connect(_on_battle_result_determined)
-
-	print("[FactoryManager] Battle arena opened!")
+	# Otherwise, open defense towers UI (not battle arena directly)
+	print("[FactoryManager] Opening Defense Towers UI from Watch Battle button")
+	_on_manage_defenses_pressed()
 
 func _on_battle_animation_complete():
 	"""Called when battle animation finishes"""

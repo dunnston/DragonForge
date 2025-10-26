@@ -34,10 +34,13 @@ func _ready():
 		DefenseManager.instance.wave_completed.connect(_on_wave_completed)
 
 		# Check if we have enemy data to display (battle in progress OR recently completed)
+		# NOTE: Don't auto-trigger battle setup here - let the parent (DefenseTowersUI) control visibility
+		# The battle animation will be running in the background, we just show/hide the view
 		var enemies = DefenseManager.instance.current_wave_enemies
-		if enemies and enemies.size() > 0:
-			# Manually trigger battle setup since we missed the signal
-			print("[BattleArena] Showing battle for wave %d (%d enemies)" % [DefenseManager.instance.wave_number, enemies.size()])
+		if enemies and enemies.size() > 0 and DefenseManager.instance.is_in_combat:
+			# Battle is in progress - setup visuals but stay hidden
+			# Parent will show us if needed
+			print("[BattleArena] Battle in progress (wave %d, %d enemies) - setting up visuals" % [DefenseManager.instance.wave_number, enemies.size()])
 			_on_wave_started(DefenseManager.instance.wave_number, enemies)
 
 	# Connect back button
@@ -46,10 +49,11 @@ func _ready():
 
 func _on_back_button_pressed():
 	"""Called when the back button is pressed"""
-	print("[BattleArena] Back button pressed")
+	print("[BattleArena] Back button pressed - hiding battle view (battle continues in background)")
 
-	# Clear battlefield before closing
-	_clear_battlefield()
+	# DON'T clear battlefield - just hide the view and let battle continue in background
+	# The visual units will keep animating even when hidden
+	# _clear_battlefield()  # Removed - this was ending battle prematurely
 
 	back_button_pressed.emit()
 	# Note: Parent is responsible for hiding or destroying this node
@@ -58,6 +62,8 @@ func _on_wave_started(wave_number: int, enemies: Array):
 	"""Start visual combat when wave begins"""
 	print("[BattleArena] Wave started! Wave: %d, Enemies: %d" % [wave_number, enemies.size()])
 	is_in_combat = true
+	
+	# Clear battlefield from previous battle (if any)
 	_clear_battlefield()
 	
 	knight_data = enemies
@@ -71,16 +77,20 @@ func _on_wave_started(wave_number: int, enemies: Array):
 	if dragons_container:
 		print("[BattleArena] Dragons container size: %s, visible: %s" % [dragons_container.size, dragons_container.visible])
 	
+	# Wait for containers to be properly sized (especially important for first battle)
+	await get_tree().process_frame
+	await get_tree().process_frame
+	
 	# Set grid columns based on unit count for optimal layout
 	_update_grid_columns(knights_container, enemies.size())
 	_update_grid_columns(dragons_container, dragon_data.size())
 	
-	# Calculate dynamic card sizes based on available space
+	# Calculate dynamic card sizes based on available space (matching tower card size)
 	var knight_card_size = await _calculate_card_size(knights_container, enemies.size())
 	var dragon_card_size = await _calculate_card_size(dragons_container, dragon_data.size())
 	
-	# Make dragons 20% larger than knights
-	dragon_card_size = dragon_card_size * 1.2
+	# Keep dragons same size as in tower UI for consistency
+	# (Removed 1.2x multiplier to match tower cards exactly)
 	
 	print("[BattleArena] Knight card size: %s, Dragon card size: %s" % [knight_card_size, dragon_card_size])
 	
@@ -123,7 +133,7 @@ func _update_grid_columns(container: GridContainer, unit_count: int):
 func _calculate_card_size(container: GridContainer, unit_count: int) -> Vector2:
 	"""Calculate optimal card size based on available space and unit count"""
 	if not container or unit_count == 0:
-		return Vector2(200, 280)  # Default size
+		return Vector2(180, 320)  # Default size matching tower cards
 	
 	# Wait a frame to ensure container has proper size
 	await get_tree().process_frame
@@ -132,6 +142,11 @@ func _calculate_card_size(container: GridContainer, unit_count: int) -> Vector2:
 	# Container hierarchy: GridContainer -> CenterContainer -> BattlefieldContainer
 	var center_container = container.get_parent()
 	var available_size = center_container.size if center_container else Vector2(800, 600)
+	
+	# Check if we have a valid size (first battle might have 0 size containers)
+	if available_size.x < 100 or available_size.y < 100:
+		print("[BattleArena] Container size too small (%s), using default tower card size" % available_size)
+		return Vector2(180, 320)  # Default size matching tower cards
 	
 	# Account for the combat log taking up space
 	var usable_width = available_size.x * 0.52  # Each side gets 52% of total width (more space for cards)
@@ -148,12 +163,12 @@ func _calculate_card_size(container: GridContainer, unit_count: int) -> Vector2:
 	var card_width = (usable_width - (columns - 1) * h_separation) / columns
 	var card_height = (usable_height - (rows - 1) * v_separation) / rows
 	
-	# Clamp to reasonable min/max values (smaller minimum for crowded scenes)
-	card_width = clamp(card_width, 70, 220)
-	card_height = clamp(card_height, 100, 300)
+	# Clamp to tower card size (180x320) - match defense towers UI
+	card_width = clamp(card_width, 70, 180)
+	card_height = clamp(card_height, 100, 320)
 	
-	# Maintain aspect ratio (roughly 1:1.5 for more vertical space)
-	var target_height = card_width * 1.5
+	# Maintain aspect ratio matching tower cards (1:1.78)
+	var target_height = card_width * 1.78
 	card_height = min(card_height, target_height)
 	
 	return Vector2(card_width, card_height)
@@ -297,7 +312,7 @@ func _spawn_knight(enemy_data: Dictionary, index: int, card_size: Vector2 = Vect
 	
 	active_knights.append(knight)
 
-func _spawn_dragon(dragon: Dragon, index: int, card_size: Vector2 = Vector2(220, 300)):
+func _spawn_dragon(dragon: Dragon, index: int, card_size: Vector2 = Vector2(180, 320)):
 	"""Spawn a dragon visual on the RIGHT side of battlefield"""
 	var dragon_panel = Panel.new()
 	dragon_panel.custom_minimum_size = card_size

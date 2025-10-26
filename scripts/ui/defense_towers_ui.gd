@@ -36,6 +36,9 @@ var current_wave_number: int = 0  # Track which wave we've shown popup for
 var scouted_enemies: Array = []
 var scouted_wave_number: int = 0
 
+# Track if user manually closed battle arena (don't auto-show if they did)
+var battle_arena_manually_closed: bool = false
+
 signal back_to_factory_requested
 
 func set_dragon_factory(factory: DragonFactory):
@@ -373,17 +376,25 @@ func _on_wave_incoming_scout(wave_num: int, enemies: Array, time_remaining: floa
 	scouted_wave_number = wave_num
 
 func _on_wave_started(wave_number: int, enemies: Array):
-	"""Show battle arena when wave starts"""
+	"""Show battle arena when wave starts (only if not manually closed)"""
 	# Clear scout data when battle starts
 	scouted_enemies.clear()
 
-	if battle_arena:
+	# Reset the manually closed flag for new battles
+	battle_arena_manually_closed = false
+
+	# Only auto-show battle arena if user didn't manually close it
+	# (If they're in the tower UI, they can click "Watch Battle" to open it)
+	if battle_arena and not battle_arena_manually_closed:
 		battle_arena.visible = true
 
 func _on_wave_completed(victory: bool, rewards: Dictionary):
 	# Update UI immediately when wave completes
 	_refresh_tower_cards()
 	_update_ui()
+
+	# Reset manually closed flag for next wave
+	battle_arena_manually_closed = false
 
 	# Store results to show after animation completes
 	last_wave_victory = victory
@@ -423,7 +434,11 @@ func _on_battle_animation_complete():
 
 func _on_battle_arena_back_pressed():
 	"""Called when player clicks back button in battle arena"""
-	print("[DefenseTowersUI] Player closed battle arena")
+	print("[DefenseTowersUI] Player closed battle arena (battle continues in background)")
+	
+	# Mark that user manually closed it - don't auto-show again
+	battle_arena_manually_closed = true
+	
 	if battle_arena:
 		battle_arena.visible = false
 
@@ -462,6 +477,8 @@ func _on_scout_button_pressed():
 		# Watch battle mode - show battle arena
 		print("[DefenseTowersUI] Opening battle arena...")
 		if battle_arena:
+			# User explicitly wants to watch - clear the manually closed flag
+			battle_arena_manually_closed = false
 			battle_arena.visible = true
 
 func _open_enemy_scout_screen():
