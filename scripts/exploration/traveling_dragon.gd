@@ -215,8 +215,65 @@ func update_timing(new_start_time: float, new_duration_seconds: int) -> void:
 	print("  Old: start_time=%d, duration=%d" % [start_time, duration_seconds])
 	print("  New: start_time=%d, duration=%d" % [new_start_time, new_duration_seconds])
 
+	# Calculate current progress with OLD timing
+	var current_time = Time.get_unix_time_from_system()
+	var old_elapsed = current_time - start_time
+	var old_progress = clamp(float(old_elapsed) / float(duration_seconds), 0.0, 1.0)
+
+	print("[TravelingDragon] Current progress: %.2f%%" % (old_progress * 100))
+
+	# Update timing values
 	start_time = new_start_time
 	duration_seconds = new_duration_seconds
 
-	# Restart the animation with new timing
-	_animate_round_trip()
+	# Calculate NEW remaining time based on new timing
+	var new_elapsed = current_time - new_start_time
+	var new_remaining = max(0.0, duration_seconds - new_elapsed)
+
+	print("[TravelingDragon] New remaining time: %.1f seconds" % new_remaining)
+
+	# Kill existing tween
+	if travel_tween:
+		travel_tween.kill()
+
+	# Determine current phase and position
+	var current_pos = position
+	var half_duration = new_remaining / 2.0
+
+	# Create new tween from current position
+	travel_tween = create_tween()
+	travel_tween.set_trans(Tween.TRANS_CUBIC)
+	travel_tween.set_ease(Tween.EASE_IN_OUT)
+
+	if old_progress < 0.5:
+		# Still outbound - continue to destination, then return
+		is_outbound = true
+
+		# Calculate how much of the outbound journey remains
+		var outbound_progress = old_progress * 2.0  # 0.0 to 1.0
+		var outbound_remaining_ratio = 1.0 - outbound_progress
+
+		# Time to reach destination = half of remaining time * ratio of outbound left
+		var time_to_destination = half_duration * (outbound_remaining_ratio / (outbound_remaining_ratio + 1.0)) * 2.0
+		var time_to_return = new_remaining - time_to_destination
+
+		print("[TravelingDragon] Outbound phase: %.1fs to destination, %.1fs to return" % [time_to_destination, time_to_return])
+
+		# Continue to destination
+		travel_tween.tween_property(self, "position", end_position, time_to_destination)
+		travel_tween.tween_callback(_on_reached_destination)
+
+		# Then return to start
+		travel_tween.tween_property(self, "position", start_position, time_to_return)
+		travel_tween.tween_callback(_on_returned_to_start)
+	else:
+		# Already returning - go straight back to start
+		is_outbound = false
+
+		print("[TravelingDragon] Return phase: %.1fs to start" % new_remaining)
+
+		# Continue return journey
+		travel_tween.tween_property(self, "position", start_position, new_remaining)
+		travel_tween.tween_callback(_on_returned_to_start)
+
+	print("[TravelingDragon] Animation updated with tonic boost!")

@@ -180,12 +180,23 @@ func _spawn_traveling_dragon_from_existing(dragon: Dragon, destination: String, 
 		"element": DragonPart.Element.keys()[dragon.head_part.element]
 	}
 
-	# Spawn the traveling dragon
-	var traveling_dragon = TravelingDragonScene.instantiate()
-
 	# Get exploration details - use ACTUAL duration from exploration_data (accounts for tonic)
 	var start_time = exploration_data.get("start_time", 0)
 	var actual_duration_seconds = exploration_data.get("duration", dest_info["duration_minutes"] * 60)
+
+	# Calculate remaining time
+	var current_time = Time.get_unix_time_from_system()
+	var elapsed = current_time - start_time
+	var remaining = actual_duration_seconds - elapsed
+
+	# Safety check: Skip if exploration is almost complete (< 8 seconds remaining)
+	# This prevents visual glitches from very short animation durations
+	if remaining < 8:
+		print("[ExplorationMapUI] Skipping existing exploration - too close to completion (%.1fs remaining, need 8+)" % remaining)
+		return
+
+	# Spawn the traveling dragon
+	var traveling_dragon = TravelingDragonScene.instantiate()
 
 	dragons_layer.add_child(traveling_dragon)
 
@@ -200,8 +211,7 @@ func _spawn_traveling_dragon_from_existing(dragon: Dragon, destination: String, 
 	print("[ExplorationMapUI] Loading existing exploration with ACTUAL duration: %d seconds" % actual_duration_seconds)
 
 	# Calculate current position based on elapsed time (round-trip logic)
-	var current_time = Time.get_unix_time_from_system()
-	var elapsed = current_time - start_time
+	# (current_time and elapsed already calculated above for safety check)
 	var progress = float(elapsed) / float(traveling_dragon.duration_seconds)
 	progress = clamp(progress, 0.0, 1.0)
 
@@ -263,6 +273,18 @@ func spawn_traveling_dragon_with_duration(dragon: Dictionary, destination_key: S
 		destination_key: One of the DESTINATIONS keys
 		duration_seconds: Actual duration in seconds (may be affected by tonic)
 	"""
+	# Call the new function with current time as start_time
+	spawn_traveling_dragon_with_timing(dragon, destination_key, Time.get_unix_time_from_system(), duration_seconds)
+
+func spawn_traveling_dragon_with_timing(dragon: Dictionary, destination_key: String, start_time: float, duration_seconds: int):
+	"""
+	Creates a traveling dragon on the map with specific start time and duration
+	Args:
+		dragon: Dictionary with {id, name, level, element}
+		destination_key: One of the DESTINATIONS keys
+		start_time: Unix timestamp when exploration started (from ExplorationManager)
+		duration_seconds: Actual duration in seconds (may be affected by tonic)
+	"""
 	if not DESTINATIONS.has(destination_key):
 		push_error("[ExplorationMapUI] Unknown destination: %s" % destination_key)
 		return
@@ -272,17 +294,23 @@ func spawn_traveling_dragon_with_duration(dragon: Dictionary, destination_key: S
 	var traveling_dragon = TravelingDragonScene.instantiate()
 	dragons_layer.add_child(traveling_dragon)
 
-	# Convert seconds back to "minutes" for the setup call (it will convert back to seconds)
-	var duration_mins = duration_seconds / 60.0
+	# Setup the dragon directly with the exact timing from ExplorationManager
+	traveling_dragon.dragon_data = dragon
+	traveling_dragon.destination_key = destination_key
+	traveling_dragon.start_position = dest_info["start_position"]
+	traveling_dragon.end_position = dest_info["end_position"]
+	traveling_dragon.start_time = start_time  # Use ExplorationManager's start_time
+	traveling_dragon.duration_seconds = duration_seconds  # Use ExplorationManager's duration
+	traveling_dragon.position = dest_info["start_position"]
 
-	# Setup the dragon with start and end positions for round-trip journey
-	traveling_dragon.setup(
-		dragon,
-		destination_key,
-		dest_info["start_position"],
-		dest_info["end_position"],
-		duration_mins
-	)
+	# Setup visuals
+	if traveling_dragon.dragon_sprite:
+		traveling_dragon._setup_sprite_appearance()
+	if traveling_dragon.name_label:
+		traveling_dragon.name_label.text = dragon.get("name", "Dragon")
+
+	# Start the animation (deferred to ensure scene is ready)
+	traveling_dragon.call_deferred("_animate_round_trip")
 
 	# Connect signal
 	traveling_dragon.exploration_complete.connect(_on_traveling_dragon_complete)
@@ -292,7 +320,7 @@ func spawn_traveling_dragon_with_duration(dragon: Dictionary, destination_key: S
 
 	_update_active_count()
 
-	print("[ExplorationMapUI] Spawned traveling dragon: %s -> %s (%d seconds)" % [dragon.name, destination_key, duration_seconds])
+	print("[ExplorationMapUI] Spawned traveling dragon: %s -> %s (%d seconds, synced with ExplorationManager)" % [dragon.name, destination_key, duration_seconds])
 
 func remove_traveling_dragon(dragon_id: String):
 	"""Remove a traveling dragon from the map"""
@@ -314,18 +342,28 @@ func _on_exploration_started(dragon: Dragon, destination: String):
 		"element": DragonPart.Element.keys()[dragon.head_part.element]
 	}
 
-	# Get the ACTUAL exploration duration from ExplorationManager (accounts for tonic)
+	# Get the ACTUAL exploration duration AND start time from ExplorationManager (accounts for tonic)
 	var actual_duration_seconds = 0
+	var actual_start_time = 0
 	if ExplorationManager and ExplorationManager.instance:
 		var explorations = ExplorationManager.instance.get_active_explorations()
 		for exploration_data in explorations:
 			var exploring_dragon = exploration_data.get("dragon")
 			if exploring_dragon and exploring_dragon.dragon_id == dragon.dragon_id:
 				actual_duration_seconds = exploration_data["duration"]
-				print("[ExplorationMapUI] Found actual duration: %d seconds (accounts for tonic)" % actual_duration_seconds)
+				actual_start_time = exploration_data["start_time"]
+				print("[ExplorationMapUI] Found actual duration: %d seconds, start_time: %d (accounts for tonic)" % [actual_duration_seconds, actual_start_time])
 				break
 
-	spawn_traveling_dragon_with_duration(dragon_dict, destination, actual_duration_seconds)
+	# Safety check: Only spawn visual dragon if exploration has reasonable duration
+	# Very short explorations (< 8 seconds) can cause visual glitches due to scene setup delays
+	# This is especially important when energy tonic is active (4x speed = 1/4 duration)
+	if actual_duration_seconds < 8:
+		print("[ExplorationMapUI] Skipping visual spawn - exploration too short (%d seconds, need 8+)" % actual_duration_seconds)
+		print("[ExplorationMapUI] Dragon will complete exploration silently (you'll still get rewards!)")
+		return
+
+	spawn_traveling_dragon_with_timing(dragon_dict, destination, actual_start_time, actual_duration_seconds)
 
 func _on_exploration_completed(dragon: Dragon, destination: String, rewards: Dictionary):
 	"""Called when ExplorationManager completes an exploration"""
