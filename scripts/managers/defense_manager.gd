@@ -734,9 +734,14 @@ func _handle_dragon_death(dragon: Dragon):
 	
 	# Remove from factory
 	_remove_dragon_from_factory(dragon)
-	
+
 	# Refresh tower UI if it's open
 	_refresh_tower_ui()
+
+	# Trigger part recovery and death notification
+	if DragonDeathManager and DragonDeathManager.instance:
+		DragonDeathManager.instance.handle_dragon_death(dragon, "combat_defending")
+		print("[DefenseManager] Triggered part recovery for %s" % dragon.dragon_name)
 
 func _remove_dragon_from_factory(dragon: Dragon):
 	"""Remove dead dragon from factory manager and refresh UI"""
@@ -830,13 +835,18 @@ func from_dict(data: Dictionary, dragon_factory = null):
 			var tower_idx = int(tower_idx_str)
 			var dragon_id = assignments_data[tower_idx_str]
 			var dragon = dragon_factory.get_dragon_by_id(dragon_id)
-			
+
 			if dragon and not dragon.is_dead:
 				tower_assignments[tower_idx] = dragon
 				dragon.current_state = Dragon.DragonState.DEFENDING
 				print("[DefenseManager] Restored tower %d defender: %s" % [tower_idx, dragon.dragon_name])
 			else:
 				print("[DefenseManager] WARNING: Could not restore defending dragon %s for tower %d" % [dragon_id, tower_idx])
+
+	# Refresh tower UI to display restored assignments
+	await get_tree().process_frame  # Wait one frame for UI to be ready
+	_refresh_tower_ui()
+	print("[DefenseManager] Refreshed tower UI after loading save data")
 
 # === DEBUG ===
 

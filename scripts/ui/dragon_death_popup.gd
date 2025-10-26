@@ -3,6 +3,9 @@ class_name DragonDeathPopup
 
 ## Popup displayed when a dragon dies, showing recovered parts
 
+# === SIGNALS ===
+signal closed  # Emitted when popup is closed (for NotificationQueueManager)
+
 # Node references
 @onready var overlay = $Overlay
 @onready var popup_panel = $Overlay/CenterContainer/PopupPanel
@@ -196,6 +199,9 @@ func _on_continue_pressed():
 
 func _animate_out():
 	"""Fade out animation before closing"""
+	# Emit closed signal for NotificationQueueManager
+	closed.emit()
+
 	var tween = create_tween()
 	tween.tween_property(overlay, "modulate:a", 0.0, 0.2)
 	tween.finished.connect(queue_free)

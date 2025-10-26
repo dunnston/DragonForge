@@ -290,7 +290,7 @@ func _format_death_cause(cause: String) -> String:
 			return "Unknown cause"
 
 func _show_single_dragon_death_popup(death_data: Dictionary):
-	"""Show the beautiful original death popup for a single dragon"""
+	"""Queue notification for a single dragon death"""
 	# Create a temporary dragon object with the saved data
 	var temp_dragon = Dragon.new()
 	temp_dragon.dragon_name = death_data.get("dragon_name", "Unknown")
@@ -307,28 +307,42 @@ func _show_single_dragon_death_popup(death_data: Dictionary):
 	var cause = death_data.get("cause", "unknown")
 	var recovered_parts = death_data.get("recovered_parts", [])
 
-	print("📂 [DragonDeathManager] Loading death popup scene...")
+	print("\n💀 [DragonDeathManager] Queuing death notification for %s" % temp_dragon.dragon_name)
+	print("   Cause: %s" % cause)
+	print("   Parts recovered: %d" % recovered_parts.size())
+
+	# Load popup scene
+	print("   Loading popup scene...")
 	var popup_scene = load("res://scenes/ui/dragon_death_popup.tscn")
 
-	if popup_scene:
-		print("✅ [DragonDeathManager] Scene loaded successfully")
-		var popup = popup_scene.instantiate()
+	if not popup_scene:
+		print("   ❌ FAILED: Death popup scene not found!")
+		return
 
-		if popup:
-			if popup is Control:
-				popup.z_index = 1000
+	print("   ✅ Popup scene loaded: %s" % popup_scene)
 
-			print("🌲 [DragonDeathManager] Adding popup to scene tree...")
-			get_tree().root.add_child(popup)
-			popup.move_to_front()
-
-			print("⚙️ [DragonDeathManager] Calling popup.setup()...")
-			popup.setup(temp_dragon, cause, recovered_parts)
-			print("✅ [DragonDeathManager] Single-dragon popup shown!")
+	# Queue notification through NotificationQueueManager
+	if NotificationQueueManager and NotificationQueueManager.instance:
+		print("   Calling NotificationQueueManager.queue_notification()...")
+		var result = NotificationQueueManager.instance.queue_notification({
+			"type": "dragon_death",
+			"title": "Dragon Lost",
+			"data": {
+				"dragon": temp_dragon,
+				"cause": cause,
+				"recovered_parts": recovered_parts
+			},
+			"popup_scene": popup_scene,
+			"context": "",  # Single deaths don't need batching context
+			"can_batch": false  # Already handled batching in DragonDeathManager
+		})
+		print("   Queue result: %s" % result)
+		if result:
+			print("   ✅ Death notification successfully queued!\n")
 		else:
-			print("❌ [DragonDeathManager] Failed to instantiate popup!")
+			print("   ❌ Failed to queue death notification!\n")
 	else:
-		print("❌ [DragonDeathManager] Warning: Death popup scene not found!")
+		print("   ❌ NotificationQueueManager not available!\n")
 
 func _show_death_summary():
 	"""Show consolidated notification for multiple deaths and decayed parts"""

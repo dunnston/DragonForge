@@ -555,14 +555,21 @@ func _on_battle_log_pressed():
 	battle_log_ui.closed.connect(func(): battle_log_ui.queue_free())
 
 func _show_wave_rewards_popup(victory: bool, rewards: Dictionary):
-	"""Show a popup with rewards from the just-completed wave"""
-	# Create popup dialog
+	"""Show wave result popup - temporarily using direct approach until scene system is fixed"""
+	# TEMPORARY: Just show directly until we fix the PackedScene issue
+	# The queue system works for pre-made .tscn files but not runtime-created scenes
+	_show_wave_popup_direct(victory, rewards)
+
+	# TODO: Create a proper wave_result_popup.tscn scene file and use queue system
+	print("[DefenseTowersUI] Showing wave %s popup (direct)" % ("victory" if victory else "defeat"))
+
+func _show_wave_popup_direct(victory: bool, rewards: Dictionary):
+	"""Fallback: Show wave popup directly if NotificationQueue not available"""
 	var dialog = AcceptDialog.new()
 	add_child(dialog)
-	dialog.title = "Wave Complete!"
+	dialog.title = "Wave Complete!" if victory else "Wave Failed!"
 	dialog.dialog_hide_on_ok = true
-	
-	# Build simple message (no BBCode)
+
 	var message = ""
 	if victory:
 		message = "🐉 VICTORY! 🐉\n\n"
@@ -576,14 +583,9 @@ func _show_wave_rewards_popup(victory: bool, rewards: Dictionary):
 		message = "⚔ DEFEAT ⚔\n\n"
 		message += "The raiders have breached your defenses!\n\n"
 		message += "Some resources may have been stolen..."
-	
-	# Set the dialog text (plain text, no overlap)
+
 	dialog.dialog_text = message
-	
-	# Show dialog
 	dialog.popup_centered()
-	
-	# Clean up when closed
 	dialog.confirmed.connect(func(): dialog.queue_free())
 	dialog.canceled.connect(func(): dialog.queue_free())
 

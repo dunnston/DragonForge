@@ -1,7 +1,8 @@
 # Exploration Return Popup - Shows when dragon returns from exploration
 extends Control
 
-signal confirmed
+signal confirmed  # Legacy signal (kept for compatibility)
+signal closed  # Emitted when popup is closed (for NotificationQueueManager)
 
 @onready var dragon_name_label: Label = $CenterContainer/PanelContainer/MarginContainer/VBoxContainer/DragonNameLabel
 @onready var health_label: Label = $CenterContainer/PanelContainer/MarginContainer/VBoxContainer/StatusSection/HealthLabel
@@ -114,7 +115,8 @@ func _display_rewards(rewards: Dictionary):
 		rewards_container.add_child(no_rewards_label)
 
 func _on_confirm_pressed():
-	confirmed.emit()
+	confirmed.emit()  # Legacy signal
+	closed.emit()  # For NotificationQueueManager
 	hide()
 
 func _input(event):

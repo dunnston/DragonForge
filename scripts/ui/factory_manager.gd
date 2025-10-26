@@ -799,18 +799,10 @@ func _update_defense_display():
 
 	if DefenseManager.instance.is_in_combat or is_scouting:
 		# Hide defense slots, show battle notification
-		if DefenseManager.instance.is_in_combat:
-			print("[FactoryManager] BATTLE ACTIVE - Showing notification panel")
-		elif is_scouting:
-			print("[FactoryManager] SCOUT PERIOD - Showing notification panel")
-
 		if defense_slot_container:
 			defense_slot_container.visible = false
 		if battle_notification_panel:
 			battle_notification_panel.visible = true
-			print("[FactoryManager] Battle notification panel set to visible")
-		else:
-			print("[FactoryManager] WARNING: battle_notification_panel is null!")
 	else:
 		# Show defense slots, hide battle notification
 		if defense_slot_container:

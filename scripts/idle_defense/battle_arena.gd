@@ -537,10 +537,15 @@ func _combat_round_attacks(knights_attacking: bool):
 				if DragonStateManager and DragonStateManager.instance:
 					DragonStateManager.instance.unregister_dragon(target_dragon)
 					print("[BattleArena] Unregistered dead dragon %s from state manager" % target_dragon.dragon_name)
-				
+
+				# Trigger part recovery and death notification
+				if DragonDeathManager and DragonDeathManager.instance:
+					DragonDeathManager.instance.handle_dragon_death(target_dragon, "combat_defending")
+					print("[BattleArena] Triggered part recovery for %s" % target_dragon.dragon_name)
+
 				# Refresh all UIs immediately
 				_refresh_all_uis()
-				
+
 				if combat_log:
 					combat_log.text += "[color=red]💀 %s has fallen![/color]\n" % target_dragon.dragon_name
 	else:
