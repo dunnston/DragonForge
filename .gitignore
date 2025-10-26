@@ -5,3 +5,4 @@
 # Claude Code specific files (local AI assistant config)
 .claude/
 *.code-workspace
+build/

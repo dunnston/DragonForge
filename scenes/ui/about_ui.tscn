@@ -1,4 +1,4 @@
-[gd_scene load_steps=2 format=3 uid="uid://about_ui_001"]
+[gd_scene load_steps=2 format=3 uid="uid://cwwls3ojvaxgr"]
 
 [ext_resource type="Script" path="res://scripts/ui/about_ui.gd" id="1_about"]
 
@@ -90,11 +90,12 @@ custom_minimum_size = Vector2(0, 150)
 layout_mode = 2
 theme_override_font_sizes/normal_font_size = 16
 bbcode_enabled = true
-text = "In a world where dragons have been hunted to extinction, you've discovered the secret to bringing them back - by stitching together dragon parts recovered from ancient battlefields.
+text = "In a world where dragons have been hunted to extinction, you've inherited the secret to bringing them back - by stitching together dragon parts recovered from ancient battlefields.
 
-Build your underground laboratory, create powerful dragons from mystical parts, and defend against knights who seek to destroy your work. Train your dragons, send them on expeditions, and unlock the secrets of dragon resurrection.
+Build your laboratory, create powerful dragons from mystical parts, and defend against knights who seek to destroy your work. Train your dragons, send them on expeditions, and unlock the secrets of dragon resurrection.
 
-But be warned: your creations are imperfect. Dragons can die, and you must use their remains to create new life. Can you rebuild the dragon population and unlock the legendary Chimera?"
+But be warned: your creations are imperfect. Dragons can die, and you must use their remains to create new life. Can you rebuild the dragon population and unlock the legendary Chimera?
+"
 fit_content = true
 
 [node name="HSeparator3" type="HSeparator" parent="CenterContainer/PanelContainer/MarginContainer/VBoxContainer/ScrollContainer/ContentVBox"]
@@ -111,19 +112,42 @@ layout_mode = 2
 theme_override_font_sizes/normal_font_size = 16
 bbcode_enabled = true
 text = "[b]Game Design & Development[/b]
-Created with the assistance of Claude AI
+Ryan Dunn
+Ege 
+Caglar
 
 [b]Programming[/b]
-Game systems, mechanics, and UI implementation
+Ryan Dunn
+Caglar
 
 [b]Art & Assets[/b]
-Dragon sprites and visual effects
+Ryan Dunn 
+ChatGPT
+
+[b]UI Theme and Font [/b]
+MrEktidd
 
 [b]Audio[/b]
-Music and sound effects integration
+Ryan Dunn
+Suno
+Pixabay
+Elevenlabs
 
 [b]Special Thanks[/b]
-Anthropic for Claude AI
+Orca Game Engine 
 Godot Engine community
-Playful AI Game Jam organizers"
+Playful AI Game Jam organizers
+
+[b]Ai Tools Used[/b]
+Ludo - Animation 
+Pixabay - Sound Effects 
+Elevenlabs - Sound Effects
+Suno - Music 
+Claude Code - Coding and Debugging 
+Orca - Codding and Debugging 
+Chat GPT - Images and Icons 
+Cursor - Coding and Debugging 
+
+
+"
 fit_content = true

@@ -30,7 +30,6 @@ ExplorationManager="*res://scripts/managers/exploration_manager.gd"
 AudioManager="*res://scripts/managers/audio_manager.gd"
 ButtonClickManager="*res://scripts/ui/button_click_manager.gd"
 SaveLoadManager="*res://scripts/managers/save_load_manager.gd"
-DevMenu="*res://scenes/dev/dev_menu.tscn"
 ScientistManager="*res://scripts/managers/scientist_manager.gd"
 TrainingManager="*res://scripts/managers/training_manager.gd"
 NotificationQueueManager="*res://scripts/managers/notification_queue_manager.gd"
@@ -60,4 +59,5 @@ folder_colors={
 
 [rendering]
 
+textures/vram_compression/import_etc2_astc=true
 viewport/hdr_2d=true
