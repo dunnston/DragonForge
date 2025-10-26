@@ -1,6 +1,9 @@
-[gd_scene load_steps=4 format=3 uid="uid://b7h3qr8yxnp4q"]
+[gd_scene load_steps=6 format=3 uid="uid://b7h3qr8yxnp4q"]
 
-[ext_resource type="Script" path="res://scripts/opening/opening_letter.gd" id="1_opening_letter"]
+[ext_resource type="Script" uid="uid://b0ftw1jaaopr" path="res://scripts/opening/opening_letter.gd" id="1_opening_letter"]
+[ext_resource type="AudioStream" uid="uid://dqpk8h7yxnp7t" path="res://assets/audio/typewriter-typing-68696.mp3" id="2_ocl61"]
+[ext_resource type="AudioStream" uid="uid://cpqsai80xop8u" path="res://assets/audio/loud-rolling-thunder-with-gentle-rainfall-422430.mp3" id="3_7caje"]
+[ext_resource type="AudioStream" uid="uid://dvb6rfxllkaaf" path="res://assets/audio/Dragon Lab Blues.mp3" id="4_nvjty"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_parchment"]
 bg_color = Color(0.918, 0.859, 0.722, 1)
@@ -16,11 +19,6 @@ corner_radius_bottom_left = 8
 shadow_color = Color(0, 0, 0, 0.3)
 shadow_size = 10
 shadow_offset = Vector2(4, 4)
-
-[sub_resource type="LabelSettings" id="LabelSettings_letter"]
-font_size = 20
-font_color = Color(0.2, 0.15, 0.1, 1)
-shadow_size = 0
 
 [node name="OpeningLetter" type="Control"]
 layout_mode = 3
@@ -70,10 +68,8 @@ theme_override_constants/margin_bottom = 40
 [node name="LetterText" type="RichTextLabel" parent="Parchment/MarginContainer"]
 layout_mode = 2
 bbcode_enabled = true
-text = ""
 fit_content = true
 scroll_active = false
-label_settings = SubResource("LabelSettings_letter")
 
 [node name="ContinuePrompt" type="Label" parent="."]
 layout_mode = 1
@@ -103,10 +99,13 @@ mouse_filter = 2
 color = Color(0, 0, 0, 1)
 
 [node name="TypingSound" type="AudioStreamPlayer" parent="."]
+stream = ExtResource("2_ocl61")
 volume_db = -10.0
 
 [node name="ThunderSound" type="AudioStreamPlayer" parent="."]
+stream = ExtResource("3_7caje")
 volume_db = -5.0
 
 [node name="DramaticMusic" type="AudioStreamPlayer" parent="."]
+stream = ExtResource("4_nvjty")
 volume_db = -15.0
