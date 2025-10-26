@@ -761,6 +761,26 @@ func _create_dragon_entry(dragon: Dragon) -> PanelContainer:
 
 func _on_dragon_entry_input(event: InputEvent, dragon: Dragon):
 	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
+		# Don't open dragon modal if another modal is already open
+		if inventory_panel and inventory_panel.visible:
+			return
+		if part_selector and part_selector.visible:
+			return
+		if dragon_details_modal and dragon_details_modal.visible:
+			return
+		if dragon_grounds_modal and dragon_grounds_modal.visible:
+			return
+		if defense_towers_ui and defense_towers_ui.visible:
+			return
+		if training_yard_ui and training_yard_ui.visible:
+			return
+		if exploration_map_ui and exploration_map_ui.visible:
+			return
+		if scientist_management_ui and scientist_management_ui.visible:
+			return
+		if save_exit_popup and save_exit_popup.visible:
+			return
+
 		print("[FactoryManager] Clicked dragon: %s" % dragon.dragon_name)
 		if dragon_details_modal:
 			dragon_details_modal.open_for_dragon(dragon)
@@ -1515,6 +1535,26 @@ func _add_walking_pet_character(pet: Dragon):
 
 func _on_pet_clicked(pet: Dragon):
 	"""Called when the walking pet is clicked"""
+	# Don't open pet interaction modal if another modal is already open
+	if inventory_panel and inventory_panel.visible:
+		return
+	if part_selector and part_selector.visible:
+		return
+	if dragon_details_modal and dragon_details_modal.visible:
+		return
+	if dragon_grounds_modal and dragon_grounds_modal.visible:
+		return
+	if defense_towers_ui and defense_towers_ui.visible:
+		return
+	if training_yard_ui and training_yard_ui.visible:
+		return
+	if exploration_map_ui and exploration_map_ui.visible:
+		return
+	if scientist_management_ui and scientist_management_ui.visible:
+		return
+	if save_exit_popup and save_exit_popup.visible:
+		return
+
 	print("[FactoryManager] _on_pet_clicked received! Pet: %s" % pet.dragon_name)
 	_open_pet_interaction_ui(pet)
 
@@ -1615,6 +1655,10 @@ func _on_wave_incoming_scout(wave_num: int, enemies: Array, time_remaining: floa
 	# Change button text to "SCOUT ENEMIES"
 	if watch_battle_button:
 		watch_battle_button.text = "SCOUT ENEMIES"
+
+	# Play notification sound
+	if AudioManager and AudioManager.instance:
+		AudioManager.instance.play_notification()
 
 	_update_defense_display()  # Show notification
 

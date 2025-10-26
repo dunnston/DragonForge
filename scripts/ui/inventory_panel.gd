@@ -133,18 +133,48 @@ func _on_slot_hovered(slot_index: int, item: Item):
 	else:
 		tooltip_stats.visible = false
 
-	# Position tooltip near mouse
+	# Position tooltip near mouse, with offset to prevent it from disappearing
 	tooltip_panel.visible = true
-	tooltip_panel.global_position = get_global_mouse_position() + Vector2(15, 15)
+	var mouse_pos = get_global_mouse_position()
+	var offset = Vector2(20, -50)  # Position above and to the right of cursor
+
+	# Adjust if tooltip would go off screen
+	var viewport_size = get_viewport_rect().size
+	var tooltip_size = tooltip_panel.size
+	if tooltip_size == Vector2.ZERO:
+		tooltip_size = Vector2(250, 150)  # Estimated size
+
+	var final_pos = mouse_pos + offset
+
+	# Keep tooltip on screen
+	if final_pos.x + tooltip_size.x > viewport_size.x:
+		final_pos.x = mouse_pos.x - tooltip_size.x - 20
+	if final_pos.y < 0:
+		final_pos.y = mouse_pos.y + 20
+
+	tooltip_panel.global_position = final_pos
 
 func _on_slot_mouse_exited():
 	"""Hide tooltip when mouse leaves slot"""
-	await get_tree().create_timer(0.1).timeout  # Small delay to prevent flicker
+	# Longer delay to make tooltip easier to read
+	await get_tree().create_timer(0.3).timeout
+
+	# Check if mouse is over any slot or the tooltip
 	var mouse_pos = get_global_mouse_position()
 	var tooltip_rect = Rect2(tooltip_panel.global_position, tooltip_panel.size)
 
-	# Only hide if mouse is not over the tooltip itself
-	if not tooltip_rect.has_point(mouse_pos):
+	# Expand the tooltip rect slightly to create a "hover buffer"
+	tooltip_rect = tooltip_rect.grow(10)
+
+	# Check if mouse is over any inventory slot
+	var over_slot = false
+	for slot_ui in slot_ui_nodes:
+		if slot_ui.get_global_rect().has_point(mouse_pos):
+			over_slot = true
+			break
+
+	# Only hide if mouse is not over the tooltip or any slot
+	if not tooltip_rect.has_point(mouse_pos) and not over_slot:
 		tooltip_panel.visible = false
 
 func _input(event):

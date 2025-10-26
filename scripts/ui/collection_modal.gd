@@ -28,6 +28,30 @@ const ELEMENT_NAMES = {
 	DragonPart.Element.SHADOW: "Shadow"
 }
 
+const PART_ICON_PATHS = {
+	"HEAD": {
+		DragonPart.Element.FIRE: "res://assets/Icons/dragon_parts/fire-dragon-head.png",
+		DragonPart.Element.ICE: "res://assets/Icons/dragon_parts/ice-dragon-head.png",
+		DragonPart.Element.LIGHTNING: "res://assets/Icons/dragon_parts/lighting-dragon-head.png",
+		DragonPart.Element.NATURE: "res://assets/Icons/dragon_parts/nature-dragon-head.png",
+		DragonPart.Element.SHADOW: "res://assets/Icons/dragon_parts/shadow-dragon-head.png"
+	},
+	"BODY": {
+		DragonPart.Element.FIRE: "res://assets/Icons/dragon_parts/fire-dragon-body.png",
+		DragonPart.Element.ICE: "res://assets/Icons/dragon_parts/ice-dragon-body.png",
+		DragonPart.Element.LIGHTNING: "res://assets/Icons/dragon_parts/lighting-dragon-body.png",
+		DragonPart.Element.NATURE: "res://assets/Icons/dragon_parts/nature-dragon-body.png",
+		DragonPart.Element.SHADOW: "res://assets/Icons/dragon_parts/shadow-dragon-body.png"
+	},
+	"TAIL": {
+		DragonPart.Element.FIRE: "res://assets/Icons/dragon_parts/fire-dragon-tail.png",
+		DragonPart.Element.ICE: "res://assets/Icons/dragon_parts/ice-dragon-tail.png",
+		DragonPart.Element.LIGHTNING: "res://assets/Icons/dragon_parts/lighting-dragon-tail.png",
+		DragonPart.Element.NATURE: "res://assets/Icons/dragon_parts/nature-dragon-tail.png",
+		DragonPart.Element.SHADOW: "res://assets/Icons/dragon_parts/shadow-dragon-tail.png"
+	}
+}
+
 func _ready():
 	_build_ui()
 
@@ -181,27 +205,60 @@ func _create_collection_entry(head: DragonPart.Element, body: DragonPart.Element
 	card.add_child(vbox)
 
 	if discovered:
-		# Show the combination
+		# Show the combination with icons
+		# Head
+		var head_hbox = HBoxContainer.new()
+		head_hbox.alignment = BoxContainer.ALIGNMENT_CENTER
+		vbox.add_child(head_hbox)
+
+		var head_icon = TextureRect.new()
+		head_icon.texture = load(PART_ICON_PATHS["HEAD"][head])
+		head_icon.custom_minimum_size = Vector2(20, 20)
+		head_icon.expand_mode = TextureRect.EXPAND_FIT_WIDTH_PROPORTIONAL
+		head_icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		head_hbox.add_child(head_icon)
+
 		var head_label = Label.new()
-		head_label.text = "🐲 " + ELEMENT_NAMES[head]
+		head_label.text = " " + ELEMENT_NAMES[head]
 		head_label.add_theme_color_override("font_color", ELEMENT_COLORS[head])
 		head_label.add_theme_font_size_override("font_size", 11)
-		head_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		vbox.add_child(head_label)
+		head_hbox.add_child(head_label)
+
+		# Body
+		var body_hbox = HBoxContainer.new()
+		body_hbox.alignment = BoxContainer.ALIGNMENT_CENTER
+		vbox.add_child(body_hbox)
+
+		var body_icon = TextureRect.new()
+		body_icon.texture = load(PART_ICON_PATHS["BODY"][body])
+		body_icon.custom_minimum_size = Vector2(20, 20)
+		body_icon.expand_mode = TextureRect.EXPAND_FIT_WIDTH_PROPORTIONAL
+		body_icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		body_hbox.add_child(body_icon)
 
 		var body_label = Label.new()
-		body_label.text = "🦎 " + ELEMENT_NAMES[body]
+		body_label.text = " " + ELEMENT_NAMES[body]
 		body_label.add_theme_color_override("font_color", ELEMENT_COLORS[body])
 		body_label.add_theme_font_size_override("font_size", 11)
-		body_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		vbox.add_child(body_label)
+		body_hbox.add_child(body_label)
+
+		# Tail
+		var tail_hbox = HBoxContainer.new()
+		tail_hbox.alignment = BoxContainer.ALIGNMENT_CENTER
+		vbox.add_child(tail_hbox)
+
+		var tail_icon = TextureRect.new()
+		tail_icon.texture = load(PART_ICON_PATHS["TAIL"][tail])
+		tail_icon.custom_minimum_size = Vector2(20, 20)
+		tail_icon.expand_mode = TextureRect.EXPAND_FIT_WIDTH_PROPORTIONAL
+		tail_icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		tail_hbox.add_child(tail_icon)
 
 		var tail_label = Label.new()
-		tail_label.text = "🐍 " + ELEMENT_NAMES[tail]
+		tail_label.text = " " + ELEMENT_NAMES[tail]
 		tail_label.add_theme_color_override("font_color", ELEMENT_COLORS[tail])
 		tail_label.add_theme_font_size_override("font_size", 11)
-		tail_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		vbox.add_child(tail_label)
+		tail_hbox.add_child(tail_label)
 
 		# Check if it's a pure element dragon (all same element)
 		if head == body and body == tail:

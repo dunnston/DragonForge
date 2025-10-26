@@ -54,6 +54,18 @@ func _ready():
 		click_button.pressed.connect(_on_pet_clicked)
 		click_button.mouse_entered.connect(_on_mouse_entered)
 		click_button.mouse_exited.connect(_on_mouse_exited)
+
+		# Disable all visual feedback from the button
+		click_button.focus_mode = Control.FOCUS_NONE  # Disable focus
+		click_button.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND  # Show hand cursor
+
+		# Make button completely transparent (no background, border, or focus indicators)
+		click_button.add_theme_color_override("font_color", Color.TRANSPARENT)
+		click_button.add_theme_color_override("font_hover_color", Color.TRANSPARENT)
+		click_button.add_theme_color_override("font_pressed_color", Color.TRANSPARENT)
+		click_button.add_theme_color_override("font_focus_color", Color.TRANSPARENT)
+		click_button.add_theme_color_override("font_disabled_color", Color.TRANSPARENT)
+
 		print("[PetWalkingCharacter] ClickButton connected")
 	else:
 		push_error("[PetWalkingCharacter] ClickButton not found!")
@@ -102,6 +114,10 @@ func _process(delta):
 	# Only update animations if visible
 	if not visible:
 		return
+
+	# Disable click button if any modal is open
+	if click_button:
+		click_button.disabled = _is_any_modal_open()
 
 	# Update sprite animation
 	if is_moving and walking_sprite:
@@ -202,6 +218,56 @@ func _is_on_factory_screen() -> bool:
 
 	# Default to true if we can't find the marker (backward compatibility)
 	return true
+
+func _is_any_modal_open() -> bool:
+	"""Check if any modal is currently open in the factory manager"""
+	# Walk up the scene tree to find the factory manager
+	var parent = get_parent()
+	if not parent:
+		return false
+
+	# Check for common modals
+	var inventory_panel = parent.get_node_or_null("InventoryPanel")
+	if inventory_panel and inventory_panel.visible:
+		return true
+
+	var part_selector = parent.get_node_or_null("PartSelector")
+	if part_selector and part_selector.visible:
+		return true
+
+	var dragon_details_modal = parent.get_node_or_null("DragonDetailsModal")
+	if dragon_details_modal and dragon_details_modal.visible:
+		return true
+
+	var dragon_grounds_modal = parent.get_node_or_null("DragonGroundsModal")
+	if dragon_grounds_modal and dragon_grounds_modal.visible:
+		return true
+
+	var defense_towers_ui = parent.get_node_or_null("DefenseTowersUI")
+	if defense_towers_ui and defense_towers_ui.visible:
+		return true
+
+	var training_yard_ui = parent.get_node_or_null("TrainingYardUI")
+	if training_yard_ui and training_yard_ui.visible:
+		return true
+
+	var exploration_map_ui = parent.get_node_or_null("ExplorationMapUI")
+	if exploration_map_ui and exploration_map_ui.visible:
+		return true
+
+	var scientist_management_ui = parent.get_node_or_null("ScientistManagementUI")
+	if scientist_management_ui and scientist_management_ui.visible:
+		return true
+
+	var pet_interaction_ui = parent.get_node_or_null("PetInteractionUI")
+	if pet_interaction_ui and pet_interaction_ui.visible:
+		return true
+
+	var save_exit_popup = parent.get_node_or_null("SaveExitPopup")
+	if save_exit_popup and save_exit_popup.visible:
+		return true
+
+	return false
 
 func _update_animation():
 	"""Update animation based on movement state"""

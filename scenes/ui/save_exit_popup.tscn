@@ -83,6 +83,13 @@ size_flags_horizontal = 4
 theme_override_font_sizes/font_size = 18
 text = "Save & Exit"
 
+[node name="SettingsButton" type="Button" parent="CenterContainer/PanelContainer/MarginContainer/VBoxContainer/ButtonsContainer"]
+custom_minimum_size = Vector2(250, 50)
+layout_mode = 2
+size_flags_horizontal = 4
+theme_override_font_sizes/font_size = 18
+text = "Settings"
+
 [node name="CancelButton" type="Button" parent="CenterContainer/PanelContainer/MarginContainer/VBoxContainer/ButtonsContainer"]
 custom_minimum_size = Vector2(250, 50)
 layout_mode = 2

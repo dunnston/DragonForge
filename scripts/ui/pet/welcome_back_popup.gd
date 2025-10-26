@@ -261,16 +261,17 @@ func _show_pet_walking_character():
 
 func _get_random_return_story() -> String:
 	"""Load and return a random story from return_messages.md"""
+	var pet_name = pet.dragon_name if pet else "Your dragon"
 	var file_path = "res://docs/return_messages.md"
 
 	# Check if file exists
 	if not FileAccess.file_exists(file_path):
-		return "Your dragon had an adventure while you were away!"
+		return "%s had an adventure while you were away!" % pet_name
 
 	# Read the file
 	var file = FileAccess.open(file_path, FileAccess.READ)
 	if not file:
-		return "Your dragon had an adventure while you were away!"
+		return "%s had an adventure while you were away!" % pet_name
 
 	var messages: Array[String] = []
 	while not file.eof_reached():
@@ -280,6 +281,8 @@ func _get_random_return_story() -> String:
 			# Remove quotes if present
 			if line.begins_with("\"") and line.ends_with("\""):
 				line = line.substr(1, line.length() - 2)
+			# Replace "Your dragon" with the pet's actual name
+			line = line.replace("Your dragon", pet_name)
 			messages.append(line)
 
 	file.close()
@@ -288,4 +291,4 @@ func _get_random_return_story() -> String:
 	if messages.size() > 0:
 		return messages.pick_random()
 	else:
-		return "Your dragon had an adventure while you were away!"
+		return "%s had an adventure while you were away!" % pet_name

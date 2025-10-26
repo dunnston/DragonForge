@@ -324,7 +324,7 @@
 			"type": "consumable",
 			"category": "food",
 			"description": "Hearty meat from defeated knights. Very filling but exhausting to digest.",
-			"icon": "res://assets/ui/knight-meat.png",
+			"icon": "res://assets/Icons/items/knight-meat.png",
 			"stackable": true,
 			"max_stack": 99,
 			"rarity": 2,

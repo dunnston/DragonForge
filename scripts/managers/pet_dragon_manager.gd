@@ -244,7 +244,7 @@ func calculate_offline_progress(seconds_offline: int) -> Dictionary:
 	for i in num_expeditions:
 		# Simulate exploration rewards (simplified)
 		var base_gold = 20 * AUTO_EXPLORE_DURATION
-		var base_xp = 30 * AUTO_EXPLORE_DURATION
+		var base_xp = 0.5 * AUTO_EXPLORE_DURATION  # Reduced from 30 to 0.5 for much slower leveling
 
 		# Apply personality bonuses
 		base_gold *= pet_dragon.get_personality_bonus("gold")

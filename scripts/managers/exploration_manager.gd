@@ -21,7 +21,7 @@ const DURATION_LONG: int = 900        # 15 minutes (Thunder Peak)
 # === RISK/REWARD CONSTANTS ===
 # Base rewards (scaled by duration and dragon level)
 const BASE_GOLD_PER_MINUTE: int = 2
-const BASE_XP_PER_MINUTE: int = 3
+const BASE_XP_PER_MINUTE: float = 0.5  # Reduced from 3 to 0.5 for slower leveling
 const PARTS_DROP_CHANCE: float = 0.3  # 30% chance per exploration
 
 # Gold reward randomness

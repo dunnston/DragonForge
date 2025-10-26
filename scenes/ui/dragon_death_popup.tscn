@@ -54,6 +54,7 @@ theme_override_constants/separation = 5
 [node name="TitleLabel" type="Label" parent="Overlay/CenterContainer/PopupPanel/MarginContainer/VBox/TitleContainer"]
 layout_mode = 2
 theme_override_colors/font_color = Color(1, 0.4, 0.4, 1)
+theme_override_font_sizes/font_size = 32
 text = "💀 DRAGON LOST 💀"
 horizontal_alignment = 1
 
