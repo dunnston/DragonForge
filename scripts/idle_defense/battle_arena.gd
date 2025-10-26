@@ -245,21 +245,22 @@ func _spawn_dragon(dragon: Dragon, index: int):
 		dragon_visual_instance.position = Vector2(110, 80)
 		dragon_visual_instance.scale = Vector2(.20,.20)
 
-		# Set dragon colors from parts
-		if dragon.head_part and dragon.body_part and dragon.tail_part:
-			dragon_visual_instance.set_dragon_colors(
-				dragon.head_part.element,
-				dragon.body_part.element,
-				dragon.tail_part.element
-			)
-
 		# Create SubViewportContainer to display it - fits in panel
 		var viewport_container = SubViewportContainer.new()
 		viewport_container.custom_minimum_size = Vector2(140, 140)
 		viewport_container.stretch = true
 		viewport_container.add_child(viewport)
-		
+
 		vbox.add_child(viewport_container)
+
+		# Set dragon colors from parts AFTER adding to scene tree
+		# Call deferred to ensure shader material is fully ready
+		if dragon.head_part and dragon.body_part and dragon.tail_part:
+			dragon_visual_instance.set_dragon_colors.call_deferred(
+				dragon.head_part.element,
+				dragon.body_part.element,
+				dragon.tail_part.element
+			)
 	
 	# Dragon name
 	var name_label = Label.new()

@@ -1,18 +1,20 @@
 # Wave Result Popup - Shows victory or defeat after wave completes
 extends Control
+class_name WaveResultPopup
 
 signal closed  # For NotificationQueueManager
 
-@onready var overlay = $Overlay
-@onready var panel = $Overlay/CenterContainer/PanelContainer
-@onready var title_label = $Overlay/CenterContainer/PanelContainer/MarginContainer/VBox/TitleLabel
-@onready var message_label = $Overlay/CenterContainer/PanelContainer/MarginContainer/VBox/MessageLabel
-@onready var rewards_label = $Overlay/CenterContainer/PanelContainer/MarginContainer/VBox/RewardsLabel
-@onready var close_button = $Overlay/CenterContainer/PanelContainer/MarginContainer/VBox/CloseButton
+@onready var title: Label = %Title
+@onready var result_label: Label = %ResultLabel
+@onready var message_label: Label = %MessageLabel
+@onready var gold_label: Label = %GoldLabel
+@onready var meat_label: Label = %MeatLabel
+@onready var rewards_container: VBoxContainer = %RewardsContainer
+@onready var confirm_button: Button = %ConfirmButton
 
 func _ready():
-	close_button.pressed.connect(_on_close_pressed)
-	hide()
+	if confirm_button:
+		confirm_button.pressed.connect(_on_close_pressed)
 
 func setup(data: Dictionary):
 	"""Setup the popup with wave result data
@@ -24,34 +26,44 @@ func setup(data: Dictionary):
 	"""
 	var victory = data.get("victory", false)
 	var rewards = data.get("rewards", {})
-	var wave_number = data.get("wave_number", 0)
 
-	# Set title based on victory/defeat
+	# Set title and result based on victory/defeat
 	if victory:
-		title_label.text = "🐉 VICTORY! 🐉"
-		title_label.add_theme_color_override("font_color", Color(0.2, 1, 0.2))  # Green
+		if title:
+			title.text = "Wave Complete!"
+		if result_label:
+			result_label.text = "🐉 VICTORY! 🐉"
+		if message_label:
+			message_label.text = "Your dragons have successfully defended!"
 	else:
-		title_label.text = "⚔ DEFEAT ⚔"
-		title_label.add_theme_color_override("font_color", Color(1, 0.3, 0.3))  # Red
+		if title:
+			title.text = "Wave Failed!"
+		if result_label:
+			result_label.text = "⚔ DEFEAT ⚔"
+		if message_label:
+			message_label.text = "The raiders have breached your defenses!\nSome resources may have been stolen..."
 
-	# Set message
-	if victory:
-		message_label.text = "Your dragons have successfully defended!"
-	else:
-		message_label.text = "The raiders have breached your defenses!\nSome resources may have been stolen..."
+	# Update rewards display
+	var gold = rewards.get("gold", 0)
+	var meat = rewards.get("meat", 0)
 
-	# Set rewards
-	var rewards_text = "REWARDS:\n"
-	if victory:
-		if rewards.get("gold", 0) > 0:
-			rewards_text += "💰 Gold: +%d\n" % rewards["gold"]
-		if rewards.get("meat", 0) > 0:
-			rewards_text += "🍖 Knight Meat: +%d\n" % rewards["meat"]
-	else:
-		rewards_text = ""  # No rewards on defeat
+	if gold_label:
+		if gold > 0:
+			gold_label.text = "💰 Gold: +%d" % gold
+			gold_label.visible = true
+		else:
+			gold_label.visible = false
 
-	rewards_label.text = rewards_text
-	rewards_label.visible = victory  # Only show rewards on victory
+	if meat_label:
+		if meat > 0:
+			meat_label.text = "🍖 Knight Meat: +%d" % meat
+			meat_label.visible = true
+		else:
+			meat_label.visible = false
+
+	# Hide rewards container if no rewards
+	if rewards_container:
+		rewards_container.visible = victory and (gold > 0 or meat > 0)
 
 	show()
 

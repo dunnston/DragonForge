@@ -9,6 +9,8 @@ const LockedCardScene = preload("res://scenes/ui/towers/locked_card.tscn")
 const DragonPickerModalScene = preload("res://scenes/ui/dragon_picker_modal.tscn")
 const BattleArenaScene = preload("res://scenes/idle_defense/battle_arena.tscn")
 const BattleLogUIScene = preload("res://scenes/ui/battle_log_ui.tscn")
+const WaveResultPopupScene = preload("res://scenes/ui/wave_result_popup.tscn")
+const BattleSummaryPopupScene = preload("res://scenes/ui/battle_summary_popup.tscn")
 
 @onready var back_button = $MarginContainer/VBox/HeaderPanel/HeaderHBox/BackButton
 @onready var battle_log_button: Button = %BattleLogButton
@@ -392,13 +394,14 @@ func _on_wave_completed(victory: bool, rewards: Dictionary):
 	# Update factory manager to refresh dragon list and gold
 	_update_factory_manager()
 
-	# Only show popup once per wave (prevent duplicate from multiple signal emissions)
-	if DefenseManager.instance and DefenseManager.instance.wave_number != current_wave_number:
-		current_wave_number = DefenseManager.instance.wave_number
+	# Only show popup if this UI is visible (prevents showing on wrong scene)
+	if visible and DefenseManager.instance and DefenseManager.instance.should_show_wave_result_popup():
 		_show_wave_rewards_popup(victory, rewards)
-		print("[DefenseTowersUI] Showing wave popup for wave %d" % current_wave_number)
+		print("[DefenseTowersUI] Showing wave popup")
+	elif not visible:
+		print("[DefenseTowersUI] This UI not visible, skipping popup")
 	else:
-		print("[DefenseTowersUI] Skipping duplicate popup for wave %d" % current_wave_number)
+		print("[DefenseTowersUI] Popup already shown by another UI, skipping")
 
 	# Battle arena stays open for player to read results and close manually via back button
 
@@ -555,39 +558,25 @@ func _on_battle_log_pressed():
 	battle_log_ui.closed.connect(func(): battle_log_ui.queue_free())
 
 func _show_wave_rewards_popup(victory: bool, rewards: Dictionary):
-	"""Show wave result popup - temporarily using direct approach until scene system is fixed"""
-	# TEMPORARY: Just show directly until we fix the PackedScene issue
-	# The queue system works for pre-made .tscn files but not runtime-created scenes
-	_show_wave_popup_direct(victory, rewards)
+	"""Show wave result popup using themed popup scene"""
+	var popup = WaveResultPopupScene.instantiate()
 
-	# TODO: Create a proper wave_result_popup.tscn scene file and use queue system
-	print("[DefenseTowersUI] Showing wave %s popup (direct)" % ("victory" if victory else "defeat"))
+	# Set z-index to appear above battle arena
+	popup.z_index = 200
+	popup.z_as_relative = false
 
-func _show_wave_popup_direct(victory: bool, rewards: Dictionary):
-	"""Fallback: Show wave popup directly if NotificationQueue not available"""
-	var dialog = AcceptDialog.new()
-	add_child(dialog)
-	dialog.title = "Wave Complete!" if victory else "Wave Failed!"
-	dialog.dialog_hide_on_ok = true
+	add_child(popup)
 
-	var message = ""
-	if victory:
-		message = "🐉 VICTORY! 🐉\n\n"
-		message += "Your dragons have successfully defended!\n\n"
-		message += "REWARDS EARNED:\n"
-		if rewards.get("gold", 0) > 0:
-			message += "💰 Gold: +%d\n" % rewards["gold"]
-		if rewards.get("meat", 0) > 0:
-			message += "🍖 Knight Meat: +%d\n" % rewards["meat"]
-	else:
-		message = "⚔ DEFEAT ⚔\n\n"
-		message += "The raiders have breached your defenses!\n\n"
-		message += "Some resources may have been stolen..."
+	# Setup with wave data
+	popup.setup({
+		"victory": victory,
+		"rewards": rewards
+	})
 
-	dialog.dialog_text = message
-	dialog.popup_centered()
-	dialog.confirmed.connect(func(): dialog.queue_free())
-	dialog.canceled.connect(func(): dialog.queue_free())
+	# Connect closed signal to clean up
+	popup.closed.connect(func(): popup.queue_free())
+
+	print("[DefenseTowersUI] Showing wave %s popup (themed, z-index: 200)" % ("victory" if victory else "defeat"))
 
 func _show_cumulative_rewards():
 	"""Show cumulative rewards from battles that happened while UI was closed"""
@@ -604,37 +593,23 @@ func _show_cumulative_rewards():
 	if DefenseManager.instance.is_first_wave:
 		print("[DefenseTowersUI] Skipping cumulative rewards - player is new and hasn't completed first wave yet")
 		return
-	
-	# Create popup dialog to show rewards
-	var dialog = AcceptDialog.new()
-	add_child(dialog)
-	dialog.title = "Battle Summary"
-	dialog.dialog_hide_on_ok = true
-	
-	# Build simple message (no BBCode)
-	var message = "⚔️ BATTLES WHILE YOU WERE AWAY ⚔️\n\n"
-	message += "Total Waves: %d\n" % cumulative["total_waves"]
-	message += "Victories: %d ✅\n" % cumulative["waves_won"]
-	message += "Defeats: %d ❌\n\n" % cumulative["waves_lost"]
-	
-	message += "REWARDS EARNED:\n"
-	if cumulative["gold"] > 0:
-		message += "💰 Gold: +%d\n" % cumulative["gold"]
-	if cumulative["meat"] > 0:
-		message += "🍖 Knight Meat: +%d\n" % cumulative["meat"]
-	
-	# Set the dialog text (plain text, no overlap)
-	dialog.dialog_text = message
-	
-	# Show dialog
-	dialog.popup_centered()
-	
-	# Reset cumulative rewards after showing
-	dialog.confirmed.connect(func(): 
+
+	# Create themed popup to show battle summary
+	var popup = BattleSummaryPopupScene.instantiate()
+
+	# Set z-index to appear above battle arena
+	popup.z_index = 200
+	popup.z_as_relative = false
+
+	add_child(popup)
+
+	# Setup with cumulative data
+	popup.setup(cumulative)
+
+	# Reset cumulative rewards after popup is closed
+	popup.closed.connect(func():
 		DefenseManager.instance.reset_cumulative_rewards()
-		dialog.queue_free()
+		popup.queue_free()
 	)
-	dialog.canceled.connect(func(): 
-		DefenseManager.instance.reset_cumulative_rewards()
-		dialog.queue_free()
-	)
+
+	print("[DefenseTowersUI] Showing cumulative battle summary (themed, z-index: 200)")

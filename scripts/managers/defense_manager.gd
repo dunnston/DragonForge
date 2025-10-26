@@ -25,6 +25,9 @@ var pending_wave_victory: bool = false
 var pending_wave_rewards: Dictionary = {}
 var pending_wave_enemies: Array = []  # Store enemies for reward calculation
 var current_wave_enemies: Array = []  # Current battle enemies (for mid-battle viewers)
+var wave_completion_triggered: bool = false  # Guard against double completion
+var visual_combat_result_received: bool = false  # Guard against multiple UIs calling on_visual_combat_result
+var wave_result_popup_shown: bool = false  # Guard against showing result popup in multiple UIs
 
 # Store scouted enemies for preview (generated at 90 seconds)
 var scouted_wave_enemies: Array = []
@@ -315,6 +318,11 @@ func _start_wave():
 
 	print("[DefenseManager] COMBAT: WAVE %d - %d enemies attacking!" % [wave_number, enemies.size()])
 
+	# Reset guards for new wave
+	wave_completion_triggered = false
+	visual_combat_result_received = false
+	wave_result_popup_shown = false
+
 	# Store enemies for mid-battle viewers (and late viewers after battle ends)
 	current_wave_enemies = enemies
 
@@ -349,8 +357,14 @@ func _start_wave():
 
 func on_visual_combat_result(victory: bool):
 	"""Called by visual combat when the winner is determined"""
+	# Guard against multiple UIs calling this function
+	if visual_combat_result_received:
+		print("[DefenseManager] Visual combat result already received, ignoring duplicate call")
+		return
+
+	visual_combat_result_received = true
 	print("[DefenseManager] Visual combat result received: Victory=%s" % victory)
-	
+
 	# Now apply the actual result
 	if victory:
 		var rewards = _calculate_rewards(pending_wave_enemies)
@@ -604,6 +618,13 @@ func _apply_auto_loss():
 	print("[DefenseManager] [STOLEN] UNDEFENDED! Raiders stole %d gold and parts!" % stolen.get("gold", 0))
 
 func _complete_wave(victory: bool, rewards: Dictionary):
+	# Guard against double completion
+	if wave_completion_triggered:
+		print("[DefenseManager] Wave completion already triggered, skipping duplicate call")
+		return
+
+	wave_completion_triggered = true
+
 	# Don't set is_in_combat to false yet - wait for battle animation to finish
 	# This keeps the wave timer paused during the battle animation
 
@@ -630,7 +651,7 @@ func _complete_wave(victory: bool, rewards: Dictionary):
 
 	reset_wave_timer()
 	wave_completed.emit(victory, rewards)
-	
+
 	# Safety fallback: If no battle animation happens, end combat after 5 seconds
 	# This handles background battles when UI isn't open
 	get_tree().create_timer(5.0).timeout.connect(func():
@@ -638,6 +659,16 @@ func _complete_wave(victory: bool, rewards: Dictionary):
 			print("[DefenseManager] No battle animation detected, auto-ending combat")
 			end_combat()
 	)
+
+func should_show_wave_result_popup() -> bool:
+	"""Check if wave result popup should be shown (prevents duplicate popups across UIs)"""
+	if wave_result_popup_shown:
+		print("[DefenseManager] Wave result popup already shown, skipping duplicate")
+		return false
+
+	wave_result_popup_shown = true
+	print("[DefenseManager] Wave result popup marked as shown")
+	return true
 
 func end_combat():
 	"""Called when battle animation finishes - resumes wave timer and applies stat changes"""

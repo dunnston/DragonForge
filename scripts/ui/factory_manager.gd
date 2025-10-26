@@ -1,6 +1,9 @@
 # Factory Manager - Main UI for Dragon Factory Management
 extends Control
 
+# === PRELOADS ===
+const WaveResultPopupScene = preload("res://scenes/ui/wave_result_popup.tscn")
+
 # === SYSTEMS ===
 var factory: DragonFactory
 var scientist_manager: ScientistManager
@@ -94,6 +97,9 @@ var scientist_management_ui: Control
 # === PET SYSTEM STATE ===
 var pet_ui_setup_complete: bool = false  # Track if pet UI is already set up
 var walking_pet_character: Node = null  # Reference to the walking pet character
+
+# === BATTLE STATE ===
+var pending_wave_result: Dictionary = {}  # Store wave result to show after animation
 
 # === DRAGON CREATION STATE ===
 var selected_head_id: String = ""
@@ -1638,8 +1644,33 @@ func _on_wave_started(wave_number: int, enemies: Array):
 
 func _on_wave_completed(victory: bool, rewards: Dictionary):
 	"""Called when a battle wave completes"""
-	print("[FactoryManager] Wave completed! Victory: %s" % victory)
+	print("[FactoryManager] Wave completed! Victory: %s, Rewards: %s" % [victory, rewards])
+
+	# Store result to show after animation
+	pending_wave_result = {
+		"victory": victory,
+		"rewards": rewards
+	}
+
+	print("[FactoryManager] Stored pending_wave_result: %s" % pending_wave_result)
+
 	_update_defense_display()  # Hide battle notification
+
+	# If battle arena is not open (background battle) AND this UI is visible, show popup immediately
+	if visible and (not battle_arena or not is_instance_valid(battle_arena) or not battle_arena.visible):
+		print("[FactoryManager] Background battle completed - checking if popup should be shown")
+		# Wait one frame for end_combat to complete
+		await get_tree().process_frame
+		if not pending_wave_result.is_empty():
+			# Check if another UI already showed the popup
+			if DefenseManager.instance and DefenseManager.instance.should_show_wave_result_popup():
+				_show_wave_result_popup()
+			else:
+				print("[FactoryManager] Popup already shown by another UI, skipping")
+			pending_wave_result = {}  # Clear after showing
+	elif not visible:
+		print("[FactoryManager] This UI not visible, skipping popup")
+		pending_wave_result = {}  # Clear to prevent showing later
 
 func _on_watch_battle_pressed():
 	"""Called when the Watch Battle button is pressed"""
@@ -1686,11 +1717,30 @@ func _on_watch_battle_pressed():
 
 func _on_battle_animation_complete():
 	"""Called when battle animation finishes"""
-	print("[FactoryManager] Battle animation complete - keeping arena open for player to read")
+	print("[FactoryManager] Battle animation complete")
+	print("[FactoryManager] pending_wave_result before end_combat: %s" % pending_wave_result)
 
 	# End combat state in DefenseManager
+	# This triggers wave_completed signal which populates pending_wave_result
 	if DefenseManager and DefenseManager.instance:
 		DefenseManager.instance.end_combat()
+
+	# Wait one frame to ensure signal processing completes
+	await get_tree().process_frame
+
+	print("[FactoryManager] pending_wave_result after end_combat: %s" % pending_wave_result)
+
+	# Show wave result popup if we have pending results
+	if not pending_wave_result.is_empty():
+		# Check if another UI already showed the popup
+		if DefenseManager.instance and DefenseManager.instance.should_show_wave_result_popup():
+			print("[FactoryManager] Calling _show_wave_result_popup()")
+			_show_wave_result_popup()
+		else:
+			print("[FactoryManager] Popup already shown by another UI, skipping")
+		pending_wave_result = {}  # Clear after showing
+	else:
+		print("[FactoryManager] WARNING: pending_wave_result is empty, not showing popup!")
 
 func _on_battle_result_determined(victory: bool):
 	"""Called when visual combat determines the winner"""
@@ -1708,6 +1758,27 @@ func _on_battle_arena_closed():
 	if battle_arena and is_instance_valid(battle_arena):
 		battle_arena.queue_free()
 		battle_arena = null
+
+func _show_wave_result_popup():
+	"""Show the wave result popup"""
+	if not pending_wave_result.has("victory") or not pending_wave_result.has("rewards"):
+		return
+
+	var popup = WaveResultPopupScene.instantiate()
+
+	# Set z-index higher than battle arena (which is 150)
+	popup.z_index = 200
+	popup.z_as_relative = false
+
+	add_child(popup)
+
+	# Setup with wave data
+	popup.setup(pending_wave_result)
+
+	# Connect closed signal to clean up
+	popup.closed.connect(func(): popup.queue_free())
+
+	print("[FactoryManager] Showing wave result popup (z-index: 200)")
 
 func _open_enemy_scout_screen():
 	"""Open the enemy scout screen to preview incoming wave"""

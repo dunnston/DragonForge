@@ -124,7 +124,6 @@ func _create_simple_part_display(part: DragonPart) -> Control:
 	name_label.text = part.get_display_name()
 	name_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	name_label.add_theme_color_override("font_color", _get_element_color(part.element))
-	name_label.add_theme_font_size_override("font_size", 11)
 	container.add_child(name_label)
 
 	# Rarity label
@@ -132,7 +131,6 @@ func _create_simple_part_display(part: DragonPart) -> Control:
 	rarity_label.text = part.get_rarity_name()
 	rarity_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	rarity_label.add_theme_color_override("font_color", Color(0.8, 0.8, 1, 1))
-	rarity_label.add_theme_font_size_override("font_size", 9)
 	container.add_child(rarity_label)
 
 	return container

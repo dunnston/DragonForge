@@ -43,10 +43,26 @@ func _ready():
 
 	# Set initial text
 	if title_label:
-		title_label.text = "Meet Your New Companion!"
+		title_label.text = "💚 A BOND IS FORMED! 💚"
 
 	if info_label:
-		info_label.text = "This special dragon will be your companion throughout your journey.\nThey'll explore the world and bring you treasures!"
+		info_label.text = """Your first dragon opens their eyes and looks directly at you.
+There's recognition there—intelligence, curiosity, and something more...
+
+Trust.
+
+This isn't just a creation. This is a friend. A partner.
+Someone who will stand by you no matter what happens.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Your companion will:
+• Never leave your side (they can't die!)
+• Explore and bring back gifts for you
+• Remember all your adventures together
+• Keep your laboratory running, no matter what
+
+Your mentor would be proud. Now the real work begins."""
 
 func setup(new_pet: PetDragon):
 	"""Setup the popup with the pet dragon"""
@@ -66,7 +82,7 @@ func setup(new_pet: PetDragon):
 
 	# Update personality display
 	if personality_label:
-		personality_label.text = pet.get_personality_name()
+		personality_label.text = "Unique Trait: " + pet.get_personality_name()
 
 	if personality_description:
 		var description = PERSONALITY_DESCRIPTIONS.get(
