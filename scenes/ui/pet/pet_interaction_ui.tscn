@@ -44,6 +44,7 @@ theme_override_constants/margin_bottom = 20
 layout_mode = 2
 follow_focus = true
 horizontal_scroll_mode = 0
+vertical_scroll_mode = 1
 
 [node name="MainVBox" type="VBoxContainer" parent="CenterContainer/PanelContainer/MarginContainer/ScrollContainer"]
 layout_mode = 2

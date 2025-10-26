@@ -1,5 +1,9 @@
 # Defense Manager - Wave-based Knight Attacks
 # Protects the Treasure Vault from raiders
+#
+# Wave Behavior:
+# - Waves 1-99: Pauses AFK when no defenders and out of resources
+# - Wave 100+: Continues AFK regardless of defenders (hardcore mode!)
 extends Node
 
 # === SINGLETON ===
@@ -77,7 +81,8 @@ func _update_wave_timer():
 
 	# Check if player is completely out of resources - pause raids if so
 	# BUT if there are defenders assigned, let the waves continue
-	if tower_assignments.is_empty() and _is_player_out_of_resources():
+	# ALSO: After wave 100, raids continue AFK regardless of resources
+	if wave_number < 100 and tower_assignments.is_empty() and _is_player_out_of_resources():
 		print("[DefenseManager] Raids PAUSED - Vault is empty, no parts, and no dragons to explore")
 		return
 
@@ -445,6 +450,12 @@ func on_visual_combat_result(victory: bool):
 		_apply_rewards(rewards)
 		wave_number += 1
 		print("[DefenseManager] ✅ VICTORY! Wave %d complete. Rewards: %d gold, %d meat 🍖" % [wave_number - 1, rewards.get("gold", 0), rewards.get("meat", 0)])
+
+		# Special message when reaching wave 100
+		if wave_number == 100:
+			print("[DefenseManager] ⚠️ MILESTONE REACHED: Wave 100!")
+			print("[DefenseManager] Raids will now continue AFK even without defenders!")
+			print("[DefenseManager] Your vault is no longer safe when you're away!")
 
 		# Add tower damage info to rewards (5 damage per tower on victory)
 		var active_towers = DefenseTowerManager.instance.get_active_towers() if DefenseTowerManager and DefenseTowerManager.instance else 0

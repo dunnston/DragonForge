@@ -19,15 +19,23 @@ const DURATION_MEDIUM: int = 600      # 10 minutes (Frozen Tundra)
 const DURATION_LONG: int = 900        # 15 minutes (Thunder Peak)
 
 # === RISK/REWARD CONSTANTS ===
-# Base rewards (scaled by duration and dragon level)
-const BASE_GOLD_PER_MINUTE: int = 2
+# Base rewards (scaled by dragon level)
 const BASE_XP_PER_MINUTE: float = 0.5  # Reduced from 3 to 0.5 for slower leveling
 const PARTS_DROP_CHANCE: float = 0.3  # 30% chance per exploration
 
 # Gold reward randomness
 const GOLD_VARIANCE: float = 0.25  # ±25% random variance
 
-# Destination difficulty multipliers (affects gold, XP, and risk)
+# Base gold rewards per destination (before level scaling and variance)
+const BASE_GOLD_REWARDS = {
+	"volcanic_caves": 20,    # 1 minute exploration
+	"ancient_forest": 40,    # 5 minute exploration
+	"frozen_tundra": 60,     # 10 minute exploration
+	"thunder_peak": 90,      # 15 minute exploration
+	"unknown": 20            # Default fallback
+}
+
+# XP difficulty multipliers (affects XP and risk)
 const DESTINATION_MULTIPLIERS = {
 	"volcanic_caves": 1.0,      # Easy - starter area
 	"ancient_forest": 1.5,      # Medium - Friend tier required
@@ -549,18 +557,20 @@ func _calculate_rewards(dragon: Dragon, duration_minutes: int, destination: Stri
 		"items": {}
 	}
 
-	# Base rewards scale with duration
-	var base_gold = BASE_GOLD_PER_MINUTE * duration_minutes
+	# Get base gold for this destination
+	var base_gold = BASE_GOLD_REWARDS.get(destination, 20)
+
+	# Base XP scales with duration
 	var base_xp = BASE_XP_PER_MINUTE * duration_minutes
 
 	# Scale with dragon level (higher level = better rewards)
 	var level_multiplier = 1.0 + (dragon.level - 1) * 0.15  # +15% per level above 1
 
-	# Scale with destination difficulty
+	# Scale with destination difficulty (XP only)
 	var difficulty_multiplier = DESTINATION_MULTIPLIERS.get(destination, 1.0)
 
-	# Apply multipliers to base rewards
-	var scaled_gold = base_gold * level_multiplier * difficulty_multiplier
+	# Apply level multiplier to gold, level+difficulty to XP
+	var scaled_gold = base_gold * level_multiplier
 	var scaled_xp = base_xp * level_multiplier * difficulty_multiplier
 
 	# Add random variance to gold (±25%)

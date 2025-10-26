@@ -109,20 +109,17 @@ func _create_moment_entry(moment: Dictionary) -> Control:
 	var title_label = Label.new()
 	title_label.text = "%s %s" % [icon, moment.get("title", "Unknown Event")]
 	title_label.add_theme_font_size_override("font_size", 16)
-	title_label.add_theme_color_override("font_color", Color(1.0, 0.9, 0.6))  # Light yellow
 	entry.add_child(title_label)
 
 	# Description
 	var desc_label = Label.new()
 	desc_label.text = moment.get("description", "")
 	desc_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	desc_label.add_theme_color_override("font_color", Color(0.9, 0.9, 0.9))
 	entry.add_child(desc_label)
 
 	# Timestamp (relative time)
 	var time_label = Label.new()
 	time_label.text = "(%s)" % _get_relative_time(moment.get("timestamp", 0))
-	time_label.add_theme_color_override("font_color", Color(0.6, 0.6, 0.6))  # Gray
 	time_label.add_theme_font_size_override("font_size", 12)
 	entry.add_child(time_label)
 

@@ -453,6 +453,18 @@ func _start_exploration_for_dragon(dragon: Dragon, destination_key: String, dest
 		_show_error_dialog("Error", "ExplorationManager not found!")
 		return
 
+	# Check if this is a pet dragon with affection restrictions
+	if dragon is PetDragon:
+		if not dragon.can_explore_destination(destination_key):
+			var tier = dragon.get_affection_tier()
+			var next_unlock = dragon.get_next_unlock_destination()
+			var error_msg = "Your pet cannot explore this area yet!\n\n"
+			error_msg += "Current Bond: %s\n" % tier
+			if next_unlock:
+				error_msg += "Next unlock: %s (needs %d affection)" % [next_unlock["destination"].capitalize().replace("_", " "), next_unlock["affection_required"]]
+			_show_error_dialog("Area Locked", error_msg)
+			return
+
 	# Start the exploration through the manager
 	var duration_minutes = destination_info["duration_minutes"]
 	if ExplorationManager.instance.start_exploration(dragon, duration_minutes, destination_key):

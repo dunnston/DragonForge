@@ -65,7 +65,7 @@ func _populate_parts_grid():
 	# If no parts available, show message
 	if parts_by_element.is_empty():
 		var message = Label.new()
-		message.text = "No %s parts in inventory!\nUse Dev Menu (`) to add parts." % type_string.to_lower()
+		message.text = "No %s parts in inventory!" % type_string.to_lower()
 		message.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		message.add_theme_font_size_override("font_size", 16)
 		message.add_theme_color_override("font_color", Color(1, 0.5, 0.5, 1))
